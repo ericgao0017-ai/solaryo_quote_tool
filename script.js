@@ -1,8 +1,8 @@
 // ==========================================
 // 0. SUPABASE CONFIGURATION (请填写你的密钥)
 // ==========================================
-const SUPABASE_URL = 'https://你的项目ID.supabase.co'; // 替换这里
-const SUPABASE_KEY = '你的anon_public_key';          // 替换这里
+const SUPABASE_URL = 'https://iytxwgyhemetdkmqoxoa.supabase.co'; // 替换这里
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dHh3Z3loZW1ldGRrbXFveG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzI3MDIsImV4cCI6MjA3OTkwODcwMn0.ZsiueMCjwm5FoPlC3IDEgmsPaabkhefw3uHFl6gBm7Q';          // 替换这里
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 全局变量：存聊天记录
@@ -1222,4 +1222,5 @@ function generateSmartBotReply(input) {
     const fallbackList = isCN ? fallbackResponses.cn : fallbackResponses.en;
     const randomIdx = Math.floor(Math.random() * fallbackList.length);
     return fallbackList[randomIdx];
+
 }
