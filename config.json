@@ -1,0 +1,111 @@
+{
+    "base_pricing": {
+        "solar_per_w": 0.9,
+        "install_base_fee": 0,
+        "battery_tiers": {
+            "entry_rate_per_kwh": 350,
+            "medium_rate_per_kwh": 600,
+            "premium_rate_per_kwh": 900,
+            "fixed_profit_markup": 4000
+        },
+        "install_labor_adder": {
+            "mixed_install": 500,
+            "battery_only": 1500
+        },
+        "addon_extras": {
+            "roof_tin": 0,
+            "roof_tile": 0,
+            "roof_terra": 800,
+            "storey_1": 0,
+            "storey_2": 300,
+            "storey_3": 500,
+            "shade_no": 0,
+            "shade_yes": 1500,
+            "backup_protection": 600
+        }
+    },
+    "subsidy_logic": {
+        "fed_stc_price_net": 37.5,
+        "stc_deeming_years": 6,
+        "fed_bat_rate_per_kwh": 340,
+        "fed_bat_cap_kwh": 50,
+        "nsw_vpp_cap_kwh": 28,
+        "rebate_vic": 1400,
+        "rebate_qld": 3000,
+        "rebate_nsw_rate": 55,
+        "rebate_sa": 350,
+        "zone_ratings": {
+            "NT": 1.622,
+            "VIC": 1.185,
+            "TAS": 1.185,
+            "DEFAULT": 1.382
+        }
+    },
+    "roi_logic": {
+        "annual_tariff_escalation_percent": 0.04,
+        "battery_lifespan_years": 15,
+        "battery_savings_penalty_threshold": 2.5
+    },
+    "solar_tiers": [
+        6.6,
+        8,
+        10,
+        13,
+        15,
+        20
+    ],
+    "recommendation_map": [
+        {
+            "bill": 0,
+            "solarIdx": 0,
+            "solarKw": 6.6,
+            "bat": 20,
+            "validBats": [
+                20,
+                30
+            ],
+            "inverter": 5
+        },
+        {
+            "bill": 301,
+            "solarIdx": 1,
+            "solarKw": 8,
+            "bat": 30,
+            "validBats": [
+                30
+            ],
+            "inverter": 5
+        },
+        {
+            "bill": 501,
+            "solarIdx": 2,
+            "solarKw": 10,
+            "bat": 40,
+            "validBats": [
+                40
+            ],
+            "inverter": 10
+        },
+        {
+            "bill": 1001,
+            "solarIdx": 3,
+            "solarKw": 13,
+            "bat": 40,
+            "validBats": [
+                40
+            ],
+            "inverter": 10
+        },
+        {
+            "bill": 1501,
+            "solarIdx": 5,
+            "solarKw": 20,
+            "bat": 50,
+            "validBats": [
+                50
+            ],
+            "inverter": 15,
+            "is3Phase": true
+        }
+    ]
+}

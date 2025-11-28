@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solaryo Quote Tool 2025</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div class="fixed-trust-badge" title="CEC Accredited Installer">
+        <img src="ceclogo.png" alt="CEC Logo" />
+        <span class="trust-tooltip">CEC Accredited</span>
+    </div>
+    <div class="container">
+
+        <div class="brand-row">
+            <div class="brand-logo">
+                <span class="brand-text">Solar<span class="brand-yo">yo</span></span>
+            </div>
+
+            <div class="header-center">
+                <h2 data-i18n="title">Smart Solar & Battery Quote</h2>
+                <div class="subtitle" data-i18n="subtitle">Official Solaryo Engine</div>
+            </div>
+
+            <div class="lang-switch">
+                <button onclick="setLang('cn')">中</button>
+                <button class="active" onclick="setLang('en')">EN</button>
+            </div>
+        </div>
+
+        <label data-i18n="lbl_mode">Installation Type</label>
+
+        <div class="mode-selector">
+            <div class="mode-btn active" onclick="setMode('solar')" id="btn-solar">
+                <svg class="mode-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="14" r="8" fill="#FFC107" />
+                    <g stroke="#FFC107" stroke-width="2">
+                        <path d="M50 2v4" />
+                        <path d="M50 22v4" />
+                        <path d="M62 14h-4" />
+                        <path d="M38 14h-4" />
+                        <path d="M58.5 5.5l-2.8 2.8" />
+                        <path d="M44.3 19.7l-2.8 2.8" />
+                        <path d="M58.5 22.5l-2.8-2.8" />
+                        <path d="M44.3 8.3l-2.8-2.8" />
+                    </g>
+                    <rect x="8" y="26" width="48" height="30" rx="2" fill="#42A5F5" stroke="#1E88E5" stroke-width="2" />
+                    <path d="M8 36h48M8 46h48M24 26v30M40 26v30" stroke="#BBDEFB" stroke-width="1" />
+                    <path d="M12 56v4M52 56v4" stroke="#546E7A" stroke-width="3" stroke-linecap="round" />
+                </svg>
+                <span data-i18n="mode_solar">Solar Only</span>
+            </div>
+
+            <div class="mode-btn" onclick="setMode('battery')" id="btn-battery">
+                <svg class="mode-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M24 6h16v6H24z" fill="#78909C" />
+                    <rect x="14" y="12" width="36" height="48" rx="4" fill="#66BB6A" stroke="#43A047"
+                        stroke-width="2" />
+                    <path d="M36 20l-10 14h6v14l10-14h-6z" fill="#FFF176" stroke="#FDD835" stroke-width="1" />
+                    <circle cx="32" cy="54" r="2" fill="#1B5E20" />
+                </svg>
+                <span data-i18n="mode_bat">Battery Only</span>
+            </div>
+
+            <div class="mode-btn" onclick="setMode('both')" id="btn-both">
+                <div class="combo-icon">
+                    <svg class="mode-icon" style="width:32px; height:32px; margin-right:-10px;" viewBox="0 0 64 64"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <rect x="8" y="20" width="48" height="30" rx="2" fill="#42A5F5" stroke="#1E88E5"
+                            stroke-width="2" />
+                        <path d="M8 30h48M8 40h48M24 20v30M40 20v30" stroke="#BBDEFB" stroke-width="1" />
+                    </svg>
+                    <svg class="mode-icon" style="width:28px; height:28px; z-index:2; margin-bottom:-4px;"
+                        viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="14" y="12" width="36" height="48" rx="4" fill="#66BB6A" stroke="#ffffff"
+                            stroke-width="4" />
+                        <path d="M36 22l-10 12h6v12l10-12h-6z" fill="#FFF176" />
+                    </svg>
+                </div>
+                <span data-i18n="mode_both">Solar + Battery</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label data-i18n="lbl_state">State / Territory</label>
+            <select id="state-select" onchange="checkRebates()">
+                <option value="NSW">NSW - New South Wales (Zone 3)</option>
+                <option value="VIC">VIC - Victoria (Zone 4)</option>
+                <option value="QLD">QLD - Queensland (Zone 3)</option>
+                <option value="SA">SA - South Australia (Zone 3)</option>
+                <option value="WA">WA - Western Australia (Zone 3)</option>
+                <option value="ACT">ACT - Canberra (Zone 3)</option>
+                <option value="TAS">TAS - Tasmania (Zone 4)</option>
+                <option value="NT">NT - Northern Territory (Zone 1)</option>
+            </select>
+        </div>
+
+        <div class="section-title" data-i18n="sec_house">Property Details</div>
+
+        <div class="grid-2" id="solar-property-fields">
+            <div class="form-group">
+                <label data-i18n="lbl_storeys">Storeys</label>
+                <select id="storey-select" onchange="calculate()">
+                    <option value="0" data-i18n="storey_1">Single Storey</option>
+                    <option value="300" data-i18n="storey_2">Double Storey</option>
+                    <option value="500" data-i18n="storey_3">Triple Storey</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-i18n="lbl_roof">Roof Type</label>
+                <select id="roof-select" onchange="calculate()">
+                    <option value="0" data-i18n="roof_tin">Tin/Metal</option>
+                    <option value="0" data-i18n="roof_tile">Tile</option>
+                    <option value="800" data-i18n="roof_terra">Terracotta / Slate</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2" id="battery-property-fields" style="display:none;">
+            <div class="form-group">
+                <label data-i18n="lbl_property_type">Property Type</label>
+                <select id="property-type-select">
+                    <option value="house" data-i18n="property_house">House</option>
+                    <option value="duplex" data-i18n="property_duplex">Duplex</option>
+                    <option value="townhouse" data-i18n="property_townhouse">Townhouse</option>
+                    <option value="villa" data-i18n="property_villa">Villa</option>
+                    <option value="land" data-i18n="property_land">Land</option>
+                    <option value="unknown" data-i18n="property_unknown">Unknown</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-i18n="lbl_phase">Phase Type</label>
+                <select id="phase-select">
+                    <option value="single" data-i18n="phase_single">Single Phase</option>
+                    <option value="three" data-i18n="phase_three">Three Phase</option>
+                    <option value="unknown" data-i18n="phase_unknown">Unknown</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" id="group-shade">
+            <label data-i18n="lbl_shade">Shading Issue</label>
+            <select id="shade-select" onchange="calculate()">
+                <option value="0" data-i18n="shade_no">No Shade</option>
+                <option value="1500" data-i18n="shade_yes">Partial Shade</option>
+            </select>
+        </div>
+
+        <div class="section-title" data-i18n="sec_usage">Energy Usage (ROI Analysis)</div>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>
+                    <span data-i18n="lbl_bill">Quarterly Bill</span>:
+                    <span class="val-display">$<span id="bill-val">100</span></span>
+                </label>
+                <input type="range" id="bill-input" min="100" max="2500" step="50" value="100"
+                    oninput="updateVal('bill')">
+                <div
+                    style="position: relative; width: 100%; height: 1.2rem; font-size:0.75rem; color:#888; margin-top:8px;">
+                    <span style="position: absolute; left: 0;">$100</span>
+                    <span style="position: absolute; left: 16.7%; transform: translateX(-50%);">$500</span>
+                    <span style="position: absolute; left: 37.5%; transform: translateX(-50%);">$1000</span>
+                    <span style="position: absolute; left: 58.3%; transform: translateX(-50%);">$1500</span>
+                    <span style="position: absolute; right: 0;">$2500+</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="lbl_appliance_trigger">Energy Profile & Needs</label>
+                <div class="custom-select-trigger" onclick="openApplianceModal()">
+                    <span id="appliance-summary" style="color:#64748b;">Select appliances...</span>
+                    <span class="trigger-icon">⚙️</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" id="group-solar">
+            <label>
+                <span data-i18n="lbl_solar_size">System Size</span>:
+                <span id="badge-solar" class="rec-badge" data-i18n="badge_rec">🌟 Our Rec</span>
+                <span class="val-display"><span id="solar-val">6.6</span> kW</span>
+            </label>
+            <input type="range" id="solar-input" min="0" max="5" step="1" value="0" oninput="updateVal('solar')">
+            <div style="font-size:0.75rem; color:#888; margin-top:5px; display:flex; justify-content:space-between;">
+                <span>6.6</span><span>8</span><span>10</span><span>13</span><span>15</span><span>20</span>
+            </div>
+        </div>
+
+        <div class="form-group" id="group-exist-solar" style="display:none;">
+            <label style="color: #e65100;">
+                <span data-i18n="lbl_exist_solar">Existing Solar System</span>:
+                <span class="val-display"><span id="exist-solar-val">6.6</span> kW</span>
+            </label>
+            <input type="range" id="exist-solar-input" min="0" max="5" step="1" value="0"
+                oninput="updateVal('exist-solar')">
+            <div style="font-size:0.75rem; color:#888; margin-top:5px; display:flex; justify-content:space-between;">
+                <span>6.6</span><span>8</span><span>10</span><span>13</span><span>15</span><span>20</span>
+            </div>
+            <div class="note-text" data-i18n="note_exist_solar">* Used to calculate battery charging efficiency.</div>
+        </div>
+
+        <div class="form-group" id="group-battery">
+            <label>
+                <span data-i18n="lbl_bat_size">Battery Storage Capacity</span>:
+                <span id="badge-bat" class="rec-badge" data-i18n="badge_rec">🌟 Our Rec</span>
+                <span class="val-display"><span id="bat-val">10</span> kWh</span>
+            </label>
+            <input type="range" id="bat-input" min="5" max="100" step="1" value="10" oninput="updateVal('battery')">
+            <div style="font-size:0.75rem; color:#888; margin-top:5px; display:flex; justify-content:space-between;">
+                <span>5 kWh</span><span>27 kWh</span><span>50 kWh</span><span>72 kWh</span><span>100 kWh</span>
+            </div>
+        </div>
+
+        <div class="rebate-section" id="rebate-section">
+            <div style="font-weight:bold; margin-bottom:8px;" data-i18n="lbl_eligible">Incentives & Rebates</div>
+            <div class="checkbox-wrapper hidden-opt" id="check-vic-solar"><input type="checkbox"
+                    id="cb-vic-solar"><label for="cb-vic-solar" data-i18n="reb_vic">VIC Solar Homes Rebate</label></div>
+            <div class="checkbox-wrapper hidden-opt" id="check-qld-bat"><input type="checkbox" id="cb-qld-bat"><label
+                    for="cb-qld-bat" data-i18n="reb_qld">QLD Battery Booster</label></div>
+            <div class="checkbox-wrapper hidden-opt" id="check-nsw-prds"><input type="checkbox" id="cb-nsw-prds"
+                    checked><label for="cb-nsw-prds" data-i18n="nsw_vpp_label">NSW VPP Connection Incentive</label>
+            </div>
+            <div class="checkbox-wrapper hidden-opt" id="check-act-loan"><span class="badge-loan">i</span> <span
+                    style="font-size:0.85rem; color:#e65100;" data-i18n="reb_act">Eligible for ACT $15k Interest-Free
+                    Loan</span></div>
+            <div class="checkbox-wrapper hidden-opt" id="check-tas-loan"><span class="badge-loan">i</span> <span
+                    style="font-size:0.85rem; color:#e65100;" data-i18n="reb_tas">Eligible for TAS Energy Saver
+                    Loan</span></div>
+            <div class="checkbox-wrapper hidden-opt" id="check-nt-stc"><span class="badge-stc">✓</span> <span
+                    style="font-size:0.85rem; color:#2e7d32;" data-i18n="reb_nt">Eligible for Zone 1 High
+                    Subsidy!</span></div>
+        </div>
+
+        <button class="btn-calc" onclick="calculate(true)" data-i18n="btn_calc">Calculate Quote</button>
+
+        <div class="result-card" id="result-card">
+
+
+            <div class="rec-box">
+                <strong data-i18n="rec_title">Recommendation:</strong>
+                <p id="rec-text">...</p>
+            </div>
+            <div id="roof-preview-box" class="roof-preview-box hidden">
+                <div class="scan-overlay">
+                    <div class="scan-line"></div>
+                    <div class="scan-crosshair"></div>
+                </div>
+                <img id="sat-image" src="" alt="Roof Preview" />
+                <div class="roof-label">
+                    <span class="dot-live"></span> <span data-i18n="roof_found">Roof Detected</span>
+                </div>
+            </div>
+
+            <div class="unlock-overlay" id="unlock-overlay">
+
+                <div id="analysis-loader" style="display: none; width: 100%; text-align: center; padding: 20px 0;">
+                    <div class="loader-icon">⚙️</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <p id="progress-text" class="progress-text" style="color: #cbd5e1; font-weight: 500;">
+                        Initializing...</p>
+                </div>
+
+                <div id="unlock-form-content">
+                    <div class="unlock-title" data-i18n="unlock_title">UNLOCK FULL QUOTE</div>
+                    <div class="unlock-desc" data-i18n="unlock_desc">Enter your details to see the net price breakdown.
+                    </div>
+
+                    <div class="trust-badges-row">
+                        <div class="trust-badge">
+                            <img src="ceclogo.png" alt="CEC" class="badge-img" onerror="this.style.display='none'">
+                            <span style="font-size:0.7rem; color:#cbd5e1;">CEC Accredited<br>Installer</span>
+                        </div>
+                        <div class="trust-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6-6 6 6" stroke="var(--solar-gold)" />
+                                <path d="M6 15l6-6 6 6" stroke="var(--solar-gold)" />
+                                <path d="M6 21l6-6 6 6" stroke="var(--solar-gold)" />
+                            </svg>
+                            <span>Tier 1<br>Solar Panels</span>
+                        </div>
+                        <div class="trust-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" stroke="#64748b" />
+                                <path d="M12 6v6l4 2" stroke="#64748b" />
+                            </svg>
+                            <span>10-Year<br>Warranty</span>
+                        </div>
+                    </div>
+
+                    <input type="text" id="lead-name" data-i18n-ph="ph_name" placeholder="Name*">
+                    <input type="email" id="lead-email" data-i18n-ph="ph_email" placeholder="Email*">
+                    <div id="err-lead-email" class="inline-error-msg"></div>
+                    <input type="tel" id="lead-phone" data-i18n-ph="ph_phone" placeholder="Phone*">
+                    <div id="err-lead-phone" class="inline-error-msg"></div>
+                    <input type="text" id="lead-address" data-i18n-ph="ph_address" placeholder="Installation Address">
+
+                    <button type="button" class="btn-submit" onclick="submitLead()" id="btn-submit"
+                        data-i18n="btn_unlock">Reveal Price & Get Quote</button>
+
+                    <div class="social-proof-text">
+                        <span id="proof-icon">🔥</span>
+                        <span id="proof-content">...</span>
+                    </div>
+                    <div id="submit-msg" style="margin-top:10px; font-size:0.9rem; color:#d84315; font-weight:bold;">
+                    </div>
+                </div>
+            </div>
+
+            <div id="price-details" class="blur-content">
+
+                <div class="row">
+                    <span id="lbl-gross-title">Gross System Price (Entry inc. GST)</span>
+                    <span id="out-gross" class="price-number">$0</span>
+                </div>
+
+                <div class="row highlight" id="row-stc-solar">
+                    <span data-i18n="res_stc_solar">Federal Solar STC</span>
+                    <span id="out-stc-solar" class="price-number">$0</span>
+                </div>
+                <div class="row highlight" id="row-stc-battery">
+                    <span data-i18n="res_stc_battery">Federal Battery STC</span>
+                    <span id="out-stc-battery" class="price-number">$0</span>
+                </div>
+                <div class="row highlight" id="row-state">
+                    <span data-i18n="res_state">State Incentive</span>
+                    <span id="out-state" class="price-number">$0</span>
+                </div>
+
+                <div class="section-title" style="margin-top: 25px; text-align: left;" data-i18n="res_final_comparison">
+                    Final Net Price Comparison</div>
+                <div class="comparison-grid">
+                    <div class="tier-box entry active" onclick="selectTier('entry')" id="box-entry">
+                        <span class="tier-label" data-i18n="tier_entry">Entry</span>
+                        <span class="price-value price-number" id="net-entry">$0</span>
+                    </div>
+                    <div class="tier-box medium" onclick="selectTier('medium')" id="box-medium">
+                        <span class="tier-label" data-i18n="tier_medium">Medium</span>
+                        <span class="price-value price-number" id="net-medium">$0</span>
+                    </div>
+                    <div class="tier-box premium" onclick="selectTier('premium')" id="box-premium">
+                        <span class="tier-label" data-i18n="tier_premium">Premium</span>
+                        <span class="price-value price-number" id="net-premium">$0</span>
+                    </div>
+                </div>
+
+                <div class="row total" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #555;">
+                    <span data-i18n="res_net">Total Net Price (Inc. GST)</span>
+                    <span id="out-net" class="price-number">$0</span>
+                </div>
+
+                <div class="roi-dashboard">
+                    <h4 class="roi-title" data-i18n="roi_title">Estimated Annual Savings</h4>
+
+                    <div id="vpp-banner" class="vpp-banner" style="display: none;">
+                        <div class="vpp-icon">⚡</div>
+                        <div class="vpp-text">
+                            <strong data-i18n="vpp_title">Join VPP & Earn Extra!</strong>
+                            <p>
+                                <span data-i18n="vpp_desc">Connect battery to earn an extra up to $800+/year.</span>
+                                <span class="vpp-info-link" onclick="openVPPModal()" data-i18n="vpp_what_is">(What is
+                                    VPP?)</span>
+                            </p>
+                        </div>
+                        <div class="vpp-badge">+$800</div>
+                    </div>
+
+                    <div class="roi-flex-container">
+                        <div class="chart-container"><canvas id="roiChart"></canvas></div>
+                        <div class="roi-data">
+                            <div class="data-box">
+                                <span class="data-label" data-i18n="chart_saved">Savings / Year</span>
+                                <span class="data-value save price-number" id="savings-val">$0</span>
+                            </div>
+                            <div class="data-box">
+                                <span class="data-label" data-i18n="payback_label">Payback Period</span>
+                                <span class="data-value time price-number" id="payback-years">0 Years</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-final-enquiry" id="btn-final-enquiry" onclick="openConfirmModal()"
+                    data-i18n="btn_final_enquiry" style="display: none;">
+                    Book Consultation & Finalise Quote
+                </button>
+
+            </div>
+
+            <div class="disclaimer" data-i18n="disclaimer">* Disclaimer: Estimates only.</div>
+        </div>
+
+        <div class="footer-brand">
+            Powered by <strong>Solaryo</strong> &copy; 2025
+            <br>
+            <a href="#"
+                style="color:#94a3b8; font-size:0.7rem; text-decoration:none; margin-top:5px; display:inline-block;">Privacy
+                Policy</a>
+        </div>
+
+    </div>
+
+    <div id="appliance-modal" class="modal-overlay" onclick="closeApplianceModal(event)">
+        <div class="modal-content profile-modal">
+            <span class="close-btn" onclick="closeApplianceModal(event)">&times;</span>
+            <h3 data-i18n="modal_profile_title">Select Energy Profile</h3>
+            <p class="modal-subtitle" data-i18n="modal_profile_desc">Select all that apply to improve quote
+                accuracy.</p>
+
+            <div class="profile-tags-grid">
+                <div class="profile-tag" onclick="toggleUsage('ev_now')" id="btn-use-ev_now">
+                    <span class="tag-icon">🚗</span> <span data-i18n="use_ev_now">EV (Existing)</span>
+                </div>
+                <div class="profile-tag" onclick="toggleUsage('ev_plan')" id="btn-use-ev_plan">
+                    <span class="tag-icon">🔜</span> <span data-i18n="use_ev_plan">EV (Planned)</span>
+                </div>
+                <div class="profile-tag" onclick="toggleUsage('pool')" id="btn-use-pool">
+                    <span class="tag-icon">🏊</span> <span data-i18n="use_pool">Pool / Spa</span>
+                </div>
+
+                <div class="profile-tag" onclick="toggleUsage('ac')" id="btn-use-ac">
+                    <span class="tag-icon">❄️</span> <span data-i18n="use_ac">Central A/C</span>
+                </div>
+                <div class="profile-tag" onclick="toggleUsage('wfh')" id="btn-use-wfh">
+                    <span class="tag-icon">💻</span> <span data-i18n="use_wfh">Home Office</span>
+                </div>
+                <div class="profile-tag" onclick="toggleUsage('general')" id="btn-use-general">
+                    <span class="tag-icon">📺</span> <span data-i18n="use_general">Large Appliances</span>
+                </div>
+
+                <div class="profile-tag" onclick="toggleUsage('hws')" id="btn-use-hws">
+                    <span class="tag-icon">🚿</span> <span data-i18n="use_hws">Elec Hot Water</span>
+                </div>
+                <div class="profile-tag" onclick="toggleUsage('gas2elec')" id="btn-use-gas2elec">
+                    <span class="tag-icon">⚡</span> <span data-i18n="use_gas2elec">Gas to Electric</span>
+                </div>
+                <div class="profile-tag" onclick="toggleUsage('backup')" id="btn-use-backup">
+                    <span class="tag-icon">🔦</span> <span data-i18n="use_backup">Backup Power</span>
+                </div>
+                <div class="profile-tag" onclick="toggleUsage('others')" id="btn-use-others">
+                    <span class="tag-icon">➕</span> <span data-i18n="use_others">Others</span>
+                </div>
+            </div>
+
+            <button class="btn-modal-ok" onclick="closeApplianceModal(event)" data-i18n="btn_done">Done</button>
+        </div>
+    </div>
+
+    <div id="vpp-modal" class="modal-overlay" onclick="closeVPPModal(event)">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeVPPModal(event)">&times;</span>
+            <h3 data-i18n="modal_vpp_title">What is a Virtual Power Plant (VPP)?</h3>
+            <div class="modal-body">
+                <p data-i18n="modal_vpp_text">
+                    A VPP connects your home battery to a network of other batteries.
+                    During times of high electricity demand, the network automatically sells your stored energy back to
+                    the grid at premium rates.
+                    <br><br>
+                    <strong>Benefit:</strong> You earn passive income credits without lifting a finger, helping the grid
+                    while reducing your own payback period.
+                </p>
+            </div>
+            <button class="btn-modal-ok" onclick="closeVPPModal(event)">OK, Got it</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay" onclick="closeConfirmModal(event)">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeConfirmModal(event)">&times;</span>
+            <h3 data-i18n="modal_conf_title">Final Confirmation</h3>
+            <p style="color:#64748b; font-size:0.9rem; margin-bottom:20px;" data-i18n="modal_conf_desc">
+                Please verify your details. Our engineer will contact you to finalize this quote.
+            </p>
+
+            <div class="form-group" style="margin-bottom:15px;">
+                <label style="font-size:0.85rem;" data-i18n="ph_name">Name</label>
+                <input type="text" id="conf-name">
+            </div>
+
+            <div class="input-group" style="margin-bottom: 15px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.85rem;" data-i18n="ph_phone">Phone</label>
+                    <input type="tel" id="conf-phone">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.85rem;" data-i18n="ph_postcode">Postcode</label>
+                    <input type="tel" id="conf-postcode" inputmode="numeric" maxlength="4" placeholder="2000">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:15px;">
+                <label style="font-size:0.85rem;" data-i18n="ph_email">Email</label>
+                <input type="email" id="conf-email">
+            </div>
+
+            <div class="form-group" style="margin-bottom:15px;">
+                <label style="font-size:0.85rem;" data-i18n="lbl_timeframe">Preferred Installation Time</label>
+                <select id="conf-timeframe">
+                    <option value="immediately" data-i18n="tf_imm">Immediately</option>
+                    <option value="4weeks" data-i18n="tf_4w">In the next 4 weeks</option>
+                    <option value="3months" data-i18n="tf_3m">In the next 3 months</option>
+                    <option value="later" data-i18n="tf_later">Over 3 months / Ballpark price</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:15px;">
+                <label style="font-size:0.85rem;" data-i18n="lbl_notes">
+                    Notes / Special Requirements (Optional)
+                </label>
+
+                <textarea id="conf-notes" rows="3" data-i18n-ph="ph_notes"
+                    placeholder="Tip: Uploading your electricity bill or a photo of your switchboard helps us provide the most accurate quote possible."></textarea>
+            </div>
+
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;">
+                    <span data-i18n="lbl_file">Upload Bill or Photo (Optional)</span>
+                    <span style="font-size:0.7rem; color:#94a3b8; font-weight:normal;">Max 5MB</span>
+                </label>
+                <input type="file" id="conf-file" accept="image/*,.pdf">
+                <div id="file-name-display" style="font-size:0.75rem; color:#64748b; margin-top:4px; display:none;">
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+                <label style="font-size:0.85rem; margin-bottom:10px; display:block;"
+                    data-i18n="lbl_contact_method">Preferred Contact Method</label>
+                <div class="radio-group">
+                    <label class="radio-box">
+                        <input type="radio" name="contact-method" value="phone" checked>
+                        <span data-i18n="contact_phone">Phone</span>
+                    </label>
+                    <label class="radio-box">
+                        <input type="radio" name="contact-method" value="email">
+                        <span data-i18n="contact_email">Email</span>
+                    </label>
+                    <label class="radio-box">
+                        <input type="radio" name="contact-method" value="sms">
+                        <span data-i18n="contact_sms">SMS</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn-modal-ok" style="background: linear-gradient(135deg, #0f172a 0%, #334155 100%);"
+                onclick="sendFinalEnquiry()" id="btn-final-submit" data-i18n="btn_confirm_send">
+                Confirm & Send Enquiry
+            </button>
+            <div id="final-msg" style="margin-top:10px; font-size:0.9rem; text-align:center; font-weight:bold;"></div>
+        </div>
+    </div>
+    <div id="sticky-footer" class="sticky-footer">
+        <div class="sticky-content">
+            <div class="sticky-info">
+                <span class="sticky-label" data-i18n="sticky_net">Total Net Price</span>
+                <span id="sticky-net-price" class="sticky-price">$0</span>
+            </div>
+            <button class="sticky-btn" onclick="openConfirmModal()" data-i18n="btn_book_now">
+                Book Now
+            </button>
+        </div>
+    </div>
+
+    <div class="chat-widget-container">
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <div class="chat-agent-info">
+                    <div class="agent-avatar">S</div>
+                    <div>
+                        <span class="agent-name" data-i18n="chat_agent">Solaryo Expert</span>
+                        <span class="agent-status" data-i18n="chat_online">Online</span>
+                    </div>
+                </div>
+                <span class="close-chat" onclick="toggleChat()">&times;</span>
+            </div>
+
+            <div class="chat-body" id="chat-body">
+                <div class="message bot">
+                    <div class="msg-content" data-i18n="chat_welcome">
+                        👋 Hi there! I'm your virtual solar assistant. <br>
+                        Need help with the quote, battery advice, or pricing?
+                    </div>
+                    <div class="msg-time" data-i18n="chat_just_now">Just now</div>
+                </div>
+            </div>
+
+            <div class="chat-footer">
+                <input type="text" id="chat-input" data-i18n-ph="chat_placeholder" placeholder="Type a message..."
+                    onkeypress="handleChatKey(event)">
+                <button class="btn-send" onclick="sendChatMessage()">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <button class="chat-toggle-btn" onclick="toggleChat()" id="chat-toggle-btn">
+            <svg class="chat-icon-svg" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span class="chat-badge">1</span>
+        </button>
+    </div>
+    <script src="script.js"></script>
+
+
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPGUUSb3VX0CGsUgwENW0djTyl6morWTY&libraries=places&callback=initAutocomplete"
+        async defer></script>
+
+</body>
+
+</html>
