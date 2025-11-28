@@ -3,7 +3,7 @@
 // ==========================================
 const SUPABASE_URL = 'https://iytxwgyhemetdkmqoxoa.supabase.co'; // 替换这里
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dHh3Z3loZW1ldGRrbXFveG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzI3MDIsImV4cCI6MjA3OTkwODcwMn0.ZsiueMCjwm5FoPlC3IDEgmsPaabkhefw3uHFl6gBm7Q';          // 替换这里
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 全局变量：存聊天记录
 let globalChatHistory = [];
@@ -817,7 +817,126 @@ function getSelectedText(elementId) {
     if (el && el.selectedIndex !== -1) return el.options[el.selectedIndex].text;
     return "";
 }
+// 🔥 终极提交函数 (修复版)
+async function sendFinalEnquiry() {
+    // 1. 获取 DOM 元素
+    const nameEl = document.getElementById('conf-name');
+    const phoneEl = document.getElementById('conf-phone');
+    const emailEl = document.getElementById('conf-email');
+    const postcodeEl = document.getElementById('conf-postcode');
+    const addressEl = document.getElementById('lead-address');
+    const notesEl = document.getElementById('conf-notes');
+    const stateEl = document.getElementById('state-select');
+    const billInput = document.getElementById('bill-input');
+    const contactMethodEl = document.querySelector('input[name="contact-method"]:checked');
+    const fileInput = document.getElementById('conf-file');
 
+    // 2. 验证
+    if (!nameEl.value || !phoneEl.value || !postcodeEl.value) {
+        document.getElementById('final-msg').style.color = 'red';
+        document.getElementById('final-msg').innerText = curLang === 'cn' ? "请完善联系信息 (含邮编)" : "Please complete contact details (inc. Postcode)";
+        return;
+    }
+
+    const btn = document.getElementById('btn-final-submit');
+    btn.disabled = true;
+    btn.innerText = curLang === 'cn' ? "提交中..." : "Sending...";
+
+    try {
+        // 3. 文件上传 (使用 supabaseClient)
+        let fileUrl = null;
+        let fileName = null;
+
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            // 限制 10MB
+            if (file.size > 10 * 1024 * 1024) {
+                throw new Error(curLang === 'cn' ? "文件过大 (需小于10MB)" : "File too large (Max 10MB)");
+            }
+
+            // 唯一文件名
+            const uniqueName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+
+            // 🔥 注意：这里用了 supabaseClient
+            const { data: uploadData, error: uploadError } = await supabaseClient
+                .storage
+                .from('uploads')
+                .upload(uniqueName, file);
+
+            if (uploadError) throw uploadError;
+
+            // 获取公开链接
+            const { data: publicUrlData } = supabaseClient
+                .storage
+                .from('uploads')
+                .getPublicUrl(uploadData.path);
+
+            fileUrl = publicUrlData.publicUrl;
+            fileName = file.name;
+        }
+
+        // 4. 构建数据包
+        const payload = {
+            created_at: new Date().toISOString(),
+            language: curLang,
+            installation_mode: curMode,
+            state: stateEl.value,
+
+            // 联系人
+            name: nameEl.value,
+            phone: phoneEl.value,
+            email: emailEl.value,
+            postcode: postcodeEl.value,
+            address: addressEl ? addressEl.value : "",
+            contact_method: contactMethodEl ? contactMethodEl.value : 'phone',
+            install_timeframe: getSelectedText('conf-timeframe'),
+
+            // 房屋与系统
+            property_storeys: getSelectedText('storey-select'),
+            property_roof: getSelectedText('roof-select'),
+            property_shade: getSelectedText('shade-select'),
+            property_phase: getSelectedText('phase-select'),
+            property_type: getSelectedText('property-type-select'),
+            bill_amount: billInput.value,
+            solar_size: document.getElementById('solar-val').innerText,
+            battery_size: document.getElementById('bat-val').innerText,
+            existing_solar_size: document.getElementById('exist-solar-val').innerText,
+            quote_tier: selectedTier,
+            estimated_price: document.getElementById('out-net').innerText,
+            notes: notesEl.value,
+
+            // 高级数据
+            user_profile: userApplianceProfile,
+            chat_history: globalChatHistory, // 聊天记录
+
+            // 文件链接
+            file_name: fileName,
+            file_url: fileUrl
+        };
+
+        // 5. 写入数据库 (🔥 注意：这里也用了 supabaseClient)
+        const { error } = await supabaseClient.from('leads').insert([payload]);
+
+        if (error) throw error;
+
+        // 6. 成功反馈
+        setTimeout(() => {
+            document.getElementById('final-msg').style.color = '#66bb6a';
+            document.getElementById('final-msg').innerText = i18n[curLang].alert_final_success;
+            btn.innerText = curLang === 'cn' ? "已提交" : "Submitted";
+            setTimeout(() => { document.getElementById('confirm-modal').style.display = 'none'; }, 2000);
+        }, 1000);
+
+    } catch (error) {
+        console.error("Error:", error);
+        let errMsg = "System Error.";
+        if (error.message) errMsg = error.message;
+        document.getElementById('final-msg').style.color = 'red';
+        document.getElementById('final-msg').innerText = errMsg;
+        btn.disabled = false;
+        btn.innerText = i18n[curLang].btn_confirm_send;
+    }
+}
 // --- Inline Validation ---
 const phoneInput = document.getElementById('lead-phone');
 if (phoneInput) phoneInput.addEventListener('input', function (e) { let x = e.target.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,3})(\d{0,3})/); e.target.value = !x[2] ? x[1] : x[1] + ' ' + x[2] + (x[3] ? ' ' + x[3] : ''); });
@@ -848,7 +967,6 @@ setTimeout(() => {
     setupInlineValidation('lead-email', 'err-lead-email', isValidEmail, { cn: "请输入有效的邮箱地址", en: "Please enter a valid email address." });
     setupInlineValidation('lead-phone', 'err-lead-phone', isValidAustralianPhone, { cn: "请输入有效的澳洲电话号码 (04xx 或 02/03...)", en: "Invalid AU phone number (04xx or Landline)" });
 }, 500);
-
 
 // ==========================================
 // [NEW] Google Maps & Roof Preview Logic
@@ -1222,5 +1340,4 @@ function generateSmartBotReply(input) {
     const fallbackList = isCN ? fallbackResponses.cn : fallbackResponses.en;
     const randomIdx = Math.floor(Math.random() * fallbackList.length);
     return fallbackList[randomIdx];
-
 }
