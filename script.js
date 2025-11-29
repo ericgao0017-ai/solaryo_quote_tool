@@ -1531,16 +1531,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 
 function openFomoModal() {
-    // 安全检查：如果数据没加载好，不执行
+    // 安全检查
     if (!fomoData || fomoData.length === 0) return;
 
-    // 1. 获取当前显示的数据
+    // 1. 获取元素
     const item = fomoData[currentFomoIndex];
     const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
     const modal = document.getElementById('fomo-detail-modal');
     const card = document.querySelector('.fomo-card'); // 获取卡片元素
 
-    // 2. 填充内容
+    // 2. 填充内容 (保持不变)
     const imgEl = document.getElementById('fomo-modal-img');
     if (item.img_url) {
         imgEl.src = item.img_url;
@@ -1551,10 +1551,10 @@ function openFomoModal() {
 
     const badgeEl = document.getElementById('fomo-modal-badge');
     if (item.type === 'news') {
-        badgeEl.innerText = "NEWS";
+        badgeEl.innerText = isCN ? "NEWS" : "NEWS";
         badgeEl.style.background = "#ef4444";
     } else {
-        badgeEl.innerText = "CASE";
+        badgeEl.innerText = isCN ? "CASE" : "CASE";
         badgeEl.style.background = "#10b981";
     }
 
@@ -1563,25 +1563,23 @@ function openFomoModal() {
     document.getElementById('fomo-modal-date').innerText = item.date || 'Just Now';
 
     // ===============================================
-    // 🟢 核心修复代码 START：强制动画重置
+    // 🟢 修复核心：调整执行顺序
     // ===============================================
 
-    // 1. 先移除动画，让元素回归初始状态
+    // 第一步：先让弹窗显示出来！(这一步必须在重排之前)
+    // 只有显示了，浏览器才知道这个元素多大，才能进行重排
+    modal.style.display = 'flex';
+
+    // 第二步：先移除动画
     card.style.animation = 'none';
 
-    // 2. 触发浏览器的“重排/回流”(Reflow)，这一行代码看着没用，但其实是在告诉浏览器“立即计算一下高度”
-    // 这会强制浏览器认为样式发生了变化，必须重新渲染
+    // 第三步：强制浏览器计算高度 (触发重排 Reflow)
+    // 此时因为 display 已经是 flex 了，offsetWidth 才有数值，重排才会生效
     void card.offsetWidth;
 
-    // 3. 重新把动画加回去 (清空 style 里的 animation，让它回读 CSS 文件里的设置)
-    card.style.animation = '';
-
-    // ===============================================
-    // 🟢 核心修复代码 END
-    // ===============================================
-
-    // 3. 显示弹窗
-    modal.style.display = 'flex';
+    // 第四步：手动重新指定动画 (直接把 CSS 里的动画参数写在这里)
+    // 这样能确保浏览器认为这是一个新的动画指令
+    card.style.animation = 'cardPopUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
 }
 
 function closeFomoModal(event) {
