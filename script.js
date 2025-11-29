@@ -1406,3 +1406,195 @@ function generateSmartBotReply(input) {
     const randomIdx = Math.floor(Math.random() * fallbackList.length);
     return fallbackList[randomIdx];
 }
+
+// ==========================================
+// [MODIFIED] FOMO Bar Logic (Supabase Connected)
+// ==========================================
+
+// 1. 定义一个空数组，稍后填入数据
+let fomoData = [];
+let currentFomoIndex = 0;
+let fomoInterval;
+
+// 2. 从 Supabase 获取数据
+async function fetchFomoData() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('fomo_news')
+            .select('*')
+            .eq('is_active', true)         // 只读取激活的新闻
+            .order('created_at', { ascending: false }); // 最新的在前面
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            fomoData = data;
+            // 数据加载完了，启动滚动条
+            initFomoBar();
+        } else {
+            // 如果没数据，隐藏条子
+            document.getElementById('fomo-bar').style.display = 'none';
+        }
+
+    } catch (err) {
+        console.error('Error fetching FOMO news:', err);
+        // 出错时也可以显示一条默认的
+        document.getElementById('fomo-text').innerText = "Contact us for latest solar deals!";
+    }
+}
+
+// 3. 初始化滚动逻辑
+function initFomoBar() {
+    // 安全检查：如果没数据或元素不存在，直接退出
+    if (!fomoData || fomoData.length === 0) return;
+    if (!document.getElementById('fomo-bar')) return;
+
+    // 先显示第一条
+    updateFomoContent();
+
+    // 如果只有一条数据，就不需要滚动了
+    if (fomoData.length === 1) return;
+
+    // 清除旧定时器（防止重复运行）
+    if (fomoInterval) clearInterval(fomoInterval);
+
+    fomoInterval = setInterval(() => {
+        const contentEl = document.querySelector('.fomo-content');
+        if (!contentEl) return;
+
+        // 向上滚出
+        contentEl.classList.add('scrolling-out');
+
+        setTimeout(() => {
+            currentFomoIndex = (currentFomoIndex + 1) % fomoData.length;
+            updateFomoContent();
+
+            // 瞬间移到底部
+            contentEl.classList.remove('scrolling-out');
+            contentEl.classList.add('scrolling-in-ready');
+
+            // 强制重绘
+            void contentEl.offsetWidth;
+
+            // 向上滚入
+            contentEl.classList.remove('scrolling-in-ready');
+        }, 500);
+
+    }, 5000);
+}
+
+// 4. 更新内容函数 (保持不变，但为了确保上下文，这里完整列出)
+function updateFomoContent() {
+    if (!fomoData || fomoData.length === 0) return;
+
+    const item = fomoData[currentFomoIndex];
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+
+    // 更新图标
+    const iconEl = document.getElementById('fomo-icon');
+    if (iconEl) iconEl.innerText = item.icon || '🔥';
+
+    // 更新文字
+    const textEl = document.getElementById('fomo-text');
+    if (textEl) textEl.innerText = isCN ? item.title_cn : item.title_en;
+
+    // 更新标签颜色
+    const labelEl = document.querySelector('.fomo-label');
+    if (labelEl) {
+        labelEl.style.display = "inline-flex";
+        labelEl.style.alignItems = "center";
+        labelEl.style.justifyContent = "center";
+        labelEl.style.height = "16px";
+        labelEl.style.padding = "0 6px";
+        labelEl.style.borderRadius = "4px";
+
+        if (item.type === 'news') {
+            labelEl.innerText = "NEWS";
+            labelEl.style.backgroundColor = "#ef4444";
+            labelEl.style.color = "#ffffff";
+        } else {
+            labelEl.innerText = "CASE";
+            labelEl.style.backgroundColor = "#10b981";
+            labelEl.style.color = "#ffffff";
+        }
+    }
+}
+
+// 5. 确保在页面加载完成后调用
+document.addEventListener('DOMContentLoaded', () => {
+    // 启动数据拉取
+    fetchFomoData();
+});
+
+// ==========================================
+// [INTERACTION] FOMO Modal Logic
+// ==========================================
+
+function openFomoModal() {
+    // 1. 获取当前显示的数据
+    // (逻辑是：不管滚到哪里，用户点的就是当前能看到的那条)
+    const item = fomoData[currentFomoIndex];
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+    const modal = document.getElementById('fomo-detail-modal');
+
+    // 2. 填充内容
+
+    // 图片
+    const imgEl = document.getElementById('fomo-modal-img');
+    if (item.img_url) {
+        imgEl.src = item.img_url;
+        imgEl.parentElement.style.display = 'block';
+    } else {
+        imgEl.parentElement.style.display = 'none';
+    }
+
+    // 标签 (保持颜色一致性)
+    const badgeEl = document.getElementById('fomo-modal-badge');
+    if (item.type === 'news') {
+        badgeEl.innerText = isCN ? "NEWS" : "NEWS";
+        badgeEl.style.background = "#ef4444"; // 红
+    } else {
+        badgeEl.innerText = isCN ? "CASE" : "CASE";
+        badgeEl.style.background = "#10b981"; // 绿
+    }
+
+    // 文本
+    document.getElementById('fomo-modal-title').innerText = isCN ? item.title_cn : item.title_en;
+    document.getElementById('fomo-modal-desc').innerHTML = isCN ? item.desc_cn : item.desc_en;
+    document.getElementById('fomo-modal-date').innerText = item.date || 'Just Now';
+
+    // 3. 显示弹窗 (Flex布局)
+    modal.style.display = 'flex';
+
+    // 4. 可选：暂停顶部的滚动 (为了不打扰用户阅读)
+    // clearInterval(fomoInterval); 
+}
+
+function closeFomoModal(event) {
+    const overlay = document.getElementById('fomo-detail-modal');
+
+    // 点击遮罩层、关闭按钮、或底部按钮时关闭
+    // 注意：点击卡片内部(.fomo-card)不应该关闭
+    if (!event ||
+        event.target === overlay ||
+        event.target.closest('.fomo-close-btn') ||
+        event.target.closest('.fomo-action-btn')) {
+
+        overlay.style.display = 'none';
+
+        // 可选：如果之前暂停了，这里可以重新启动滚动
+        // initFomoBar(); 
+    }
+}
+
+// 将其挂载到全局初始化
+document.addEventListener('DOMContentLoaded', () => {
+    initFomoBar();
+});
+
+// 为了支持语言切换时即时更新
+const originalSetLang = window.setLang; // 劫持原本的 setLang
+window.setLang = function (lang) {
+    if (originalSetLang) originalSetLang(lang); // 执行原逻辑
+    updateFomoContent(); // 执行 FOMO 更新
+};

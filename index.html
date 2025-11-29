@@ -16,10 +16,21 @@
 </head>
 
 <body>
+    <div id="fomo-bar" class="fomo-bar apple-notify" onclick="openFomoModal()">
+        <div class="fomo-content">
+            <span id="fomo-icon" class="fomo-icon">🔥</span>
+            <div class="fomo-text-inline">
+                <span class="fomo-label">NEW</span>
+                <span id="fomo-text" class="fomo-text">Loading...</span>
+            </div>
+        </div>
+        <span class="fomo-arrow">›</span>
+    </div>
     <div class="fixed-trust-badge" title="CEC Accredited Installer">
         <img src="ceclogo.png" alt="CEC Logo" />
         <span class="trust-tooltip">CEC Accredited</span>
     </div>
+
     <div class="container">
 
         <div class="brand-row">
@@ -37,6 +48,7 @@
                 <button class="active" onclick="setLang('en')">EN</button>
             </div>
         </div>
+
 
         <label data-i18n="lbl_mode">Installation Type</label>
 
@@ -612,6 +624,36 @@
             </svg>
             <span class="chat-badge">1</span>
         </button>
+    </div>
+
+    <div id="fomo-detail-modal" class="fomo-modal-overlay" onclick="closeFomoModal(event)">
+        <div class="fomo-card">
+            <button class="fomo-close-btn" onclick="closeFomoModal(event)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </button>
+
+            <div class="fomo-card-image">
+                <img id="fomo-modal-img" src="" alt="News Image">
+                <div id="fomo-modal-badge" class="fomo-card-badge">NEWS</div>
+            </div>
+
+            <div class="fomo-card-body">
+                <div class="fomo-meta-row">
+                    <span id="fomo-modal-date" class="fomo-date">Today</span>
+                    <span class="fomo-source">Solaryo Official</span>
+                </div>
+
+                <h3 id="fomo-modal-title">...</h3>
+                <div class="fomo-divider"></div>
+                <p id="fomo-modal-desc">...</p>
+
+                <button class="fomo-action-btn" onclick="closeFomoModal(event)">
+                    Got it
+                </button>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 

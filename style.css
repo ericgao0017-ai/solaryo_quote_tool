@@ -2658,3 +2658,431 @@ input[type="file"]::file-selector-button:hover {
     animation: glow-pulse 1.5s infinite;
     border-radius: 16px;
 }
+
+/* ==========================================
+   [FINAL] Apple Style Notification (Dynamic Pill)
+   ========================================== */
+
+/* 1. 确保 Body 不需要额外的 Padding (按您的要求) */
+body {
+    padding-top: 40px !important;
+    /* 保持原有的少量留白即可，不需要特意为Bar腾位置 */
+}
+
+/* 2. 灵动岛胶囊样式 */
+/* 1. 胶囊主体：更透、更有水晶感 */
+/* 胶囊主体：更透、更有水晶感 + 修复溢出问题 */
+.fomo-bar.apple-notify {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+
+    /* 尺寸 */
+    width: auto;
+    min-width: 280px;
+    max-width: 92%;
+    height: 40px;
+
+    /* 🟢 关键修复：加上这就不会滚出去了 */
+    overflow: hidden;
+
+    /* 视觉：通透水晶感 */
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 100px;
+
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05),
+        0 1px 3px rgba(0, 0, 0, 0.02);
+
+    /* 布局 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    /* 🟢 微调：因为加了 overflow: hidden，padding 控制要更精确 */
+    padding: 0 10px 0 14px;
+    gap: 10px;
+
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    /* 进场动画 */
+    animation: notifyPopIn 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+/* ⚠️ 注意：加了 overflow: hidden 后，为了让悬停放大的效果不被切掉，
+   我们需要把 scale 动画改得温和一点，或者只放大内部元素。
+   这里我们保持整体放大，通常在现代浏览器上 overflow:hidden 不会切掉 transform scale 的边界。
+*/
+.fomo-bar.apple-notify:hover {
+    background: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    /* 如果发现边缘被切，可以去掉下面这行 transform */
+    transform: translateX(-50%) scale(1.02);
+}
+
+/* 图标 */
+.fomo-icon {
+    font-size: 1rem;
+    animation: pulse 2s infinite;
+}
+
+/* 2. 动画容器：控制滚动 */
+.fomo-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    overflow: hidden;
+
+    /* 添加过渡属性，控制位移和透明度 */
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 0.5s ease;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* 🟢 状态A：旧内容向上滚走 */
+.fomo-content.scrolling-out {
+    transform: translateY(-20px);
+    /* 向上移动 */
+    opacity: 0;
+    /* 变透明 */
+}
+
+/* 🟢 状态B：新内容准备从下方进入 (JS瞬间切换到这里) */
+.fomo-content.scrolling-in-ready {
+    transition: none;
+    /* 瞬间移动，不要动画 */
+    transform: translateY(20px);
+    /* 放在下方 */
+    opacity: 0;
+}
+
+.fomo-text-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* 标签：做得非常小，像 App 角标 */
+.fomo-label {
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+/* 主文字：清晰、紧凑 */
+.fomo-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1e293b;
+    /* 深色文字 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+}
+
+/* 右侧箭头：简单的灰色小箭头 */
+.fomo-arrow {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    line-height: 1;
+    margin-right: 2px;
+    padding-bottom: 2px;
+    transition: transform 0.3s;
+}
+
+.fomo-bar.apple-notify:hover .fomo-arrow {
+    color: var(--primary);
+    transform: translateX(2px);
+}
+
+/* 动画定义 */
+@keyframes notifyPopIn {
+    0% {
+        top: -60px;
+        opacity: 0;
+    }
+
+    100% {
+        top: 10px;
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 手机适配 */
+@media (max-width: 500px) {
+    .fomo-bar.apple-notify {
+        top: 8px;
+        /* 手机上更贴顶 */
+        height: 36px;
+        /* 手机上更扁一点，不遮挡太多内容 */
+        min-width: auto;
+        width: 90%;
+        padding: 0 6px 0 10px;
+    }
+
+    .fomo-text {
+        font-size: 0.75rem;
+        max-width: 180px;
+    }
+
+    .fomo-label {
+        font-size: 0.5rem;
+        padding: 1px 5px;
+    }
+}
+
+/* ==========================================
+   [INTERACTION] FOMO Modal (iOS Card Style)
+   ========================================== */
+
+/* 1. 遮罩层：深色加模糊，聚焦视线 */
+.fomo-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20000;
+    /* 最高层级 */
+    background: rgba(0, 0, 0, 0.4);
+    /* 半透明黑 */
+    backdrop-filter: blur(8px);
+    /* 背景模糊 */
+    -webkit-backdrop-filter: blur(8px);
+
+    display: none;
+    /* 默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+
+    animation: fadeIn 0.3s ease;
+}
+
+/* 2. 卡片本体 */
+.fomo-card {
+    width: 100%;
+    max-width: 420px;
+    /* 类似手机弹窗的宽度 */
+    background: #ffffff;
+    border-radius: 24px;
+    /* iOS 风格大圆角 */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+
+    transform: scale(0.9);
+    opacity: 0;
+    animation: cardPopUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 3. 图片区域 */
+.fomo-card-image {
+    width: 100%;
+    height: 200px;
+    background: #f1f5f9;
+    position: relative;
+    overflow: hidden;
+}
+
+.fomo-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.fomo-card:hover .fomo-card-image img {
+    transform: scale(1.05);
+    /* 悬停时图片微放大 */
+}
+
+/* 图片上的标签 */
+.fomo-card-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
+}
+
+/* 4. 关闭按钮 (右上角悬浮) */
+.fomo-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+}
+
+.fomo-close-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.fomo-close-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* 5. 内容区域 */
+/* 修改后的内容区域：支持长文滚动 */
+.fomo-card-body {
+    padding: 24px;
+    text-align: left;
+
+    /* 🟢 新增：限制最大高度 + 允许垂直滚动 */
+    max-height: 50vh;
+    /* 内容区最多占屏幕高度的一半 */
+    overflow-y: auto;
+    /* 内容多了自动出现滚动条 */
+
+    /* 优化滚动条样式 (Chrome/Safari) */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.fomo-card-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.fomo-card-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fomo-card-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.fomo-meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+#fomo-modal-title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.3;
+}
+
+.fomo-divider {
+    width: 40px;
+    height: 3px;
+    background: var(--border);
+    margin: 16px 0;
+    border-radius: 2px;
+}
+
+#fomo-modal-desc {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0 0 24px 0;
+}
+
+/* 底部大按钮 */
+.fomo-action-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.fomo-action-btn:active {
+    transform: scale(0.98);
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes cardPopUp {
+    from {
+        transform: scale(0.9) translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 手机适配 */
+@media (max-width: 500px) {
+    .fomo-card-image {
+        height: 160px;
+    }
+
+    .fomo-card-body {
+        padding: 20px;
+    }
+
+    #fomo-modal-title {
+        font-size: 1.1rem;
+    }
+}
