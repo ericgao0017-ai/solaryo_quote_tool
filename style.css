@@ -2112,148 +2112,158 @@ input[type="file"]::file-selector-button:hover {
     animation: none;
 }
 
-/* --- New: Fixed Trust Badge Styles --- */
+/* ==========================================
+   [修正版] 右下角 CEC Logo (悬浮在聊天按钮上方)
+   ========================================== */
 
 .fixed-trust-badge {
     position: fixed;
-    top: 50px;
-    /* 距离顶部 */
-    left: 20px;
-    /* <--- 修改点：距离左侧边缘 */
-    /* right: 20px; <--- 移除或注释 */
-    z-index: 100;
-    /* 确保它浮在其他内容之上 */
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(5px);
-    border: 2px solid var(--accent);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    opacity: 0.7;
-    /* 默认略微透明，不干扰主流程 */
+    z-index: 90;
 
+    /* --- 1. 尺寸调整 --- */
+    /* 稍微加大一点 (之前是 42px) */
+    width: 50px;
+    height: 50px;
+
+    /* --- 2. 位置重新对齐 --- */
+    /* 垂直：聊天按钮底部(30px) + 高度(56px) + 间距(18px) */
+    bottom: 104px;
+
+    /* 水平：根据 50px 宽度重新居中对齐聊天按钮 */
+    /* 聊天按钮中心点距离右边 58px，Logo半径25px -> right = 33px */
+    right: 33px;
+    left: auto;
+    top: auto;
+
+    /* --- 3. 颜色与质感修复 (不再发灰) --- */
+    /* 背景改亮：乳白色半透明 */
+    background: rgba(255, 255, 255, 0.75);
+
+    /* 毛玻璃效果 */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    /* 边框亮一点 */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+
+    /* 透明度调高，避免显得暗淡 */
+    opacity: 0.65;
+
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* 给一点柔和的阴影，让它更有层次感 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .fixed-trust-badge img {
-    width: 80%;
-    /* Logo 在圆形内的大小 */
-    height: 80%;
+    /* 图标稍微放大，撑满一点 */
+    width: 75%;
+    height: 75%;
     object-fit: contain;
+
+    /* 🟢 关键修改：去掉黑白滤镜，恢复 Logo 原色 */
+    filter: none;
+
+    transition: transform 0.3s ease;
 }
 
-/* 悬停效果：放大、提高透明度、显示提示 */
+/* --- 鼠标悬停状态 --- */
 .fixed-trust-badge:hover {
     opacity: 1;
-    transform: scale(1.1);
-    width: 70px;
-    height: 70px;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
-    /* 绿色阴影 */
+    /* 悬停时完全不透明 */
+    background: #ffffff;
+    /* 纯白背景 */
+    transform: scale(1.15) translateY(-2px);
+    /* 放大并微微上浮 */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    /* 阴影加深 */
+    border-color: #fff;
+    z-index: 9995;
 }
 
-/* 提示文字 Tooltip */
+.fixed-trust-badge:hover img {
+    filter: grayscale(0%);
+    /* 恢复彩色 */
+}
+
+/* ==========================================
+   [修正版] 提示文字 (Tooltip) - 改为向左弹出
+   ========================================== */
 .trust-tooltip {
     position: absolute;
     top: 50%;
-    right: auto;
-    left: 100%;
-    /* <--- 修改点：放在徽章的右侧 */
     transform: translateY(-50%);
 
-    /* 增加一个指向徽章的小箭头 */
-    margin-left: 15px;
-    /* <--- 修改点 */
+    /* --- 核心修改：让提示文字出现在 Logo 的左侧 --- */
+    left: auto;
+    right: 125%;
+    /* 放在左边，距离 125% 避免挨太近 */
 
     background: var(--primary);
-    /* 深色背景 */
     color: white;
     white-space: nowrap;
-    padding: 8px 15px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
     font-weight: 600;
 
+    /* 默认隐藏 */
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s, right 0.3s, visibility 0.3s;
+    transition: all 0.2s ease;
+    pointer-events: none;
 
-    /* 增加一个指向徽章的小箭头 */
-    margin-right: 15px;
+    /* 阴影 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* 提示文字的小箭头 */
+/* 提示文字的小箭头 (指向右边) */
 .trust-tooltip::after {
     content: '';
     position: absolute;
     top: 50%;
-    /* 箭头位置 */
-    left: -5px;
+
+    /* 箭头位置：Tooltip 的最右侧 */
+    right: -4px;
+    left: auto;
+
     transform: translateY(-50%) rotate(45deg);
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     background: var(--primary);
-    box-shadow: 1px -1px 1px rgba(0, 0, 0, 0.1);
 }
 
+/* 悬停时显示 Tooltip */
 .fixed-trust-badge:hover .trust-tooltip {
     opacity: 1;
     visibility: visible;
-    left: calc(100% + 15px);
-    /* <--- 修改点：悬停时向右移动 */
+    right: 140%;
+    /* 稍微有个滑入的动效 */
 }
 
-
-@media (max-width: 768px) {
+/* ==========================================
+   [修正版] 移动端适配 (手机屏幕)
+   ========================================== */
+@media (max-width: 500px) {
     .fixed-trust-badge {
-        top: auto;
-        /* 取消顶部定位 */
-        bottom: 75px;
-        /* 移到左下角 */
-        right: auto;
-        left: 10px;
+        bottom: 175px;
+        /* 相应上移 */
+        right: 19px;
+        /* 重新计算右边距适配手机 */
         width: 40px;
-        /* 缩小尺寸 */
+        /* 手机上也稍微大一点点 */
         height: 40px;
-        z-index: 1000;
-        /* 确保在移动端浮动按钮上方 */
     }
 
-    /* 移动端悬停时，提示文字向上显示 */
-    .fixed-trust-badge:hover {
-        transform: scale(1.05);
-        /* 稍微缩小放大程度 */
-    }
-
+    /* 手机端点击后，Tooltip 可能会遮挡，稍微调整一下 */
     .trust-tooltip {
-        top: auto;
-        bottom: 100%;
-        /* 向上显示 */
-        right: auto;
-        left: 50%;
-        transform: translateX(-50%);
-        margin-right: 0;
-        margin-bottom: 15px;
-    }
-
-    .trust-tooltip::after {
-        top: 100%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(45deg);
-        box-shadow: -1px 1px 1px rgba(0, 0, 0, 0.1);
-    }
-
-    .fixed-trust-badge:hover .trust-tooltip {
-        right: auto;
-        left: 50%;
-        transform: translateX(-50%);
-        opacity: 1;
-        visibility: visible;
+        font-size: 0.7rem;
+        padding: 4px 8px;
     }
 }
 
@@ -2273,51 +2283,65 @@ input[type="file"]::file-selector-button:hover {
 
 /* 1. 悬浮按钮 - 视觉优化 */
 .chat-toggle-btn {
-    /* 恢复鼠标点击事件 */
     pointer-events: auto;
 
     width: 56px;
-    /* 稍微缩小 (原60px) */
     height: 56px;
     border-radius: 50%;
 
-    /* 🟢 [核心优化]：平时半透明 + 毛玻璃效果 */
-    background: rgba(15, 23, 42, 0.85);
-    /* 深色半透明背景 */
-    backdrop-filter: blur(8px);
-    /* 磨砂玻璃质感 */
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    /* 增加精致感 */
+    /* --- 核心修改：静止状态下的透明感 --- */
+    /* 背景改为深色半透明 (不再是深黑) */
+    background: rgba(15, 23, 42, 0.4);
+
+    /* 毛玻璃效果 */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    /* 边框非常淡 */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    /* 整体透明度降低 */
+    opacity: 0.7;
+
+    /* 去掉厚重的阴影，只留一点点轮廓感 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 
     color: white;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    /* 柔和阴影 */
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
-
-    /* 初始透明度略低，减少视觉干扰 */
-    opacity: 0.9;
 }
 
 /* 🟢 鼠标悬停：变大、变实、变亮 */
+/* --- 鼠标悬停状态：完全唤醒 --- */
 .chat-toggle-btn:hover {
+    /* 变大、上浮 */
     transform: scale(1.1) translateY(-2px);
+
+    /* 变成品牌绿色 (或者你可以改成深色 var(--primary)) */
     background: var(--accent);
-    /* 悬停时变成品牌绿色 */
+
+    /* 完全不透明 */
     opacity: 1;
+
+    /* 加上强烈的投影，产生悬浮感 */
     box-shadow: 0 15px 30px rgba(16, 185, 129, 0.4);
+
     border-color: transparent;
 }
 
+.chat-toggle-btn svg {
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+/* 红色小圆点 (未读消息) 保持鲜艳，提醒用户 */
 .chat-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -2px;
+    right: -2px;
     background: #ef5350;
     color: white;
     font-size: 0.75rem;
@@ -2328,7 +2352,11 @@ input[type="file"]::file-selector-button:hover {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    border: 2px solid white;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+    /* 即使按钮半透明，未读红点也要显眼 */
+    opacity: 1 !important;
 }
 
 /* 2. 聊天主窗口 */
@@ -2528,13 +2556,11 @@ input[type="file"]::file-selector-button:hover {
     }
 
     .chat-toggle-btn {
-        /* 🟢 手机端进一步缩小 */
         width: 48px;
         height: 48px;
-
-        /* 手机端更加透明，因为手指遮挡更严重 */
-        background: rgba(15, 23, 42, 0.7);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        /* 手机端背景稍微深一点点，防止在复杂背景上看不清 */
+        background: rgba(15, 23, 42, 0.6);
+        opacity: 0.8;
     }
 
     /* 调整图标大小适配小按钮 */
@@ -2551,4 +2577,26 @@ input[type="file"]::file-selector-button:hover {
         top: -2px;
         right: -2px;
     }
+}
+
+/* --- style.css (新增) --- */
+
+/* 聊天窗口里的邮箱链接样式 */
+.agent-email-link {
+    color: rgba(255, 255, 255, 0.8);
+    /* 浅白色 */
+    font-size: 0.7rem;
+    text-decoration: none;
+    /* 去掉下划线 */
+    font-weight: 400;
+    transition: opacity 0.2s;
+    letter-spacing: 0.02em;
+    font-family: sans-serif;
+}
+
+.agent-email-link:hover {
+    color: #fff;
+    /* 悬停变亮 */
+    text-decoration: underline;
+    /* 悬停显示下划线 */
 }
