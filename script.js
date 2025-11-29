@@ -1531,15 +1531,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 
 function openFomoModal() {
+    // 安全检查：如果数据没加载好，不执行
+    if (!fomoData || fomoData.length === 0) return;
+
     // 1. 获取当前显示的数据
-    // (逻辑是：不管滚到哪里，用户点的就是当前能看到的那条)
     const item = fomoData[currentFomoIndex];
     const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
     const modal = document.getElementById('fomo-detail-modal');
+    const card = document.querySelector('.fomo-card'); // 获取卡片元素
 
     // 2. 填充内容
-
-    // 图片
     const imgEl = document.getElementById('fomo-modal-img');
     if (item.img_url) {
         imgEl.src = item.img_url;
@@ -1548,26 +1549,39 @@ function openFomoModal() {
         imgEl.parentElement.style.display = 'none';
     }
 
-    // 标签 (保持颜色一致性)
     const badgeEl = document.getElementById('fomo-modal-badge');
     if (item.type === 'news') {
-        badgeEl.innerText = isCN ? "NEWS" : "NEWS";
-        badgeEl.style.background = "#ef4444"; // 红
+        badgeEl.innerText = "NEWS";
+        badgeEl.style.background = "#ef4444";
     } else {
-        badgeEl.innerText = isCN ? "CASE" : "CASE";
-        badgeEl.style.background = "#10b981"; // 绿
+        badgeEl.innerText = "CASE";
+        badgeEl.style.background = "#10b981";
     }
 
-    // 文本
     document.getElementById('fomo-modal-title').innerText = isCN ? item.title_cn : item.title_en;
     document.getElementById('fomo-modal-desc').innerHTML = isCN ? item.desc_cn : item.desc_en;
     document.getElementById('fomo-modal-date').innerText = item.date || 'Just Now';
 
-    // 3. 显示弹窗 (Flex布局)
-    modal.style.display = 'flex';
+    // ===============================================
+    // 🟢 核心修复代码 START：强制动画重置
+    // ===============================================
 
-    // 4. 可选：暂停顶部的滚动 (为了不打扰用户阅读)
-    // clearInterval(fomoInterval); 
+    // 1. 先移除动画，让元素回归初始状态
+    card.style.animation = 'none';
+
+    // 2. 触发浏览器的“重排/回流”(Reflow)，这一行代码看着没用，但其实是在告诉浏览器“立即计算一下高度”
+    // 这会强制浏览器认为样式发生了变化，必须重新渲染
+    void card.offsetWidth;
+
+    // 3. 重新把动画加回去 (清空 style 里的 animation，让它回读 CSS 文件里的设置)
+    card.style.animation = '';
+
+    // ===============================================
+    // 🟢 核心修复代码 END
+    // ===============================================
+
+    // 3. 显示弹窗
+    modal.style.display = 'flex';
 }
 
 function closeFomoModal(event) {
