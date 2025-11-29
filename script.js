@@ -463,7 +463,57 @@ function calculate(forceShow = false) {
         const isUnlocked = sessionStorage.getItem('quoteUnlocked') === 'true';
 
         // 如果是自动计算(滑块拖动)且卡片没显示，直接退出
-        if (!isVisible && !forceShow) return;
+        if (forceShow && !isVisible) {
+            // 获取当前界面上的值
+            const currentBill = parseFloat(document.getElementById('bill-input').value);
+            const currentState = document.getElementById('state-select').value;
+            const currentStorey = document.getElementById('storey-select').value;
+            const currentRoof = document.getElementById('roof-select').value;
+            const currentShade = document.getElementById('shade-select').value;
+            const currentSolar = document.getElementById('solar-input').value;
+            const currentBat = document.getElementById('bat-input').value;
+
+            // 检查有没有选家电
+            const hasProfile = Object.values(userApplianceProfile).some(val => val === true);
+
+            // 定义什么是“默认没改过”的状态
+            const isBillDefault = currentBill <= 100;    // 默认 $100
+            const isStateDefault = currentState === 'NSW'; // 默认 NSW
+            const isStoreyDefault = currentStorey === "0"; // 默认 Single Storey
+            const isRoofDefault = currentRoof === "0";     // 默认 Tin/Tile
+            const isShadeDefault = currentShade === "0";   // 默认 No Shade
+            const isSolarDefault = currentSolar === "0";   // 默认 6.6kW
+            const isBatDefault = currentBat === "10";      // 默认 10kWh
+
+            // 🔥 关键点：我们这里故意【不检查】安装模式 (curMode)
+            // 意思就是：就算客户改了安装模式，但如果没填电费、没改州，依然会被拦截。
+
+            // 判定：是否所有关键信息都是默认值？
+            const isInfoEmpty = isBillDefault && isStateDefault && isStoreyDefault &&
+                isRoofDefault && isShadeDefault && isSolarDefault &&
+                isBatDefault && !hasProfile;
+
+            if (isInfoEmpty) {
+                // ⛔️ 触发阻断 (温柔提示版)
+                const msg = curLang === 'cn'
+                    ? "请先输入基础信息，才能算出准确价格哦~"
+                    : "Please provide more details first.";
+                // 调用我们在外面定义的提示框函数
+                showToast(msg);
+
+                // 视觉引导：高亮“季度电费”
+                const billGroup = document.getElementById('bill-input').parentElement;
+                billGroup.classList.add('input-highlight');
+
+                // 滚动回顶部，让用户看到
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // 2秒后移除高亮
+                setTimeout(() => billGroup.classList.remove('input-highlight'), 2000);
+
+                return; // 🛑 停止往下执行，不显示结果
+            }
+        }
 
         // [Gamified Animation Logic]
         // 如果是点击了按钮(forceShow=true) 且 之前没显示 且 没解锁 -> 播放动画
@@ -1050,6 +1100,21 @@ window.openApplianceModal = openApplianceModal;
 window.closeApplianceModal = closeApplianceModal;
 window.toggleUsage = toggleUsage;
 
+// 显示顶部提示
+function showToast(message) {
+    let toast = document.getElementById("toast-notification");
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast-notification";
+        toast.className = "toast-msg";
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span>☝️</span> ${message}`;
+    toast.classList.add("show");
+
+    // 3秒后消失
+    setTimeout(() => { toast.classList.remove("show"); }, 3000);
+}
 
 // ==========================================
 // Social Proof Logic
