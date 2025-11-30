@@ -2118,7 +2118,8 @@ input[type="file"]::file-selector-button:hover {
 
 .fixed-trust-badge {
     position: fixed;
-    z-index: 90;
+    /* 🟢 修改 1：直接把基础层级设高，始终高于聊天窗口(9990) */
+    z-index: 9995;
 
     /* --- 1. 尺寸调整 --- */
     /* 稍微加大一点 (之前是 42px) */
@@ -2183,7 +2184,6 @@ input[type="file"]::file-selector-button:hover {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     /* 阴影加深 */
     border-color: #fff;
-    z-index: 9995;
 }
 
 .fixed-trust-badge:hover img {
@@ -2602,27 +2602,44 @@ input[type="file"]::file-selector-button:hover {
 }
 
 /* --- [NEW] 顶部提示条与高亮动画 --- */
+/* --- [MODIFIED] 顶部提示条 (透明磨砂 & 位置下移) --- */
 .toast-msg {
     visibility: hidden;
     min-width: 300px;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    /* 橙色警告 */
+
+    /* 1. 透明背景：使用 rgba 设置 85% 不透明度 */
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.7) 0%, rgba(217, 119, 6, 0.7) 100%);
+
+    /* 2. 毛玻璃特效 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    /* 3. 增加一点白色边框，增强玻璃质感 */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
     color: #fff;
     text-align: center;
     border-radius: 50px;
-    /* 圆润一点 */
     padding: 12px 24px;
     position: fixed;
+
+    /* 4. 层级要低于 FOMO Bar (10001)，所以设为 10000 */
     z-index: 10000;
+
     left: 50%;
-    top: 20px;
+
+    /* 5. 初始位置：稍微偏上一点，为了弹跳动画 */
+    top: 60px;
+
     transform: translateX(-50%);
-    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+
+    /* 阴影也稍微调淡一点，配合透明感 */
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+
     font-weight: 700;
     font-size: 0.95rem;
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-    /* 弹性动画 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2632,8 +2649,10 @@ input[type="file"]::file-selector-button:hover {
 .toast-msg.show {
     visibility: visible;
     opacity: 1;
-    top: 40px;
-    /* 弹跳出现 */
+
+    /* 6. 最终位置：下移到 75px */
+    /* FOMO Bar 占据了顶部约 50px 的空间，75px 可以完美避开它 */
+    top: 75px;
 }
 
 /* 呼吸灯高亮效果 */
