@@ -950,6 +950,9 @@ function closeVPPModal(event) {
 }
 
 function openConfirmModal() {
+    // 1. 隐藏 FOMO Bar (新增代码)
+    const fomoBar = document.getElementById('fomo-bar');
+    if (fomoBar) fomoBar.style.display = 'none';
     document.getElementById('conf-name').value = document.getElementById('lead-name').value;
     document.getElementById('conf-phone').value = document.getElementById('lead-phone').value;
     document.getElementById('conf-email').value = document.getElementById('lead-email').value;
@@ -968,6 +971,10 @@ function openConfirmModal() {
 function closeConfirmModal(event) {
     const overlay = document.getElementById('confirm-modal');
     if (!event || event.target === overlay || event.target.classList.contains('close-btn')) { overlay.style.display = 'none'; }
+    // 恢复 FOMO Bar (新增代码)
+    // 注意：必须设置为 'flex' 以保持胶囊布局，不能用 'block'
+    const fomoBar = document.getElementById('fomo-bar');
+    if (fomoBar) fomoBar.style.display = 'flex';
 }
 
 function isValidAustralianPhone(p) { return /^(?:04|\+?614)\d{8}$|^(?:02|03|07|08)\d{8}$/.test(p.replace(/[\s()-]/g, '')); }
