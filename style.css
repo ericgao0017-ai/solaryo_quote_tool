@@ -3065,7 +3065,7 @@ body {
     .fomo-text {
         font-size: 0.8rem;
         /* 原 0.75rem，稍微大一点点更清晰 */
-        max-width: 200px;
+        max-width: 400px;
     }
 
     .fomo-label {
