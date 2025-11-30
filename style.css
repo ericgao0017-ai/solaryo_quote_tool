@@ -628,25 +628,140 @@ input[type=range]:hover::-webkit-slider-runnable-track {
     opacity: 0.7;
 }
 
-.rec-box {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 24px;
-    border-radius: 20px;
-    margin-bottom: 32px;
-    font-size: 1rem;
-    color: #e2e8f0;
-    line-height: 1.6;
-    backdrop-filter: blur(5px);
+/* --- [NEW] Selected Specs Dashboard (选配仪表盘) --- */
+/* --- [REFINED] Compact Spec Dashboard (紧凑版配置仪表盘) --- */
+/* --- [UPDATED] Spec Dashboard Style --- */
+
+/* 1. 确保标题区域不被隐藏 */
+[data-i18n="rec_title"] {
+    display: none !important;
+    /* 这个是HTML里原本的静态标题，我们不需要它，继续隐藏 */
 }
 
+/* 2. 容器样式 */
+.rec-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px;
+    /* 稍微增加一点内边距让标题呼吸 */
+    border-radius: 16px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* 3. 新的标题样式 (重点优化) */
 .rec-box strong {
-    color: var(--accent);
     display: block;
-    margin-bottom: 10px;
-    font-size: 1.2rem;
+    /* 恢复显示 */
+    color: var(--solar-gold);
+    /* 金色 */
+    font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.12em;
+    /* 宽字间距，显高级 */
+    font-weight: 700;
+
+    /* 分割线样式 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+
+    /* 让标题看起来不像普通文字 */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 4. 网格布局 */
+.spec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+/* 5. 参数块样式 */
+.spec-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    padding: 10px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.2s;
+}
+
+.spec-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent);
+}
+
+.spec-icon {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.spec-label {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 2px;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.spec-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.2;
+}
+
+/* 6. 警告信息样式 */
+.spec-warnings {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    /* 虚线分隔 */
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.warning-item,
+.upsell-item {
+    margin-bottom: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.warning-item {
+    color: #ef5350;
+}
+
+.upsell-item {
+    color: var(--accent);
+}
+
+/* 手机端适配 */
+@media (max-width: 500px) {
+    .spec-grid {
+        gap: 6px;
+    }
+
+    .spec-value {
+        font-size: 0.85rem;
+    }
+
+    /* 手机上标题稍微小一点 */
+    .rec-box strong {
+        font-size: 0.75rem;
+        margin-bottom: 12px;
+    }
 }
 
 /* --- ROI Dashboard --- */

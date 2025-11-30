@@ -100,7 +100,7 @@ const i18n = {
         res_state: "州政府 VPP 补贴",
         res_net: "预计自付 (含GST)",
         res_final_comparison: "最终净价对比 (三档方案)",
-        tier_entry: "入门级", tier_medium: "中端级", tier_premium: "高端级",
+        tier_entry: "入门级", tier_medium: "中端级", tier_premium: "高端级/特斯拉",
         lead_title: "获取正式方案", lead_desc: "我们将根据您所在的州发送定制方案。", btn_submit: "提交咨询",
         unlock_title: "解锁完整报价单", unlock_desc: "输入您的联系方式以查看详细价格明细。", btn_unlock: "查看完整价格",
         disclaimer: "* 声明：所有估价均为预估值 (Estimate)，实际报价以销售人员最终报价为准。NSW补贴仅限<28kWh。",
@@ -109,7 +109,7 @@ const i18n = {
         rec_loan: "提示：该州提供无息贷款，可大大降低首付压力。",
         rec_std: "标准配置，适合您的用电习惯。",
         rec_bat: "建议加装电池！(注意：NSW用户若安装>28kWh将失去州补贴)",
-        rec_warn_small_solar: "⚠️ 警告：您的太阳能系统太小，无法充满这台大容量电池 (>20kWh)。",
+        rec_warn_small_solar: "⚠️ 警告：您的太阳能系统太小，无法充满这台大容量电池，升级您的系统大小。",
         warn_nsw_limit: "⚠️ 注意：电池容量超过28kWh，无法申请NSW州政府补贴。",
         warn_qld_exhausted: "⚠️ 注意：昆州 Battery Booster 补贴目前已耗尽，暂无法申请。",
         roi_title: "预计每年节省电费", payback_label: "预计回本周期：", chart_curr: "当前电费 (年)", chart_new: "安装后电费 (年)", chart_saved: "节省金额", years: "年",
@@ -184,7 +184,7 @@ const i18n = {
         res_state: "State VPP Incentive (<28kWh)",
         res_net: "Total Net Price (Inc. GST)",
         res_final_comparison: "Final Net Price Comparison",
-        tier_entry: "Entry", tier_medium: "Medium", tier_premium: "Premium",
+        tier_entry: "Entry", tier_medium: "Medium", tier_premium: "Premium/Tesla",
         lead_title: "Lock in Quote", lead_desc: "Get a formal consultation based on your location.", btn_submit: "Send Enquiry",
         unlock_title: "UNLOCK FULL QUOTE", unlock_desc: "Enter your details to reveal the net price breakdown.", btn_unlock: "Reveal Price",
         disclaimer: "* Disclaimer: All quotes are estimates only.",
@@ -193,7 +193,7 @@ const i18n = {
         rec_loan: "Tip: Interest-Free Loans available in this state.",
         rec_std: "Standard setup matches your usage.",
         rec_bat: "Battery Recommended! (Note: NSW State rebate void if >28kWh)",
-        rec_warn_small_solar: "⚠️ Warning: Your solar system is too small to fully charge this large battery (>20kWh).",
+        rec_warn_small_solar: "⚠️ Warning: Your solar system is too small to fully charge this large battery，upgrade your system size.",
         warn_nsw_limit: "⚠️ Alert: System ≥28kWh is ineligible for NSW VPP Rebate.",
         warn_qld_exhausted: "⚠️ Note: QLD Battery Booster allocation is currently exhausted.",
         roi_title: "Estimated Annual Savings", payback_label: "Est. Payback Period:", chart_curr: "Current Bill", chart_new: "New Bill", chart_saved: "Savings", years: "Years",
@@ -300,17 +300,28 @@ function setMode(mode) {
     checkRebates();
 }
 
+// ==========================================
+// [UPDATED] 数值更新逻辑 (修复：拖动滑块时立即检查补贴)
+// ==========================================
 function updateVal(type) {
     const solarInput = document.getElementById('solar-input');
     const batInput = document.getElementById('bat-input');
     const badgeSolar = document.getElementById('badge-solar');
     const badgeBat = document.getElementById('badge-bat');
 
+    // 1. 更新界面显示的数字
     if (type === 'solar') document.getElementById('solar-val').innerText = solarTiers[parseInt(solarInput.value)];
     if (type === 'exist-solar') document.getElementById('exist-solar-val').innerText = solarTiers[parseInt(document.getElementById('exist-solar-input').value)];
-    if (type === 'battery') document.getElementById('bat-val').innerText = batInput.value;
+
+    if (type === 'battery') {
+        document.getElementById('bat-val').innerText = batInput.value;
+        // 🟢 [核心修复] 拖动电池滑块时，立即检查补贴状态 (是否变灰)
+        checkRebates();
+    }
+
     if (type === 'bill') document.getElementById('bill-val').innerText = document.getElementById('bill-input').value;
 
+    // 2. 账单滑块的特殊逻辑 (智能推荐)
     if (type === 'bill') {
         const billVal = parseFloat(document.getElementById('bill-input').value);
         let rec = recommendationMap[0];
@@ -325,6 +336,9 @@ function updateVal(type) {
         batInput.value = rec.bat;
         document.getElementById('bat-val').innerText = rec.bat;
 
+        // 账单变化也会改变电池大小，所以这里也要检查补贴
+        checkRebates();
+
         if (curMode !== 'battery' && billVal <= 200) {
             badgeSolar.style.display = 'none'; badgeBat.style.display = 'none';
         } else {
@@ -332,6 +346,8 @@ function updateVal(type) {
         }
         if (document.getElementById('result-card').style.display === 'block') calculate(false);
     }
+
+    // 3. 徽章显示逻辑
     if (type === 'solar') {
         if (parseInt(solarInput.value) !== currentRecValues.solarIdx) badgeSolar.style.display = 'none';
         else if (currentRecValues.solarIdx !== -1) badgeSolar.style.display = 'inline-block';
@@ -350,31 +366,75 @@ function selectTier(tier) {
     calculate(false);
 }
 
+// ==========================================
+// [UPDATED] 检查补贴逻辑 (NSW变灰但不改字版)
+// ==========================================
+// ==========================================
+// [UPDATED] 检查补贴逻辑 (checkRebates)
+// ==========================================
+// ==========================================
+// [UPDATED] 检查补贴逻辑 (NSW变灰但不改字版)
+// ==========================================
 function checkRebates() {
     const state = document.getElementById('state-select').value;
     const section = document.getElementById('rebate-section');
     const batSize = parseFloat(document.getElementById('bat-input').value);
-    const els = { vic: document.getElementById('check-vic-solar'), qld: document.getElementById('check-qld-bat'), nsw: document.getElementById('check-nsw-prds'), act: document.getElementById('check-act-loan'), tas: document.getElementById('check-tas-loan'), nt: document.getElementById('check-nt-stc') };
+    const els = {
+        vic: document.getElementById('check-vic-solar'),
+        qld: document.getElementById('check-qld-bat'),
+        nsw: document.getElementById('check-nsw-prds'),
+        act: document.getElementById('check-act-loan'),
+        tas: document.getElementById('check-tas-loan'),
+        nt: document.getElementById('check-nt-stc')
+    };
     const NSW_CAP = config.subsidy_logic.nsw_vpp_cap_kwh || 28;
 
+    // 重置显示状态
     Object.values(els).forEach(el => el.style.display = 'none');
     section.style.display = 'none';
     let hasInfo = false;
 
+    // 1. VIC
     if (state === 'VIC' && curMode !== 'battery') { els.vic.style.display = 'flex'; hasInfo = true; }
+
+    // 2. QLD
     if (state === 'QLD' && curMode !== 'solar') { els.qld.style.display = 'flex'; hasInfo = true; }
+
+    // 3. NSW (重点修改)
     if (state === 'NSW' && curMode !== 'solar') {
-        els.nsw.style.display = 'flex'; hasInfo = true;
+        els.nsw.style.display = 'flex';
+        hasInfo = true;
         const cb = els.nsw.querySelector('input');
-        if (batSize >= NSW_CAP) { cb.checked = false; cb.disabled = true; els.nsw.style.opacity = '0.5'; }
-        else { cb.disabled = false; els.nsw.style.opacity = '1'; }
+        const lbl = els.nsw.querySelector('label');
+
+        // 每次进来都先重置为原始文案 (清除之前可能追加的文字)
+        lbl.innerText = i18n[curLang].nsw_vpp_label;
+        lbl.style.textDecoration = "none"; // 移除删除线
+
+        if (batSize >= NSW_CAP) {
+            // ❌ 超过 28kWh：变灰 + 禁用
+            cb.checked = false;
+            cb.disabled = true;
+            els.nsw.style.opacity = '0.5';         // 半透明变灰
+            els.nsw.style.pointerEvents = 'none';  // 禁止鼠标点击
+
+            // 🟢 修改点：不再追加 "(限28kWh内)" 文字，保持原样
+        } else {
+            // ✅ 28kWh 以内：恢复正常
+            cb.disabled = false;
+            if (!cb.checked) cb.checked = true; // 自动勾选
+            els.nsw.style.opacity = '1';
+            els.nsw.style.pointerEvents = 'auto';
+        }
     }
+
+    // 4. Other States
     if (state === 'ACT') { els.act.style.display = 'flex'; hasInfo = true; }
     if (state === 'TAS') { els.tas.style.display = 'flex'; hasInfo = true; }
     if (state === 'NT' && curMode !== 'battery') { els.nt.style.display = 'flex'; hasInfo = true; }
+
     if (hasInfo) section.style.display = 'block';
 }
-
 // --- 4. 计算逻辑 (Calculation) ---
 
 function safeSetText(id, text) { const el = document.getElementById(id); if (el) el.innerText = text; }
@@ -385,73 +445,142 @@ function calculateBatteryGross(batteryKwh, tier) {
     return (batteryKwh * rate) + T.fixed_profit_markup;
 }
 
-function generateRecommendation(state, billAmount, time, shade, hasBat, batteryKwh, isSolarTooSmall) {
+// ==========================================
+// [UPDATED] 推荐逻辑：展示用户所选配置 (User Selected Specs)
+// [UPDATED] 推荐逻辑：带精致标题版
+// ==========================================
+// ==========================================
+// [UPDATED] 推荐逻辑：含“高电费建议加电池”提示
+// ==========================================
+function generateRecommendation(state, billAmount, time, shade, hasBat, batteryKwh, isSolarTooSmall, activeSolarKw) {
     const lang = i18n[curLang];
-    const NSW_CAP = config.subsidy_logic.nsw_vpp_cap_kwh || 28;
 
-    if (curMode !== 'battery' && billAmount <= 200) {
-        return `<span style="color: #fcd34d; font-weight: bold;">💡 ${lang.rec_not_rec}</span>`;
-    }
+    // 1. 定义标题
+    const titleText = curLang === 'cn' ? "当前选定系统配置" : "SELECTED SYSTEM CONFIGURATION";
 
-    let rec = recommendationMap[0];
-    for (let i = 0; i < recommendationMap.length; i++) {
-        if (billAmount >= recommendationMap[i].bill) rec = recommendationMap[i];
-    }
-
-    let msg = "";
-    let invText = `${rec.inverter}${lang.rec_inv}`;
-    if (rec.is3Phase) invText += lang.rec_phase3;
-
-    if ((userApplianceProfile.ev_now || userApplianceProfile.ev_plan || userApplianceProfile.pool) && !hasBat) {
-        msg += curLang === 'cn' ? " (检测到高耗能设备，强烈建议加配电池) " : " (High usage detected, Battery highly recommended) ";
-    }
-
-    if (curLang === 'cn') {
-        msg = `${lang.rec_prefix} ($${billAmount})${lang.rec_suffix} ${rec.solarKw}kW 太阳能 + ${invText}`;
-        if (hasBat) {
-            const batText = rec.validBats.join('kWh 或 ');
-            msg += ` + ${batText}kWh 电池。`;
-        } else { msg += `。`; }
+    // 2. 计算逆变器大小
+    let inverterSize = 5;
+    if (curMode !== 'battery') {
+        if (activeSolarKw >= 15) inverterSize = 15;
+        else if (activeSolarKw >= 12) inverterSize = 10;
+        else if (activeSolarKw >= 8) inverterSize = 8;
+        else if (activeSolarKw > 6.6) inverterSize = 6;
     } else {
-        msg = `${lang.rec_prefix} ($${billAmount})${lang.rec_suffix} ${rec.solarKw}kW Solar + ${invText}`;
-        if (hasBat) {
-            const batText = rec.validBats.join('kWh or ');
-            msg += ` + ${batText}kWh Battery.`;
-        } else { msg += `.`; }
+        inverterSize = 5;
     }
 
-    let upsellTips = [];
+    // 3. 构建网格 HTML
+    let gridHtml = `<div class="spec-grid">`;
+
+    if (curMode !== 'battery') {
+        // Solar Only / Both
+        gridHtml += `
+            <div class="spec-item">
+                <div class="spec-icon">☀️</div>
+                <div class="spec-label">${curLang === 'cn' ? "太阳能板" : "Solar Panels"}</div>
+                <div class="spec-value">${activeSolarKw} kW</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-icon">⚡</div>
+                <div class="spec-label">${curLang === 'cn' ? "逆变器" : "Inverter"}</div>
+                <div class="spec-value">${inverterSize} kW <span style="color:var(--solar-gold); vertical-align: super; font-size: 0.6em;">*</span></div>
+            </div>
+        `;
+
+        if (hasBat) {
+            gridHtml += `
+                <div class="spec-item">
+                    <div class="spec-icon">🔋</div>
+                    <div class="spec-label">${curLang === 'cn' ? "储能电池" : "Battery"}</div>
+                    <div class="spec-value">${batteryKwh} kWh</div>
+                </div>
+            `;
+        } else {
+            // Solar Only 模式下显示虚线占位
+            gridHtml += `
+                <div class="spec-item" style="opacity:0.3; border-style:dashed;">
+                    <div class="spec-icon">🔋</div>
+                    <div class="spec-label">${curLang === 'cn' ? "电池 (可选)" : "Battery (Opt)"}</div>
+                    <div class="spec-value">-</div>
+                </div>
+            `;
+        }
+    } else {
+        // Battery Only
+        gridHtml += `
+            <div class="spec-item" style="opacity:0.5;">
+                <div class="spec-icon">🏠</div>
+                <div class="spec-label">${curLang === 'cn' ? "现有系统" : "Existing Solar"}</div>
+                <div class="spec-value">${activeSolarKw} kW</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-icon">⚡</div>
+                <div class="spec-label">${curLang === 'cn' ? "新逆变器" : "New Inverter"}</div>
+                <div class="spec-value">${inverterSize} kW <span style="color:var(--solar-gold); vertical-align: super; font-size: 0.6em;">*</span></div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-icon">🔋</div>
+                <div class="spec-label">${curLang === 'cn' ? "储能电池" : "Battery"}</div>
+                <div class="spec-value">${batteryKwh} kWh</div>
+            </div>
+        `;
+    }
+    gridHtml += `</div>`;
+
+    // 4. 构建提示信息
+    let tipsHtml = `<div class="spec-warnings">`;
+    let hasTips = false;
+
+    // (A) Inverter Note (Always show)
+    const invNote = curLang === 'cn'
+        ? "* 备注：如需升级逆变器容量，价格可能会有所变动。"
+        : "* Note: Price may vary if upgrading inverter capacity.";
+    tipsHtml += `<div class="warning-item" style="color:#94a3b8; font-style: italic;">${invNote}</div>`;
+    hasTips = true;
+
+    // (B) Warnings
+    if (isSolarTooSmall) {
+        tipsHtml += `<div class="warning-item">${lang.rec_warn_small_solar}</div>`;
+        hasTips = true;
+    }
+
+    // (C) Upsells (Backup / Gas2Elec)
     if (userApplianceProfile.backup && hasBat) {
-        const txt = curLang === 'cn' ? "✅ 已为您匹配带<b>全屋离网备份 (Blackout Protection)</b> 的电池系统。" : "✅ Quote includes battery with <b>Full Backup Protection</b>.";
-        upsellTips.push(txt);
+        const txt = curLang === 'cn' ? "✅ 含全屋离网备份" : "✅ Includes Full Backup";
+        tipsHtml += `<div class="upsell-item">${txt}</div>`;
+        hasTips = true;
     }
     if (userApplianceProfile.gas2elec) {
-        const txt = curLang === 'cn' ? "⚡ 检测到电气化需求，建议将逆变器升级至 <b>10kW</b> 以预留容量。" : "⚡ Upgrade inverter to <b>10kW</b> for future electrification.";
-        upsellTips.push(txt);
-    }
-    if (userApplianceProfile.hws) {
-        const txt = curLang === 'cn' ? "💡 建议加装 <b>Catch Power 继电器</b>，利用多余太阳能免费烧水。" : "💡 Add <b>Hot Water Timer</b> to heat water for free.";
-        upsellTips.push(txt);
+        const txt = curLang === 'cn' ? "⚡ 已预留电气化容量" : "⚡ Ready for Electrification";
+        tipsHtml += `<div class="upsell-item">${txt}</div>`;
+        hasTips = true;
     }
 
-    let warn = "";
-    if (state === 'NSW' && hasBat && batteryKwh >= NSW_CAP) warn = lang.warn_nsw_limit;
-    else if (state === 'QLD' && hasBat) warn = lang.warn_qld_exhausted;
-    else if (hasBat && state === 'NSW') warn = lang.rec_bat;
-    else if ((state === 'ACT' || state === 'TAS') && !hasBat) warn = lang.rec_loan;
-    else if (state === 'NT') warn = lang.rec_nt;
-
-    let finalHtml = `<span style="color: #f1f5f9;">${msg}</span>`;
-
-    if (upsellTips.length > 0) {
-        finalHtml += `<div style="margin-top:12px; font-size:0.9rem; background:rgba(255,255,255,0.1); padding:10px; border-radius:8px;">`;
-        upsellTips.forEach(tip => finalHtml += `<div style="margin-bottom:4px;">${tip}</div>`);
-        finalHtml += `</div>`;
+    // (D) [NEW] High Bill + Solar Only -> Suggest Battery
+    if (curMode === 'solar' && billAmount > 200) {
+        const txt = curLang === 'cn'
+            ? "💡 建议：您的电费较高，加装电池可大幅提升回报率。"
+            : "💡 Tip: High bill detected. Adding a battery can significantly boost your ROI.";
+        // 使用 upsell-item 样式（绿色），表示正向建议
+        tipsHtml += `<div class="upsell-item" style="font-weight:600;">${txt}</div>`;
+        hasTips = true;
     }
-    if (warn) {
-        finalHtml += `<br><br><span style="color: #ff5252; font-weight: bold;">${warn}</span>`;
+
+    // (E) Low Bill Warning
+    if (billAmount <= 200 && activeSolarKw > 6.6 && curMode !== 'battery') {
+        const txt = curLang === 'cn' ? "💡 提示：电费较低，回本周期较长。" : "💡 Tip: Low bill, longer payback.";
+        tipsHtml += `<div class="warning-item" style="color:#fbbf24">${txt}</div>`;
+        hasTips = true;
     }
-    return finalHtml;
+
+    tipsHtml += `</div>`;
+
+    // 5. 返回
+    return `
+        <strong class="config-title">${titleText}</strong>
+        ${gridHtml}
+        ${hasTips ? tipsHtml : ''}
+    `;
 }
 
 function calculate(forceShow = false) {
@@ -637,9 +766,19 @@ function calculate(forceShow = false) {
         let maxRecBat = (rec.validBats && rec.validBats.length > 0) ? Math.max(...rec.validBats) : rec.bat;
         const isSolarTooSmall = hasBat && (batteryKwh > maxRecBat) && (activeSolarKw * config.roi_logic.battery_savings_penalty_threshold < batteryKwh);
 
+        // 找到这一行并确保它传递了 activeSolarKw
         const recEl = document.getElementById('rec-text');
         if (recEl) {
-            recEl.innerHTML = generateRecommendation(state, billAmount, 'day', shadeCostRaw, hasBat, batteryKwh, isSolarTooSmall);
+            recEl.innerHTML = generateRecommendation(
+                state,
+                billAmount,
+                'day',
+                shadeCostRaw,
+                hasBat,
+                batteryKwh,
+                isSolarTooSmall,
+                activeSolarKw // <--- 必须确保传了这个参数
+            );
         }
 
         const netPremiumVal = parseFloat(netPricesRaw[selectedTier]);
@@ -1143,40 +1282,66 @@ function updateSocialProof() {
 // ==========================================
 
 // 1. 游戏化加载动画 (Gamified Analysis Animation)
+// ==========================================
+// [UPDATED] 游戏化加载动画 (修复：动画过程中完全隐藏表单)
+// ==========================================
+// ==========================================
+// [UPDATED] 游戏化加载动画 (强制覆盖 CSS !important)
+// ==========================================
 function playAnalysisAnimation() {
     const loader = document.getElementById('analysis-loader');
     const formContent = document.getElementById('unlock-form-content');
     const bar = document.getElementById('progress-bar');
     const text = document.getElementById('progress-text');
 
-    // 初始化状态
-    if (formContent) formContent.style.display = 'none';
-    if (loader) loader.style.display = 'block';
+    // --- 1. 初始状态：强制隐藏表单 (使用 setProperty 覆盖 CSS 的 !important) ---
+    if (formContent) {
+        // 🟢 [核心修复] 使用 'important' 参数，强制打败 CSS 里的 display: flex !important
+        formContent.style.setProperty('display', 'none', 'important');
+        formContent.classList.remove('fade-in');
+    }
+
+    if (loader) loader.style.display = 'block'; // 显示加载圈
     if (bar) bar.style.width = '0%';
     if (text) text.innerText = i18n[curLang].step_1;
 
-    // 动画序列
-    setTimeout(() => { if (bar) bar.style.width = '35%'; }, 100);
+    // --- 2. 动画步骤 ---
 
+    // 0.1秒
+    setTimeout(() => {
+        if (bar) bar.style.width = '35%';
+    }, 100);
+
+    // 1.5秒
     setTimeout(() => {
         if (text) text.innerText = i18n[curLang].step_2;
         if (bar) bar.style.width = '70%';
     }, 1500);
 
+    // 3.0秒
     setTimeout(() => {
         if (text) text.innerText = i18n[curLang].step_3;
         if (bar) bar.style.width = '92%';
     }, 3000);
 
-    // 完成
+    // --- 3. 动画完成 (4.2秒)：强制显示表单 ---
     setTimeout(() => {
+        // 隐藏加载器
         if (loader) loader.style.display = 'none';
+
+        // 显示表单
         if (formContent) {
-            formContent.style.display = 'block';
+            // 🟢 [核心修复] 恢复显示，必须用 flex 才能保持居中，且同样需要 important
+            formContent.style.setProperty('display', 'flex', 'important');
+
+            // 加上淡入动画
             formContent.classList.add('fade-in');
         }
+
+        // 更新标题
         const titleEl = document.querySelector('.unlock-title');
         if (titleEl) titleEl.innerText = i18n[curLang].quote_ready;
+
     }, 4200);
 }
 
