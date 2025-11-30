@@ -3306,3 +3306,23 @@ body {
         font-size: 1.1rem;
     }
 }
+
+/* --- [修复] 强制隐藏 FOMO Bar 的锁 --- */
+/* 只要 body 带有 .hide-fomo 类，#fomo-bar 必须隐藏，谁来都不好使 */
+body.hide-fomo #fomo-bar {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    animation: none !important;
+    /* 关键：杀掉动画，防止动画让它复活 */
+}
+
+body.hide-fomo .fixed-trust-badge,
+body.hide-fomo .chat-widget-container {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    animation: none !important;
+}

@@ -950,12 +950,14 @@ function closeVPPModal(event) {
 }
 
 function openConfirmModal() {
-    // 1. 隐藏 FOMO Bar (新增代码)
-    const fomoBar = document.getElementById('fomo-bar');
-    if (fomoBar) fomoBar.style.display = 'none';
+    // 1. 【上锁】给 body 加类，CSS 会立刻强制隐藏 FOMO Bar
+    document.body.classList.add('hide-fomo');
+
+    // ... (以下是原有逻辑，保持不变) ...
     document.getElementById('conf-name').value = document.getElementById('lead-name').value;
     document.getElementById('conf-phone').value = document.getElementById('lead-phone').value;
     document.getElementById('conf-email').value = document.getElementById('lead-email').value;
+
     if (extractedPostcode) {
         document.getElementById('conf-postcode').value = extractedPostcode;
     } else {
@@ -963,6 +965,7 @@ function openConfirmModal() {
         const pcMatches = rawAddress.match(/\b\d{4}\b/g);
         if (pcMatches && pcMatches.length > 0) document.getElementById('conf-postcode').value = pcMatches[pcMatches.length - 1];
     }
+
     document.getElementById('confirm-modal').style.display = 'flex';
     document.getElementById('final-msg').innerText = '';
     document.getElementById('btn-final-submit').disabled = false;
@@ -970,11 +973,12 @@ function openConfirmModal() {
 }
 function closeConfirmModal(event) {
     const overlay = document.getElementById('confirm-modal');
-    if (!event || event.target === overlay || event.target.classList.contains('close-btn')) { overlay.style.display = 'none'; }
-    // 恢复 FOMO Bar (新增代码)
-    // 注意：必须设置为 'flex' 以保持胶囊布局，不能用 'block'
-    const fomoBar = document.getElementById('fomo-bar');
-    if (fomoBar) fomoBar.style.display = 'flex';
+    if (!event || event.target === overlay || event.target.classList.contains('close-btn')) {
+        overlay.style.display = 'none';
+
+        // 2. 【解锁】移除类，FOMO Bar 恢复显示
+        document.body.classList.remove('hide-fomo');
+    }
 }
 
 function isValidAustralianPhone(p) { return /^(?:04|\+?614)\d{8}$|^(?:02|03|07|08)\d{8}$/.test(p.replace(/[\s()-]/g, '')); }
@@ -1154,6 +1158,20 @@ async function sendFinalEnquiry() {
         btn.disabled = false;
         btn.innerText = i18n[curLang].btn_confirm_send;
     }
+    // 在 sendFinalEnquiry 函数底部...
+    setTimeout(() => {
+        document.getElementById('final-msg').style.color = '#66bb6a';
+        document.getElementById('final-msg').innerText = i18n[curLang].alert_final_success;
+        btn.innerText = curLang === 'cn' ? "已提交" : "Submitted";
+
+        setTimeout(() => {
+            document.getElementById('confirm-modal').style.display = 'none';
+
+            // 【新增】提交成功关闭弹窗后，也记得解锁
+            document.body.classList.remove('hide-fomo');
+
+        }, 2000);
+    }, 1000);
 }
 // --- Inline Validation ---
 const phoneInput = document.getElementById('lead-phone');
