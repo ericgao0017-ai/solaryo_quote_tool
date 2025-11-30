@@ -112,7 +112,7 @@ const i18n = {
         rec_warn_small_solar: "⚠️ 警告：您的太阳能系统太小，无法充满这台大容量电池，升级您的系统大小。",
         warn_nsw_limit: "⚠️ 注意：电池容量超过28kWh，无法申请NSW州政府补贴。",
         warn_qld_exhausted: "⚠️ 注意：昆州 Battery Booster 补贴目前已耗尽，暂无法申请。",
-        roi_title: "预计每年节省电费", payback_label: "预计回本周期：", chart_curr: "当前电费 (年)", chart_new: "安装后电费 (年)", chart_saved: "节省金额", years: "年",
+        roi_title: "预计每年节省电费", payback_label: "预计回本周期：", chart_curr: "当前电费 (年)", chart_new: "安装后电费 (年)", chart_saved: "预计节省金额:", years: "年",
         err_required: "请填写所有必填字段（姓名、邮箱、电话）。", err_email: "请输入有效的邮箱地址。", err_phone: "请输入有效的澳洲电话号码（例如 04xx xxx xxx）。",
         ph_name: "姓名 (Name)*", ph_email: "电子邮箱 (Email)*", ph_phone: "电话 (Phone)*", ph_address: "安装地址 (Address)",
         badge_rec: "🌟 我们的建议",
@@ -196,7 +196,7 @@ const i18n = {
         rec_warn_small_solar: "⚠️ Warning: Your solar system is too small to fully charge this large battery，upgrade your system size.",
         warn_nsw_limit: "⚠️ Alert: System ≥28kWh is ineligible for NSW VPP Rebate.",
         warn_qld_exhausted: "⚠️ Note: QLD Battery Booster allocation is currently exhausted.",
-        roi_title: "Estimated Annual Savings", payback_label: "Est. Payback Period:", chart_curr: "Current Bill", chart_new: "New Bill", chart_saved: "Savings", years: "Years",
+        roi_title: "Estimated Annual Savings", payback_label: "Est. Payback Period:", chart_curr: "Current Bill", chart_new: "New Bill", chart_saved: "EST. Annual Savings:", years: "Years",
         err_required: "Please fill in all required fields (Name, Email, Phone).", err_email: "Please enter a valid email address.", err_phone: "Please enter a valid Australian phone number.",
         ph_name: "Name*", ph_email: "Email*", ph_phone: "Phone*", ph_address: "Installation Address",
         badge_rec: "🌟 Our Recommendation",
@@ -447,10 +447,8 @@ function calculateBatteryGross(batteryKwh, tier) {
 
 // ==========================================
 // [UPDATED] 推荐逻辑：展示用户所选配置 (User Selected Specs)
-// [UPDATED] 推荐逻辑：带精致标题版
 // ==========================================
-// ==========================================
-// [UPDATED] 推荐逻辑：含“高电费建议加电池”提示
+// [UPDATED] 推荐逻辑：电池容量决定逆变器大小
 // ==========================================
 function generateRecommendation(state, billAmount, time, shade, hasBat, batteryKwh, isSolarTooSmall, activeSolarKw) {
     const lang = i18n[curLang];
@@ -458,22 +456,42 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
     // 1. 定义标题
     const titleText = curLang === 'cn' ? "当前选定系统配置" : "SELECTED SYSTEM CONFIGURATION";
 
-    // 2. 计算逆变器大小
+    // 2. 计算逆变器大小 & 后缀
     let inverterSize = 5;
-    if (curMode !== 'battery') {
+    let invSuffix = ""; // 用于存放 "(三相电)" 等备注
+
+    if (!hasBat) {
+        // --- 场景 A: 只有太阳能 (按板子大小配) ---
         if (activeSolarKw >= 15) inverterSize = 15;
         else if (activeSolarKw >= 12) inverterSize = 10;
         else if (activeSolarKw >= 8) inverterSize = 8;
         else if (activeSolarKw > 6.6) inverterSize = 6;
+        else inverterSize = 5;
     } else {
-        inverterSize = 5;
+        // --- 场景 B: 有电池 (按电池容量强制匹配) ---
+        // 规则：<33kWh=5kW, 33-43kWh=10kW, >43kWh=15kW(三相)
+        if (batteryKwh > 43) {
+            inverterSize = 15;
+            // 增加三相电备注，使用小字号换行显示，保持美观
+            invSuffix = curLang === 'cn'
+                ? "<span style='display:block; font-size:0.6em; font-weight:400; opacity:0.8;'>(需三相电)</span>"
+                : "<span style='display:block; font-size:0.6em; font-weight:400; opacity:0.8;'>(3-Phase Only)</span>";
+        } else if (batteryKwh >= 33) {
+            inverterSize = 10;
+        } else {
+            inverterSize = 5;
+        }
     }
 
     // 3. 构建网格 HTML
     let gridHtml = `<div class="spec-grid">`;
 
+    // 辅助：逆变器显示 HTML (包含数值、单位、星号、后缀)
+    // 这里的 CSS vertical-align: super 是为了让星号上标，invSuffix 则是换行小字
+    const inverterDisplayHtml = `${inverterSize} kW <span style="color:var(--solar-gold); vertical-align: super; font-size: 0.6em;">*</span>${invSuffix}`;
+
     if (curMode !== 'battery') {
-        // Solar Only / Both
+        // Solar Only 或 Solar + Battery
         gridHtml += `
             <div class="spec-item">
                 <div class="spec-icon">☀️</div>
@@ -483,7 +501,7 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
             <div class="spec-item">
                 <div class="spec-icon">⚡</div>
                 <div class="spec-label">${curLang === 'cn' ? "逆变器" : "Inverter"}</div>
-                <div class="spec-value">${inverterSize} kW <span style="color:var(--solar-gold); vertical-align: super; font-size: 0.6em;">*</span></div>
+                <div class="spec-value">${inverterDisplayHtml}</div>
             </div>
         `;
 
@@ -496,7 +514,7 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
                 </div>
             `;
         } else {
-            // Solar Only 模式下显示虚线占位
+            // 占位符
             gridHtml += `
                 <div class="spec-item" style="opacity:0.3; border-style:dashed;">
                     <div class="spec-icon">🔋</div>
@@ -506,7 +524,7 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
             `;
         }
     } else {
-        // Battery Only
+        // Battery Only 模式
         gridHtml += `
             <div class="spec-item" style="opacity:0.5;">
                 <div class="spec-icon">🏠</div>
@@ -516,7 +534,7 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
             <div class="spec-item">
                 <div class="spec-icon">⚡</div>
                 <div class="spec-label">${curLang === 'cn' ? "新逆变器" : "New Inverter"}</div>
-                <div class="spec-value">${inverterSize} kW <span style="color:var(--solar-gold); vertical-align: super; font-size: 0.6em;">*</span></div>
+                <div class="spec-value">${inverterDisplayHtml}</div>
             </div>
             <div class="spec-item">
                 <div class="spec-icon">🔋</div>
@@ -531,20 +549,26 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
     let tipsHtml = `<div class="spec-warnings">`;
     let hasTips = false;
 
-    // (A) Inverter Note (Always show)
+    // Note
     const invNote = curLang === 'cn'
         ? "* 备注：如需升级逆变器容量，价格可能会有所变动。"
         : "* Note: Price may vary if upgrading inverter capacity.";
     tipsHtml += `<div class="warning-item" style="color:#94a3b8; font-style: italic;">${invNote}</div>`;
     hasTips = true;
 
-    // (B) Warnings
+    // Warnings
+    const NSW_CAP = config.subsidy_logic.nsw_vpp_cap_kwh || 28;
+    if (state === 'NSW' && hasBat && batteryKwh >= NSW_CAP) {
+        // NSW变灰逻辑已在 checkRebates 处理，这里不再重复报错，除非你想强调
+        // tipsHtml += `<div class="warning-item">⚠️ ${lang.warn_nsw_limit}</div>`; 
+        // hasTips = true;
+    }
     if (isSolarTooSmall) {
         tipsHtml += `<div class="warning-item">${lang.rec_warn_small_solar}</div>`;
         hasTips = true;
     }
 
-    // (C) Upsells (Backup / Gas2Elec)
+    // Upsells
     if (userApplianceProfile.backup && hasBat) {
         const txt = curLang === 'cn' ? "✅ 含全屋离网备份" : "✅ Includes Full Backup";
         tipsHtml += `<div class="upsell-item">${txt}</div>`;
@@ -556,23 +580,21 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
         hasTips = true;
     }
 
-    // (D) [NEW] High Bill + Solar Only -> Suggest Battery
-    if (curMode === 'solar' && billAmount > 200) {
+    // High Bill Suggestion
+    if (curMode === 'solar' && billAmount > 250) {
         const txt = curLang === 'cn'
             ? "💡 建议：您的电费较高，加装电池可大幅提升回报率。"
             : "💡 Tip: High bill detected. Adding a battery can significantly boost your ROI.";
-        // 使用 upsell-item 样式（绿色），表示正向建议
         tipsHtml += `<div class="upsell-item" style="font-weight:600;">${txt}</div>`;
         hasTips = true;
     }
 
-    // (E) Low Bill Warning
+    // Low Bill Warning
     if (billAmount <= 200 && activeSolarKw > 6.6 && curMode !== 'battery') {
         const txt = curLang === 'cn' ? "💡 提示：电费较低，回本周期较长。" : "💡 Tip: Low bill, longer payback.";
         tipsHtml += `<div class="warning-item" style="color:#fbbf24">${txt}</div>`;
         hasTips = true;
     }
-
     tipsHtml += `</div>`;
 
     // 5. 返回

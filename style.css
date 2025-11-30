@@ -2040,13 +2040,50 @@ input[type="file"]::file-selector-button:hover {
 }
 
 /* 只有在移动端/平板端才显示这个逻辑 (< 768px) */
+/* ==========================================
+   [UPDATED] 底部行动栏 (长条透明版)
+   ========================================== */
+.sticky-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    /* 恢复全宽长条 */
+    z-index: 999;
+
+    /* 🟢 材质修改：同步顶部胶囊的“亮色透明毛玻璃” */
+    background: rgba(255, 255, 255, 0.55);
+    /* 半透明亮色 */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    /* 边框：只保留上边框，增强分割感 */
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 0;
+    /* 不要圆角 */
+
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+
+    /* 🟢 高度压缩：减小内边距 */
+    padding: 8px 20px;
+    /* 适配 iPhone 底部黑条，保证不被遮挡 */
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+
+    /* 动画保持不变 */
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    display: none;
+    /* 默认隐藏，由JS控制显示 */
+}
+
+/* 媒体查询：仅在移动端显示 */
 @media (max-width: 768px) {
     .sticky-footer {
         display: block;
     }
 }
 
-/* 激活状态：向上滑出 */
 .sticky-footer.visible {
     transform: translateY(0);
 }
@@ -2062,30 +2099,40 @@ input[type="file"]::file-selector-button:hover {
 .sticky-info {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    /* 紧凑排列 */
 }
 
+/* 🟢 文字颜色适配：因为背景变亮了，文字要改深色 */
 .sticky-label {
-    font-size: 0.7rem;
-    color: #94a3b8;
+    font-size: 0.65rem;
+    color: #64748b;
+    /* 深灰 */
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    line-height: 1.2;
 }
 
 .sticky-price {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 800;
-    color: #ffffff;
+    color: #1e293b;
+    /* 深黑 */
     font-family: 'Outfit', sans-serif;
+    line-height: 1.2;
 }
 
+/* 按钮微调 */
 .sticky-btn {
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
     color: white;
     border: none;
-    padding: 10px 24px;
+    /* 按钮变小一点，适应变矮的栏 */
+    padding: 8px 20px;
     border-radius: 30px;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     transition: transform 0.2s;
@@ -2804,55 +2851,86 @@ body {
 }
 
 /* 2. 灵动岛胶囊样式 */
-/* 1. 胶囊主体：更透、更有水晶感 */
-/* 胶囊主体：更透、更有水晶感 + 修复溢出问题 */
+/* --- 1. 容器样式 (电脑端) --- */
 .fomo-bar.apple-notify {
+    /* 基础属性 */
     position: fixed;
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10001;
 
-    /* 尺寸 */
+    /* 🟢 高度变大 */
+    height: 46px;
+
+    /* 布局与外观 */
     width: auto;
     min-width: 280px;
     max-width: 92%;
-    height: 40px;
-
-    /* 🟢 关键修复：加上这就不会滚出去了 */
     overflow: hidden;
-
-    /* 视觉：通透水晶感 */
     background: rgba(255, 255, 255, 0.45);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 100px;
-
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05),
-        0 1px 3px rgba(0, 0, 0, 0.02);
-
-    /* 布局 */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    /* 🟢 微调：因为加了 overflow: hidden，padding 控制要更精确 */
-    padding: 0 10px 0 14px;
-    gap: 10px;
+    /* 🟢 内边距微调 */
+    padding: 0 14px 0 18px;
+    gap: 12px;
 
     cursor: pointer;
     transition: all 0.3s ease;
-
-    /* 进场动画 */
     animation: notifyPopIn 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
-/* ⚠️ 注意：加了 overflow: hidden 后，为了让悬停放大的效果不被切掉，
-   我们需要把 scale 动画改得温和一点，或者只放大内部元素。
-   这里我们保持整体放大，通常在现代浏览器上 overflow:hidden 不会切掉 transform scale 的边界。
-*/
+/* --- 2. 内部字体样式 (电脑端) --- */
+
+/* 图标变大 */
+.fomo-icon {
+    font-size: 1.1rem;
+    /* 原 1rem */
+    animation: pulse 2s infinite;
+}
+
+/* 标签变大 */
+.fomo-label {
+    font-size: 0.6rem;
+    /* 原 0.55rem */
+    font-weight: 800;
+    padding: 3px 7px;
+    /* 标签内边距也微调 */
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+/* 主文字变大 */
+.fomo-text {
+    font-size: 0.85rem;
+    /* 原 0.8rem */
+    font-weight: 600;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+/* 箭头变大 */
+.fomo-arrow {
+    font-size: 1.2rem;
+    /* 原 1.1rem */
+    color: #94a3b8;
+    line-height: 1;
+    margin-right: 2px;
+    padding-bottom: 2px;
+    transition: transform 0.3s;
+}
+
 .fomo-bar.apple-notify:hover {
     background: rgba(255, 255, 255, 0.65);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
@@ -2970,26 +3048,34 @@ body {
     }
 }
 
-/* 手机适配 */
+/* --- 3. 手机端适配 --- */
 @media (max-width: 500px) {
     .fomo-bar.apple-notify {
         top: 8px;
-        /* 手机上更贴顶 */
-        height: 36px;
-        /* 手机上更扁一点，不遮挡太多内容 */
+
+        /* 🟢 手机端高度 */
+        height: 40px;
+
         min-width: auto;
         width: 90%;
-        padding: 0 6px 0 10px;
+        padding: 0 10px 0 14px;
     }
 
+    /* 🟢 手机端字体适配 */
     .fomo-text {
-        font-size: 0.75rem;
-        max-width: 180px;
+        font-size: 0.8rem;
+        /* 原 0.75rem，稍微大一点点更清晰 */
+        max-width: 200px;
     }
 
     .fomo-label {
-        font-size: 0.5rem;
-        padding: 1px 5px;
+        font-size: 0.55rem;
+        /* 原 0.5rem */
+        padding: 2px 6px;
+    }
+
+    .fomo-icon {
+        font-size: 1rem;
     }
 }
 
