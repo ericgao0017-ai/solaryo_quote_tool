@@ -3326,3 +3326,175 @@ body.hide-fomo .chat-widget-container {
     pointer-events: none !important;
     animation: none !important;
 }
+
+/* ==========================================
+   📱 iPhone / 小屏手机 深度适配补丁
+   把这段代码放在 style.css 的最下面
+   ========================================== */
+@media (max-width: 480px) {
+
+    /* 1. 全局字体与容器“瘦身” */
+    /* 缩小根字体，让所有 rem 单位自动变小 */
+    html {
+        font-size: 14px;
+    }
+
+    body {
+        padding: 10px 8px !important;
+        /* 减少外围留白 */
+    }
+
+    .container {
+        /* 核心修复：大幅减少容器内边距，让内容有更多横向空间 */
+        padding: 24px 12px !important;
+        border-radius: 20px;
+    }
+
+    /* 2. 顶部 Logo栏 紧凑化 */
+    .brand-row {
+        margin-bottom: 16px;
+        gap: 4px !important;
+    }
+
+    .brand-text {
+        font-size: 1.2rem !important;
+        /* Logo字体改小 */
+    }
+
+    .header-center h2 {
+        font-size: 0.8rem !important;
+        /* 标题改小，防止换行太难看 */
+    }
+
+    .lang-switch {
+        transform: scale(0.9);
+        /* 整体缩小语言切换按钮 */
+        transform-origin: right center;
+    }
+
+    /* 3. 按钮与输入框 高度压缩 */
+    /* 手机上 56px 太高了，显得笨重，改为 48px */
+    select,
+    input[type="number"],
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    .custom-select-trigger {
+        height: 48px !important;
+        font-size: 1rem !important;
+        /* 防止iOS自动缩放，保持16px实际渲染 */
+        padding: 0 12px !important;
+    }
+
+    /* 4. 安装模式按钮 (Mode Selector) */
+    .mode-selector {
+        gap: 6px !important;
+    }
+
+    .mode-btn {
+        padding: 10px 4px !important;
+    }
+
+    .mode-btn span {
+        font-size: 0.65rem !important;
+        /* 字体改小，防止折行 */
+        transform: scale(0.95);
+    }
+
+    .mode-icon {
+        width: 28px !important;
+        /* 图标缩小 */
+        height: 28px !important;
+        margin-bottom: 4px !important;
+    }
+
+    /* 5. 核心修复：配置网格 (Spec Grid) 不再切分错乱 */
+    .spec-grid {
+        gap: 4px !important;
+        /* 减小格子间距 */
+    }
+
+    .spec-item {
+        padding: 8px 2px !important;
+        /* 减小格子内部留白 */
+    }
+
+    .spec-label {
+        font-size: 0.6rem !important;
+        transform: scale(0.9);
+        /* 强制缩小标签文字 */
+        white-space: nowrap;
+        /* 禁止文字换行 */
+    }
+
+    .spec-value {
+        font-size: 0.85rem !important;
+    }
+
+    /* 6. 核心修复：价格对比网格 (Price Comparison) */
+    .comparison-grid {
+        gap: 6px !important;
+    }
+
+    .tier-box {
+        padding: 12px 2px !important;
+        /* 极窄边距 */
+    }
+
+    .tier-label {
+        font-size: 0.65rem !important;
+    }
+
+    .price-value {
+        font-size: 0.85rem !important;
+        /* 价格数字改小 */
+    }
+
+    /* 7. 结果卡片优化 */
+    .result-card {
+        padding: 20px 12px !important;
+        /* 增加卡片内部可用宽度 */
+    }
+
+    .row {
+        font-size: 0.9rem !important;
+    }
+
+    .row.total {
+        font-size: 1.2rem !important;
+    }
+
+    /* 8. 底部悬浮栏适配 */
+    .sticky-footer {
+        padding: 8px 12px !important;
+        padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+    }
+
+    .sticky-price {
+        font-size: 1rem !important;
+    }
+
+    .sticky-btn {
+        padding: 8px 16px !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* 9. 修复弹窗显示 */
+    .modal-content {
+        padding: 20px !important;
+        width: 95% !important;
+    }
+
+    .profile-tags-grid {
+        gap: 8px !important;
+    }
+
+    .profile-tag {
+        height: 60px !important;
+        /* 选项块变矮 */
+    }
+
+    .profile-tag span:last-child {
+        font-size: 0.7rem !important;
+    }
+}
