@@ -3498,3 +3498,63 @@ body.hide-fomo .chat-widget-container {
         font-size: 0.7rem !important;
     }
 }
+
+/* ==========================================
+   📱 iPhone / 小屏手机 布局修复补丁 (大字体版)
+   放在 style.css 最底部
+   ========================================== */
+@media (max-width: 500px) {
+
+    /* 1. 核心修复：把被浪费的宽度抢回来 */
+    body {
+        padding: 10px 5px !important;
+        /* 减少外围留白 */
+    }
+
+    .container {
+        /* 原来是 48px，导致中间太窄。现在改为 12px，瞬间宽敞 */
+        padding: 30px 12px !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* 2. 修复“配置格子” (黑色背景那个) */
+    .spec-grid {
+        /* 减小格子之间的空隙，从 8px 减到 4px */
+        gap: 4px !important;
+    }
+
+    .spec-item {
+        /* 减小格子内部的留白，确保文字能贴边显示 */
+        padding: 12px 2px !important;
+    }
+
+    /* 让“SOLAR PANELS”这种长单词如果换行，行高紧凑点，不要撑坏布局 */
+    .spec-label {
+        line-height: 1.1 !important;
+        margin-bottom: 4px !important;
+        /* 不缩小字体，但允许单词紧凑一点 */
+        letter-spacing: -0.02em !important;
+    }
+
+    /* 3. 修复“价格对比栏” (Entry/Medium/Premium) */
+    .comparison-grid {
+        gap: 6px !important;
+    }
+
+    .tier-box {
+        /* 同样减少内部留白，给大字体腾位置 */
+        padding: 15px 2px !important;
+    }
+
+    /* 4. 标题优化：允许长标题在手机上自然换行，不要被截断 */
+    .section-title {
+        white-space: normal !important;
+        line-height: 1.3 !important;
+    }
+
+    /* 5. 结果卡片优化 */
+    .result-card {
+        padding: 30px 15px !important;
+    }
+}
