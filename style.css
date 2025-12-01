@@ -3326,3 +3326,133 @@ body.hide-fomo .chat-widget-container {
     pointer-events: none !important;
     animation: none !important;
 }
+
+/* ==========================================
+   [Mobile Alignment Fix] 小屏 iPhone 极致排版修复
+   (不改变字体大小，仅调整间距和布局结构)
+   ========================================== */
+
+@media (max-width: 430px) {
+
+    /* 1. 容器：以此换取更多水平空间 */
+    .container {
+        /* 原来是 24px 16px，左右留白太多了，现在改为 12px */
+        padding: 24px 10px !important;
+        /* 宽度撑满，防止左右晃动 */
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 2. 顶部 Logo 行：防止错位折行 */
+    .brand-row {
+        gap: 4px !important;
+        /* 极小的间距 */
+    }
+
+    .header-center {
+        /* 让中间标题区域能被压缩，优先保证左右 Logo 和 语言按钮 */
+        flex: 1;
+        padding: 0 2px !important;
+        white-space: nowrap;
+        /* 强制不换行 */
+        overflow: hidden;
+        /* 超出隐藏 */
+    }
+
+    .lang-switch button {
+        /* 语言按钮稍微瘦身一点点，不改字号 */
+        width: 32px !important;
+    }
+
+    /* 3. 安装模式按钮 (Mode Selector) */
+    .mode-selector {
+        gap: 6px !important;
+        /* 缩小按钮间距 */
+    }
+
+    .mode-btn {
+        /* 减少按钮内部左右留白，给文字腾地方 */
+        padding: 12px 2px !important;
+        min-width: 0 !important;
+        /* 允许按钮被压缩 */
+    }
+
+    /* 4. 推荐配置网格 (Spec Grid) */
+    .spec-grid {
+        gap: 4px !important;
+        /* 3列变紧凑 */
+    }
+
+    .spec-item {
+        padding: 10px 2px !important;
+        /* 减少格子内边距 */
+    }
+
+    /* 5. 价格对比栏 (最重要的修复) */
+    /* 这里的文字很长(Premium/Tesla)，如果不缩小字体，必须减少间距 */
+    .comparison-grid {
+        gap: 4px !important;
+        margin-left: -4px !important;
+        /* 视觉补偿：稍微往两边撑一点 */
+        margin-right: -4px !important;
+    }
+
+    .tier-box {
+        padding: 16px 2px !important;
+        /* 极窄内边距 */
+    }
+
+    /* 6. 信任徽章 (Trust Badges) */
+    .trust-badges-row {
+        gap: 8px !important;
+    }
+
+    .trust-badge {
+        /* 允许徽章文字自然换行，避免撑开宽度 */
+        min-width: 0 !important;
+        width: 30% !important;
+    }
+
+    /* 7. 底部固定栏 (Sticky Footer) */
+    .sticky-footer {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    /* 按钮不要太宽，防止挤掉价格 */
+    .sticky-btn {
+        padding: 8px 16px !important;
+    }
+}
+
+/* ==========================================
+   [Ultra Small Fix] 针对 iPhone SE / 5S (宽度 < 360px)
+   极端情况下的保护措施
+   ========================================== */
+@media (max-width: 360px) {
+    /* 实在排不下时，将价格对比改为竖排，或者允许横向滚动 */
+    /* 这里选择保持横排但更加极限的压缩 */
+
+    .mode-selector {
+        /* 如果文字实在太长，允许横向滚动，保持布局不乱 */
+        overflow-x: auto;
+        padding-bottom: 4px;
+        /* 留出滚动条空间 */
+        justify-content: flex-start;
+        /* 左对齐 */
+    }
+
+    .mode-btn {
+        /* 保持一个最小宽度，防止文字竖着排 */
+        min-width: 80px !important;
+        flex-shrink: 0;
+        /* 禁止压缩 */
+    }
+
+    /* 表单输入框优化 */
+    .input-group {
+        flex-direction: column !important;
+        /* 手机号和邮编在极小屏下换行排列 */
+        gap: 12px !important;
+    }
+}
