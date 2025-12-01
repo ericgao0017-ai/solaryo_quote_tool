@@ -1583,19 +1583,15 @@ const chatRules = [
     },
 ];
 
-// 兜底回复库 (当不知道怎么回的时候)
+// 兜底回复库 (当不知道怎么回的时候，引导去发邮件)
 const fallbackResponses = {
     cn: [
-        "这个问题比较专业，建议您先把上面的【房屋详情】填一下，我们的工程师稍后会根据您的具体情况来解答。",
-        "收到。不过为了给您最准确的建议，我建议您先点击“计算报价”看看大概的预算范围。",
-        "这得看您的屋顶具体朝向。您方便上传一张电费单或者屋顶照片吗？（在最后一步可以上传）",
-        "我记下了。关于这点，您可以稍后在电话里跟我们的工程师详细确认。现在您可以先看看预估价格。"
+        "这个问题我暂时答不上来 😅。如果您有任何具体需求或疑问，欢迎发送邮件至 <a href='mailto:info@solaryo.com.au' style='color:#0f172a; text-decoration:underline; font-weight:bold;'>info@solaryo.com.au</a>，我们会尽快回复。",
+        "抱歉，我可能没完全理解。如有任何业务需求，请直接 Email 联系我们：<a href='mailto:info@solaryo.com.au' style='color:#0f172a; text-decoration:underline; font-weight:bold;'>info@solaryo.com.au</a>"
     ],
     en: [
-        "That's a specific technical detail. I'd suggest filling out the property details above first so our engineer can give you a tailored answer.",
-        "Noted. To give you the best advice, I recommend running the calculator first to see your budget range.",
-        "It depends on your roof orientation. Would you be able to upload a bill or roof photo at the final step?",
-        "Good question. Our engineer can explain that better over the phone. For now, try checking the estimated price above."
+        "I'm not sure about that one 😅. If you have any specific requirements, please email us at <a href='mailto:info@solaryo.com.au' style='color:#0f172a; text-decoration:underline; font-weight:bold;'>info@solaryo.com.au</a>",
+        "Sorry, I missed that. For any specific enquiries, feel free to email us directly: <a href='mailto:info@solaryo.com.au' style='color:#0f172a; text-decoration:underline; font-weight:bold;'>info@solaryo.com.au</a>"
     ]
 };
 
