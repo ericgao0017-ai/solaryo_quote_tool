@@ -375,65 +375,118 @@ function selectTier(tier) {
 // ==========================================
 // [UPDATED] 检查补贴逻辑 (NSW变灰但不改字版)
 // ==========================================
+// ==========================================
+// [FIXED] 检查补贴逻辑 (修复 QLD 禁用 & 贷款提示)
+// ==========================================
 function checkRebates() {
     const state = document.getElementById('state-select').value;
     const section = document.getElementById('rebate-section');
     const batSize = parseFloat(document.getElementById('bat-input').value);
+
+    // 获取所有 DOM 元素
     const els = {
         vic: document.getElementById('check-vic-solar'),
         qld: document.getElementById('check-qld-bat'),
         nsw: document.getElementById('check-nsw-prds'),
         act: document.getElementById('check-act-loan'),
         tas: document.getElementById('check-tas-loan'),
-        nt: document.getElementById('check-nt-stc')
+        nt: document.getElementById('check-nt-stc'),
+        sa: document.getElementById('check-sa-vpp')
     };
-    const NSW_CAP = config.subsidy_logic.nsw_vpp_cap_kwh || 28;
 
-    // 重置显示状态
-    Object.values(els).forEach(el => el.style.display = 'none');
+    // 1. 先全部隐藏 & 重置状态
+    Object.values(els).forEach(el => {
+        if (el) {
+            el.style.display = 'none';
+            el.style.opacity = '1';
+            el.style.pointerEvents = 'auto';
+            const input = el.querySelector('input');
+            if (input) input.disabled = false;
+        }
+    });
+
+    // 默认隐藏整个板块
     section.style.display = 'none';
     let hasInfo = false;
 
-    // 1. VIC
-    if (state === 'VIC' && curMode !== 'battery') { els.vic.style.display = 'flex'; hasInfo = true; }
+    // --- 2. 逐个州判断逻辑 ---
 
-    // 2. QLD
-    if (state === 'QLD' && curMode !== 'solar') { els.qld.style.display = 'flex'; hasInfo = true; }
+    // VIC Logic
+    if (state === 'VIC' && curMode !== 'battery') {
+        els.vic.style.display = 'flex';
+        hasInfo = true;
+    }
 
-    // 3. NSW (重点修改)
+    // QLD Logic (修复：强制变灰 & 禁用)
+    if (state === 'QLD' && curMode !== 'solar') {
+        els.qld.style.display = 'flex';
+        hasInfo = true;
+
+        // 强制禁用逻辑
+        const qldInput = els.qld.querySelector('input');
+        if (qldInput) {
+            qldInput.checked = false; // 强制不勾选
+            qldInput.disabled = true; // 禁止点击
+        }
+        els.qld.style.opacity = '0.5'; // 变灰
+        els.qld.style.pointerEvents = 'none'; // 禁止鼠标交互
+
+        // 可选：修改文字提示用户
+        const qldLabel = els.qld.querySelector('label');
+        if (qldLabel) qldLabel.innerHTML = curLang === 'cn' ? "昆州电池补贴 (名额已满)" : "QLD Battery Booster (Exhausted)";
+    }
+
+    // NSW Logic
+    const NSW_CAP = config.subsidy_logic.nsw_vpp_cap_kwh || 28;
     if (state === 'NSW' && curMode !== 'solar') {
         els.nsw.style.display = 'flex';
         hasInfo = true;
         const cb = els.nsw.querySelector('input');
         const lbl = els.nsw.querySelector('label');
 
-        // 每次进来都先重置为原始文案 (清除之前可能追加的文字)
-        lbl.innerText = i18n[curLang].nsw_vpp_label;
-        lbl.style.textDecoration = "none"; // 移除删除线
+        // 重置文字
+        if (lbl) lbl.innerText = i18n[curLang].nsw_vpp_label;
 
         if (batSize >= NSW_CAP) {
-            // ❌ 超过 28kWh：变灰 + 禁用
-            cb.checked = false;
-            cb.disabled = true;
-            els.nsw.style.opacity = '0.5';         // 半透明变灰
-            els.nsw.style.pointerEvents = 'none';  // 禁止鼠标点击
-
-            // 🟢 修改点：不再追加 "(限28kWh内)" 文字，保持原样
+            if (cb) { cb.checked = false; cb.disabled = true; }
+            els.nsw.style.opacity = '0.5';
+            els.nsw.style.pointerEvents = 'none';
         } else {
-            // ✅ 28kWh 以内：恢复正常
-            cb.disabled = false;
-            if (!cb.checked) cb.checked = true; // 自动勾选
+            if (cb) { cb.disabled = false; if (!cb.checked) cb.checked = true; }
             els.nsw.style.opacity = '1';
             els.nsw.style.pointerEvents = 'auto';
         }
     }
 
-    // 4. Other States
-    if (state === 'ACT') { els.act.style.display = 'flex'; hasInfo = true; }
-    if (state === 'TAS') { els.tas.style.display = 'flex'; hasInfo = true; }
-    if (state === 'NT' && curMode !== 'battery') { els.nt.style.display = 'flex'; hasInfo = true; }
+    // ACT Logic (修复：确保显示)
+    if (state === 'ACT') {
+        els.act.style.display = 'flex';
+        hasInfo = true;
+    }
 
-    if (hasInfo) section.style.display = 'block';
+    // TAS Logic (修复：确保显示)
+    if (state === 'TAS') {
+        els.tas.style.display = 'flex';
+        hasInfo = true;
+    }
+
+    // NT Logic
+    if (state === 'NT' && curMode !== 'battery') {
+        els.nt.style.display = 'flex';
+        hasInfo = true;
+    }
+
+    if (state === 'SA' && curMode !== 'solar') {
+        if (els.sa) {
+            els.sa.style.display = 'flex';
+            hasInfo = true;
+        }
+    }
+
+    // 3. 只要有一条信息，就显示整个板块
+    if (hasInfo) {
+        section.style.display = 'block';
+    }
 }
 // --- 4. 计算逻辑 (Calculation) ---
 
@@ -754,10 +807,46 @@ function calculate(forceShow = false) {
             netPricesFmt[tier] = fmt.format(finalNet);
         });
 
+        // ---------------------------------------------------------
+        // [插入开始] 动态修改补贴的名字 (根据不同州显示不同文字)
+        // ---------------------------------------------------------
+
+        // 1. ⭐ 直接用默认值初始化 (不要用空字符串)
+        // 这样即使是 WA 或 TAS，至少也会显示 "State VPP Incentive"
+        let dynamicStateLabel = i18n[curLang].res_state;
+
+        // 2. 针对特定州进行“覆盖”
+        if (state === 'VIC') {
+            dynamicStateLabel = curLang === 'cn' ? "维州太阳能补贴 (Solar Homes)" : "VIC Solar Homes Rebate";
+        } else if (state === 'NSW') {
+            dynamicStateLabel = curLang === 'cn' ? "新州电池/VPP 补贴" : "NSW PDRS/VPP Incentive";
+        } else if (state === 'SA') {
+            dynamicStateLabel = curLang === 'cn' ? "南澳 VPP 加入奖励" : "SA VPP Join Bonus";
+        } else if (state === 'ACT') {
+            dynamicStateLabel = curLang === 'cn' ? "ACT 无息贷款权益" : "ACT Loan Benefit";
+        }
+
+        // 3. 应用到界面 (保持不变)
+        const rowStateDiv = document.getElementById('row-state');
+        if (rowStateDiv) {
+            const labelSpan = rowStateDiv.querySelector('span');
+            if (labelSpan) labelSpan.innerText = dynamicStateLabel;
+        }
+
+        // 3. 找到这一行里的第一个 span (就是显示文字的那个标签)，并修改它
+        if (rowStateDiv) {
+            // querySelector('span') 会默认抓取第一个 span，也就是左边的文字标签
+            const labelSpan = rowStateDiv.querySelector('span');
+            if (labelSpan) {
+                labelSpan.innerText = dynamicStateLabel;
+            }
+        }
+
         safeSetText('lbl-gross-title', `${i18n[curLang].res_gross} (${i18n[curLang]['tier_' + selectedTier]})`);
         safeSetText('out-gross', grossPricesFmt[selectedTier]);
         safeSetText('out-stc-solar', "-" + fmt.format(stcSolarValue));
         safeSetText('out-stc-battery', "-" + fmt.format(stcBatteryValue));
+
         safeSetText('out-state', "-" + fmt.format(stateRebateVal));
         safeSetText('net-entry', netPricesFmt['entry']);
         safeSetText('net-medium', netPricesFmt['medium']);
