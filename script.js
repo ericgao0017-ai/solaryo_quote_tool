@@ -10,6 +10,49 @@ let globalChatHistory = [];
 // ==========================================
 // 1. 全局变量与配置 (Global Config & Variables)
 // ==========================================
+// --- [NEW] Brand & Tier Configuration ---
+// ==========================================
+// 1. 全局变量与配置 (Global Config & Variables)
+// ==========================================
+// --- [UPDATED] Brand & Tier Configuration ---
+const brandConfig = {
+    entry: {
+        title: "Entry Tier (High Capacity Only)",
+        brands: [
+            // Only allows > 39kWh. Logic: Old Entry Gross * 0.5
+            { id: 'felicity', name: 'Felicity', markup: 0, markupPerKwh: 0 }
+        ]
+    },
+    medium: {
+        title: "Medium Tier Brands",
+        brands: [
+            // Medium - Low (Base = Old Entry Price)
+            { id: 'fox', name: 'FoxESS', markup: 0, markupPerKwh: 0 },
+            { id: 'dyness', name: 'Dyness', markup: 0, markupPerKwh: 0 },
+            { id: 'solplanet', name: 'Solplanet', markup: 0, markupPerKwh: 0 },
+
+            // Medium - High (Base + $55/kWh)
+            { id: 'goodwe', name: 'GoodWe', markup: 0, markupPerKwh: 55, tag: 'Smart' },
+            { id: 'alpha', name: 'AlphaESS', markup: 0, markupPerKwh: 55, tag: 'Design' }
+        ]
+    },
+    premium: {
+        title: "Premium Tier Brands",
+        brands: [
+            // Premium - Low (Base = Old Medium Price ($600/kWh base))
+            { id: 'sungrow', name: 'Sungrow', markup: 0, markupPerKwh: 0 },
+            { id: 'sigenergy', name: 'Sigenergy', markup: 0, markupPerKwh: 0 },
+
+            // Premium - High (Tesla = Old Premium Price ($900/kWh base))
+            // Difference between Old Premium (900) and Old Medium (600) is 300.
+            { id: 'tesla', name: 'Tesla', markup: 0, markupPerKwh: 300, tag: 'Tesla' }
+        ]
+    }
+};
+
+// 全局变量：存储 calculate 计算出来的三个档位的“裸价”（不含品牌加价）
+let currentBasePrices = { entry: 0, medium: 0, premium: 0 };
+let currentSelectedBrandMarkup = 0; // 当前选中的品牌加价
 
 // Google Places & Roof Preview Variables
 let autocomplete;
@@ -123,7 +166,7 @@ const i18n = {
         vpp_desc: "连接电池到虚拟电厂，每年额外躺赚最高至 $800。",
         vpp_what_is: "(什么是 VPP?)",
         modal_vpp_title: "什么是虚拟电厂 (VPP)?",
-        modal_vpp_text: "虚拟电厂 (VPP) 将您的家用电池与其他用户的电池联网。...",
+        modal_vpp_text: "虚拟电厂 (VPP) 将您的家用电池与其他用户的电池联网。在用电高峰期，网络会自动将您存储的电能以高价卖回给电网。<br><br><strong>核心收益：</strong> 您无需任何操作即可获得被动收入抵扣电费，既帮助了电网稳定，又缩短了您的回本周期。",
         btn_final_enquiry: "预约专家咨询 & 敲定报价",
         modal_conf_title: "确认联系方式",
         modal_conf_desc: "请核对您的信息。我们的工程师将尽快联系您以制定最终方案。",
@@ -204,7 +247,7 @@ const i18n = {
         rec_inv: "kW Inverter", rec_phase3: " (3-Phase Only)",
         rec_not_rec: "Given your low quarterly bill, payback period would be excessive.",
         vpp_title: "Join VPP & Earn Extra!", vpp_desc: "Connect battery to earn an extra up to $800/year.", vpp_what_is: "(What is VPP?)",
-        modal_vpp_title: "What is a Virtual Power Plant (VPP)?", modal_vpp_text: "A VPP connects your home battery...",
+        modal_vpp_title: "What is a Virtual Power Plant (VPP)?", modal_vpp_text: "A VPP connects your home battery to a network of other batteries. During times of high electricity demand, the network automatically sells your stored energy back to the grid at premium rates.<br><br><strong>Benefit:</strong> You earn passive income credits without lifting a finger, helping the grid while reducing your own payback period.",
         btn_final_enquiry: "Book Consultation & Finalise Quote",
         modal_conf_title: "Final Confirmation", modal_conf_desc: "Please verify your details.",
         btn_confirm_send: "Confirm & Send Enquiry",
@@ -243,7 +286,7 @@ const i18n = {
 
 let curLang = 'en';
 let curMode = 'solar';
-let selectedTier = 'entry';
+let selectedTier = 'medium';
 let currentRecValues = { solarIdx: -1, validBats: [] };
 
 function setLang(lang) {
@@ -273,6 +316,9 @@ function setLang(lang) {
     if (document.getElementById('result-card').style.display === 'block') calculate(false);
 }
 
+// ==========================================
+// 2. 交互逻辑 (Interaction) - Updated setMode
+// ==========================================
 function setMode(mode) {
     curMode = mode;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -294,10 +340,19 @@ function setMode(mode) {
         groups.solar.style.display = 'block'; groups.exist.style.display = 'none'; groups.shade.style.display = 'block';
         groups.battery.style.display = 'block'; groups.solarPropertyFields.style.display = 'grid'; groups.batteryPropertyFields.style.display = 'grid';
     } else {
+        // Solar Only
         groups.solar.style.display = 'block'; groups.exist.style.display = 'none'; groups.shade.style.display = 'block';
         groups.battery.style.display = 'none'; groups.solarPropertyFields.style.display = 'grid'; groups.batteryPropertyFields.style.display = 'none';
     }
+
+    // 1. 检查各州补贴资格 (变灰逻辑)
     checkRebates();
+
+    // 2. 🟢 核心修复：如果结果卡片已经显示出来了，切换模式时必须立即重算！
+    // 这样才能刷新 VPP Banner 的显示状态，以及重新计算不同模式下的价格。
+    if (document.getElementById('result-card').style.display === 'block') {
+        calculate(false);
+    }
 }
 
 // ==========================================
@@ -359,13 +414,127 @@ function updateVal(type) {
     }
 }
 
+// [MODIFIED] 选择档位：不仅高亮盒子，还要渲染下方的品牌
 function selectTier(tier) {
-    selectedTier = tier;
+    selectedTier = tier; // 更新全局变量
+
+    // 1. UI 高亮档位盒子
     document.querySelectorAll('.tier-box').forEach(box => box.classList.remove('active'));
     document.getElementById(`box-${tier}`).classList.add('active');
-    calculate(false);
+
+    // 2. 渲染该档位下的品牌列表
+    renderBrands(tier);
 }
 
+// [NEW] 渲染品牌列表
+function renderBrands(tier) {
+    const container = document.getElementById('brand-selection-container');
+    const list = document.getElementById('brand-list');
+    const title = document.getElementById('brand-area-title');
+
+    // Solar Only 模式隐藏逻辑 (保持不变)
+    if (curMode === 'solar') {
+        if (container) container.style.display = 'none';
+        const basePrice = currentBasePrices[tier] || 0;
+        const fmt = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+        const outNet = document.getElementById('out-net');
+        if (outNet) outNet.innerText = fmt.format(basePrice);
+        const stickyPrice = document.getElementById('sticky-net-price');
+        if (stickyPrice) stickyPrice.innerText = fmt.format(basePrice);
+        return;
+    }
+
+    if (!container || !list) return;
+
+    const config = brandConfig[tier];
+    if (!config) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    if (title) title.innerText = config.title;
+    list.innerHTML = '';
+
+    config.brands.forEach((brand, index) => {
+        const div = document.createElement('div');
+        div.className = 'brand-card';
+        div.onclick = () => selectBrand(brand.id, brand.markup, tier);
+        div.id = `brand-${brand.id}`;
+
+        // 🟢 [核心修改] 图片 + 文字的组合
+        // 逻辑：默认显示图片。
+        // onerror="..." 的意思是：如果图片加载失败（比如你还没上传），就自动隐藏图片，并显示下面的文字 span。
+        let html = `
+            <img 
+                src="${brand.id}.png" 
+                class="brand-logo-img" 
+                alt="${brand.name}" 
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+            >
+            <span class="brand-name-fallback" style="display:none;">${brand.name}</span>
+        `;
+
+        div.innerHTML = html;
+        list.appendChild(div);
+
+        if (index === 0) {
+            selectBrand(brand.id, brand.markup, tier, true);
+        }
+    });
+}
+
+// [UPDATED] 选择具体品牌 (支持按 kWh 加价)
+// ==========================================
+// 🟢 [UPDATED] 选择具体品牌 (含动态 ROI 刷新)
+// ==========================================
+function selectBrand(brandId, markup, tier, isAutoSelect = false) {
+    // 1. UI 高亮品牌卡片
+    document.querySelectorAll('.brand-card').forEach(c => c.classList.remove('active'));
+    const activeCard = document.getElementById(`brand-${brandId}`);
+    if (activeCard) activeCard.classList.add('active');
+
+    // 2. 计算加价逻辑 (支持固定加价 + 按kWh加价)
+    const batSize = parseFloat(document.getElementById('bat-input').value) || 0;
+
+    let extraCost = markup; // 基础固定加价
+
+    // 查找当前品牌的 perKwh 配置
+    const tierConfig = brandConfig[tier];
+    if (tierConfig) {
+        const brandObj = tierConfig.brands.find(b => b.id === brandId);
+        if (brandObj && brandObj.markupPerKwh) {
+            extraCost += (brandObj.markupPerKwh * batSize);
+        }
+    }
+
+    currentSelectedBrandMarkup = extraCost;
+
+    // 获取当前档位的基准价格 (Base Price)
+    const basePrice = currentBasePrices[tier];
+    const finalPrice = basePrice + extraCost;
+
+    // 3. 更新大字价格 (#out-net) & 底部悬浮栏
+    const fmt = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+    document.getElementById('out-net').innerText = fmt.format(finalPrice);
+
+    const stickyPriceEl = document.getElementById('sticky-net-price');
+    if (stickyPriceEl) stickyPriceEl.innerText = fmt.format(finalPrice);
+
+    // 4. 🟢 核心新增：动态刷新 ROI 图表
+    // 必须重新获取当前的系统参数，才能算出准确的回本周期
+    const billAmount = parseFloat(document.getElementById('bill-input').value);
+
+    // 获取当前活跃的太阳能板大小
+    const solarNewIndex = parseInt(document.getElementById('solar-input').value);
+    const solarNewKw = solarTiers[solarNewIndex];
+    const solarExistIndex = parseInt(document.getElementById('exist-solar-input').value);
+    const solarExistKw = solarTiers[solarExistIndex];
+    let activeSolarKw = (curMode === 'battery') ? solarExistKw : solarNewKw;
+
+    // 调用图表更新函数，传入包含品牌溢价后的 finalPrice
+    updateChart(finalPrice, billAmount, curMode !== 'solar', batSize, activeSolarKw);
+}
 // ==========================================
 // [UPDATED] 检查补贴逻辑 (NSW变灰但不改字版)
 // ==========================================
@@ -498,10 +667,8 @@ function calculateBatteryGross(batteryKwh, tier) {
     return (batteryKwh * rate) + T.fixed_profit_markup;
 }
 
-// ==========================================
-// [UPDATED] 推荐逻辑：展示用户所选配置 (User Selected Specs)
-// ==========================================
-// [UPDATED] 推荐逻辑：电池容量决定逆变器大小
+
+// [UPDATED] 推荐逻辑 (已移除"系统过小"警告)
 // ==========================================
 function generateRecommendation(state, billAmount, time, shade, hasBat, batteryKwh, isSolarTooSmall, activeSolarKw) {
     const lang = i18n[curLang];
@@ -511,21 +678,19 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
 
     // 2. 计算逆变器大小 & 后缀
     let inverterSize = 5;
-    let invSuffix = ""; // 用于存放 "(三相电)" 等备注
+    let invSuffix = "";
 
     if (!hasBat) {
-        // --- 场景 A: 只有太阳能 (按板子大小配) ---
+        // --- 场景 A: 只有太阳能 ---
         if (activeSolarKw >= 15) inverterSize = 15;
         else if (activeSolarKw >= 12) inverterSize = 10;
         else if (activeSolarKw >= 8) inverterSize = 8;
         else if (activeSolarKw > 6.6) inverterSize = 6;
         else inverterSize = 5;
     } else {
-        // --- 场景 B: 有电池 (按电池容量强制匹配) ---
-        // 规则：<33kWh=5kW, 33-43kWh=10kW, >43kWh=15kW(三相)
+        // --- 场景 B: 有电池 ---
         if (batteryKwh > 43) {
             inverterSize = 15;
-            // 增加三相电备注，使用小字号换行显示，保持美观
             invSuffix = curLang === 'cn'
                 ? "<span style='display:block; font-size:0.6em; font-weight:400; opacity:0.8;'>(需三相电)</span>"
                 : "<span style='display:block; font-size:0.6em; font-weight:400; opacity:0.8;'>(3-Phase Only)</span>";
@@ -538,13 +703,9 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
 
     // 3. 构建网格 HTML
     let gridHtml = `<div class="spec-grid">`;
-
-    // 辅助：逆变器显示 HTML (包含数值、单位、星号、后缀)
-    // 这里的 CSS vertical-align: super 是为了让星号上标，invSuffix 则是换行小字
     const inverterDisplayHtml = `${inverterSize} kW <span style="color:var(--solar-gold); vertical-align: super; font-size: 0.6em;">*</span>${invSuffix}`;
 
     if (curMode !== 'battery') {
-        // Solar Only 或 Solar + Battery
         gridHtml += `
             <div class="spec-item">
                 <div class="spec-icon">☀️</div>
@@ -567,7 +728,6 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
                 </div>
             `;
         } else {
-            // 占位符
             gridHtml += `
                 <div class="spec-item" style="opacity:0.3; border-style:dashed;">
                     <div class="spec-icon">🔋</div>
@@ -609,23 +769,24 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
     tipsHtml += `<div class="warning-item" style="color:#94a3b8; font-style: italic;">${invNote}</div>`;
     hasTips = true;
 
-    // Warnings
-    const NSW_CAP = config.subsidy_logic.nsw_vpp_cap_kwh || 28;
-    if (state === 'NSW' && hasBat && batteryKwh >= NSW_CAP) {
-        // NSW变灰逻辑已在 checkRebates 处理，这里不再重复报错，除非你想强调
-        // tipsHtml += `<div class="warning-item">⚠️ ${lang.warn_nsw_limit}</div>`; 
-        // hasTips = true;
-    }
-    if (isSolarTooSmall) {
-        tipsHtml += `<div class="warning-item">${lang.rec_warn_small_solar}</div>`;
-        hasTips = true;
-    }
+    // 🔥 移除 NSW limit 警告
+    // 🔥 移除 isSolarTooSmall 警告 (这里删除了相关代码)
 
     // Upsells
-    if (userApplianceProfile.backup && hasBat) {
-        const txt = curLang === 'cn' ? "✅ 含全屋离网备份" : "✅ Includes Full Backup";
-        tipsHtml += `<div class="upsell-item">${txt}</div>`;
-        hasTips = true;
+    if (userApplianceProfile.backup) {
+        if (hasBat) {
+            // 有电池：显示绿色 ✅
+            const txt = curLang === 'cn' ? "✅ 含全屋离网备份" : "✅ Includes Full Backup";
+            tipsHtml += `<div class="upsell-item">${txt}</div>`;
+            hasTips = true;
+        } else {
+            // 🟢 [核心新增] 仅光伏：显示红色 ⚠️
+            const txt = curLang === 'cn'
+                ? "⚠️ 仅光伏模式下 Backup 可能无效，详情请咨询专家。"
+                : "⚠️ Backup might be ineffective in Solar Only mode. Ask an expert.";
+            tipsHtml += `<div class="warning-item" style="color:#ef5350">${txt}</div>`;
+            hasTips = true;
+        }
     }
     if (userApplianceProfile.gas2elec) {
         const txt = curLang === 'cn' ? "⚡ 已预留电气化容量" : "⚡ Ready for Electrification";
@@ -643,14 +804,16 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
     }
 
     // Low Bill Warning
-    if (billAmount <= 200 && activeSolarKw > 6.6 && curMode !== 'battery') {
+    const isSolarOnlyWarn = (curMode === 'solar' && billAmount <= 200);
+    const isBothWarn = (curMode === 'both' && billAmount <= 200 && activeSolarKw >= 6.6);
+
+    if (isSolarOnlyWarn || isBothWarn) {
         const txt = curLang === 'cn' ? "💡 提示：电费较低，回本周期较长。" : "💡 Tip: Low bill, longer payback.";
         tipsHtml += `<div class="warning-item" style="color:#fbbf24">${txt}</div>`;
         hasTips = true;
     }
     tipsHtml += `</div>`;
 
-    // 5. 返回
     return `
         <strong class="config-title">${titleText}</strong>
         ${gridHtml}
@@ -658,274 +821,254 @@ function generateRecommendation(state, billAmount, time, shade, hasBat, batteryK
     `;
 }
 
+// ==========================================
+// 🟢 [UPDATED] 核心计算函数 (Fix: Entry=(Gross-STC)*50%, Fix State Rebate Display)
+// ==========================================
+// ==========================================
+// 🟢 [UPDATED] 核心计算函数 (Fix: 禁止自动弹窗 + 之前所有修复)
+// ==========================================
 function calculate(forceShow = false) {
     try {
         const card = document.getElementById('result-card');
         const isVisible = card.style.display === 'block';
-
-        // 🟢 1. 变量定义移到最上面，防止重复声明错误
         const isUnlocked = sessionStorage.getItem('quoteUnlocked') === 'true';
 
-        // 如果是自动计算(滑块拖动)且卡片没显示，直接退出
+        // 🛑 [修复核心] 防止选下拉框时自动弹窗
+        // 如果当前还没显示结果(isVisible=false)，且不是点击按钮触发(forceShow=false)，直接退出
+        if (!isVisible && !forceShow) return;
+
+        // --- 1. 默认值拦截逻辑 (点击按钮时才检查) ---
         if (forceShow && !isVisible) {
-            // 获取当前界面上的值
             const currentBill = parseFloat(document.getElementById('bill-input').value);
             const currentState = document.getElementById('state-select').value;
-            const currentStorey = document.getElementById('storey-select').value;
-            const currentRoof = document.getElementById('roof-select').value;
-            const currentShade = document.getElementById('shade-select').value;
             const currentSolar = document.getElementById('solar-input').value;
-            const currentBat = document.getElementById('bat-input').value;
-
-            // 检查有没有选家电
             const hasProfile = Object.values(userApplianceProfile).some(val => val === true);
 
-            // 定义什么是“默认没改过”的状态
-            const isBillDefault = currentBill <= 100;    // 默认 $100
-            const isStateDefault = currentState === 'NSW'; // 默认 NSW
-            const isStoreyDefault = currentStorey === "0"; // 默认 Single Storey
-            const isRoofDefault = currentRoof === "0";     // 默认 Tin/Tile
-            const isShadeDefault = currentShade === "0";   // 默认 No Shade
-            const isSolarDefault = currentSolar === "0";   // 默认 6.6kW
-            const isBatDefault = currentBat === "10";      // 默认 10kWh
-
-            // 🔥 关键点：我们这里故意【不检查】安装模式 (curMode)
-            // 意思就是：就算客户改了安装模式，但如果没填电费、没改州，依然会被拦截。
-
-            // 判定：是否所有关键信息都是默认值？
-            const isInfoEmpty = isBillDefault && isStateDefault && isStoreyDefault &&
-                isRoofDefault && isShadeDefault && isSolarDefault &&
-                isBatDefault && !hasProfile;
-
-            if (isInfoEmpty) {
-                // ⛔️ 触发阻断 (温柔提示版)
-                const msg = curLang === 'cn'
-                    ? "请先输入基础信息，才能算出准确价格哦~"
-                    : "Please provide more details first.";
-                // 调用我们在外面定义的提示框函数
+            if (currentBill <= 100 && currentState === 'NSW' && currentSolar === "0" && !hasProfile) {
+                const msg = curLang === 'cn' ? "请先输入基础信息，才能算出准确价格哦~" : "Please provide more details first.";
                 showToast(msg);
-
-                // 视觉引导：高亮“季度电费”
                 const billGroup = document.getElementById('bill-input').parentElement;
                 billGroup.classList.add('input-highlight');
-
-                // 滚动回顶部，让用户看到
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                // 2秒后移除高亮
                 setTimeout(() => billGroup.classList.remove('input-highlight'), 2000);
-
-                return; // 🛑 停止往下执行，不显示结果
+                return;
             }
         }
 
-        // [Gamified Animation Logic]
-        // 如果是点击了按钮(forceShow=true) 且 之前没显示 且 没解锁 -> 播放动画
         if (forceShow && !isVisible && !isUnlocked) {
             playAnalysisAnimation();
         }
 
+        // --- 2. 获取基础数据 ---
         const state = document.getElementById('state-select').value;
         const solarNewIndex = parseInt(document.getElementById('solar-input').value);
         const solarNewKw = solarTiers[solarNewIndex];
-        const solarExistIndex = parseInt(document.getElementById('exist-solar-input').value);
-        const solarExistKw = solarTiers[solarExistIndex];
-        let activeSolarKw = (curMode === 'battery') ? solarExistKw : solarNewKw;
         const batteryKwh = parseFloat(document.getElementById('bat-input').value);
 
+        // 确定活跃太阳能系统 (Solar Cost)
         const BP = config.base_pricing;
-        const SL = config.subsidy_logic;
-        const extras = BP.addon_extras;
-
-        const P_SOLAR_W = BP.solar_per_w || 0.9;
-        const P_SOLAR_KW = P_SOLAR_W * 1000;
+        const P_SOLAR_KW = (BP.solar_per_w || 0.9) * 1000;
         const P_BASE_INSTALL = BP.install_base_fee || 0;
-        const P_BAT_ADDON = BP.install_labor_adder.mixed_install || 500;
-        const P_BAT_ONLY = BP.install_labor_adder.battery_only || 1500;
-        const STC_PRICE = SL.fed_stc_price_net || 37.5;
-        const DEEMING_YEARS = SL.stc_deeming_years || 6;
-        const FED_BAT_RATE = SL.fed_bat_rate_per_kwh || 340;
-        const FED_BAT_CAP = SL.fed_bat_cap_kwh || 50;
-        const NSW_CAP = SL.nsw_vpp_cap_kwh || 28;
-        const REBATE_NSW_RATE = SL.rebate_nsw_rate || 55;
-        const REBATE_VIC = SL.rebate_vic || 1400;
-        const REBATE_SA = SL.rebate_sa || 350;
+        const costShade = parseFloat(document.getElementById('shade-select').value) === 1500 ? BP.addon_extras.addon_shading : 0;
 
-        const costRoof = parseFloat(document.getElementById('roof-select').value) === 800 ? extras.addon_roof_terra : 0;
-        const valStorey = parseFloat(document.getElementById('storey-select').value);
-        let costStorey = (valStorey === 300) ? extras.addon_storey_double : (valStorey === 500 ? extras.addon_storey_triple : 0);
-        const costShade = parseFloat(document.getElementById('shade-select').value) === 1500 ? extras.addon_shading : 0;
-
-        // [新增] 如果选择了 Backup，增加 $600 费用
-        let costBackup = 0;
-        if (userApplianceProfile.backup) {
-            costBackup = 600;
-        }
-
+        // 计算太阳能部分的 Gross Price (不含电池)
         let grossSolarBase = 0;
         if (curMode !== 'battery') {
             grossSolarBase = (solarNewKw * P_SOLAR_KW) + P_BASE_INSTALL + costShade;
         }
 
+        // --- 3. 电池基准价格计算 (Gross Battery Logic) ---
+        const OLD_ENTRY_RATE = 350;
+        const OLD_MEDIUM_RATE = 600;
+        const FIXED_PROFIT = 4000;
+        const P_BAT_LABOR = (curMode === 'battery') ? 1500 : 500;
+
+        // 基础造价 (不含GST)
+        const baseCostOldEntry = (batteryKwh * OLD_ENTRY_RATE) + FIXED_PROFIT + P_BAT_LABOR;
+        const baseCostOldMedium = (batteryKwh * OLD_MEDIUM_RATE) + FIXED_PROFIT + P_BAT_LABOR;
+
+        // --- 4. 新 Tier Gross (含 GST) ---
+        let grossBatNewEntry = baseCostOldEntry * 1.1;
+        let grossBatNewMedium = baseCostOldEntry * 1.1; // Medium Base = Entry Gross
+        let grossBatNewPremium = baseCostOldMedium * 1.1; // Premium Base = Medium Gross
+
+        // --- 5. 补贴计算 (STC & State) ---
+        const SL = config.subsidy_logic;
+
+        // A. STC Solar
         let stcSolarValue = 0;
         if (curMode !== 'battery') {
-            stcSolarValue = Math.floor(solarNewKw * getZoneRating(state) * DEEMING_YEARS) * STC_PRICE;
+            stcSolarValue = Math.floor(solarNewKw * getZoneRating(state) * SL.stc_deeming_years) * SL.fed_stc_price_net;
         }
 
+        // B. STC Battery
         let stcBatteryValue = 0;
-        let stateRebateVal = 0;
-
         if (curMode !== 'solar') {
-            stcBatteryValue = Math.min(batteryKwh, FED_BAT_CAP) * FED_BAT_RATE;
-            if (state === 'NSW' && document.getElementById('cb-nsw-prds').checked) {
-                if (batteryKwh < NSW_CAP) { stateRebateVal += (batteryKwh * REBATE_NSW_RATE); }
-            }
-            if (state === 'VIC' && document.getElementById('cb-vic-solar').checked) { stateRebateVal += REBATE_VIC; }
-            if (state === 'SA') { stateRebateVal += REBATE_SA; }
+            stcBatteryValue = Math.min(batteryKwh, SL.fed_bat_cap_kwh) * SL.fed_bat_rate_per_kwh;
         }
 
-        const fixedDeductions = stcSolarValue + stcBatteryValue + stateRebateVal;
-        const siteExtras = costStorey + costRoof + costBackup;
+        const totalSTC = stcSolarValue + stcBatteryValue;
 
-        const TIERS = ['entry', 'medium', 'premium'];
-        const netPricesRaw = {};
-        const netPricesFmt = {};
-        const grossPricesFmt = {};
+        // C. State Rebates (州政府补贴)
+        let stateRebateVal = 0;
+        if (state === 'NSW' && curMode !== 'solar') {
+            const nswCb = document.getElementById('cb-nsw-prds');
+            // 如果电池 >= 28，补贴为0；否则看是否勾选
+            if (batteryKwh < SL.nsw_vpp_cap_kwh && nswCb && nswCb.checked) {
+                stateRebateVal += (batteryKwh * SL.rebate_nsw_rate);
+            }
+        }
+        if (state === 'VIC' && curMode !== 'battery') {
+            const vicCb = document.getElementById('cb-vic-solar');
+            if (vicCb && vicCb.checked) stateRebateVal += SL.rebate_vic;
+        }
+        if (state === 'SA' && curMode !== 'solar') {
+            stateRebateVal += SL.rebate_sa;
+        }
+
+        // 杂项费用
+        const valRoof = parseFloat(document.getElementById('roof-select').value) === 800 ? 800 : 0;
+        const valStorey = parseFloat(document.getElementById('storey-select').value);
+        let costStorey = (valStorey === 300) ? 300 : (valStorey === 500 ? 500 : 0);
+        let costBackup = userApplianceProfile.backup ? 600 : 0;
+        const siteExtras = valRoof + costStorey + costBackup;
+
+        // --- 6. 最终净价计算 (Net Prices) ---
+
         const fmt = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
 
-        TIERS.forEach(tier => {
-            let grossBattery = 0;
-            if (curMode !== 'solar') {
-                let labor = (curMode === 'battery') ? P_BAT_ONLY : P_BAT_ADDON;
-                let base = calculateBatteryGross(batteryKwh, tier);
-                grossBattery = (base + labor) * 1.1;
+        // >>> ENTRY TIER (Felicity) <<<
+        // 逻辑：(Gross - STC) * 50%。不减 State Rebate。
+        const grossEntryTotal = grossSolarBase + grossBatNewEntry + siteExtras;
+        const netEntryFinal = (grossEntryTotal - totalSTC) * 0.5;
+
+        currentBasePrices['entry'] = netEntryFinal;
+        safeSetText('net-entry', fmt.format(netEntryFinal));
+
+        // >>> MEDIUM TIER <<<
+        // 标准逻辑：Gross - STC - State Rebate
+        const grossMediumTotal = grossSolarBase + grossBatNewMedium + siteExtras;
+        const netMediumBase = grossMediumTotal - totalSTC - stateRebateVal;
+
+        currentBasePrices['medium'] = netMediumBase;
+        const medHighMarkup = 55 * batteryKwh;
+        safeSetText('net-medium', `${fmt.format(netMediumBase)} ~ ${fmt.format(netMediumBase + medHighMarkup)}`);
+
+        // >>> PREMIUM TIER <<<
+        const grossPremiumTotal = grossSolarBase + grossBatNewPremium + siteExtras;
+        const netPremiumBase = grossPremiumTotal - totalSTC - stateRebateVal;
+
+        currentBasePrices['premium'] = netPremiumBase;
+        const premHighMarkup = 300 * batteryKwh;
+        safeSetText('net-premium', `${fmt.format(netPremiumBase)} ~ ${fmt.format(netPremiumBase + premHighMarkup)}`);
+
+        // --- 7. Entry Tier 禁用逻辑 (Felicity > 39kWh only) ---
+        const entryBox = document.getElementById('box-entry');
+        if (curMode !== 'solar' && batteryKwh <= 39) {
+            entryBox.classList.add('disabled');
+            if (selectedTier === 'entry') {
+                selectTier('medium');
             }
-            const totalGross = grossSolarBase + grossBattery + siteExtras;
-            const finalNet = totalGross - fixedDeductions;
-            grossPricesFmt[tier] = fmt.format(totalGross);
-            netPricesRaw[tier] = finalNet;
-            netPricesFmt[tier] = fmt.format(finalNet);
-        });
-
-        // ---------------------------------------------------------
-        // [插入开始] 动态修改补贴的名字 (根据不同州显示不同文字)
-        // ---------------------------------------------------------
-
-        // 1. ⭐ 直接用默认值初始化 (不要用空字符串)
-        // 这样即使是 WA 或 TAS，至少也会显示 "State VPP Incentive"
-        let dynamicStateLabel = i18n[curLang].res_state;
-
-        // 2. 针对特定州进行“覆盖”
-        if (state === 'VIC') {
-            dynamicStateLabel = curLang === 'cn' ? "维州太阳能补贴 (Solar Homes)" : "VIC Solar Homes Rebate";
-        } else if (state === 'NSW') {
-            dynamicStateLabel = curLang === 'cn' ? "新州电池/VPP 补贴" : "NSW PDRS/VPP Incentive";
-        } else if (state === 'SA') {
-            dynamicStateLabel = curLang === 'cn' ? "南澳 VPP 加入奖励" : "SA VPP Join Bonus";
-        } else if (state === 'ACT') {
-            dynamicStateLabel = curLang === 'cn' ? "ACT 无息贷款权益" : "ACT Loan Benefit";
+        } else {
+            entryBox.classList.remove('disabled');
         }
 
-        // 3. 应用到界面 (保持不变)
+        // --- 8. 界面显示更新 ---
+
+        // 动态修改补贴名字
+        let dynamicStateLabel = i18n[curLang].res_state;
+        if (state === 'VIC') dynamicStateLabel = curLang === 'cn' ? "维州太阳能补贴 (Solar Homes)" : "VIC Solar Homes Rebate";
+        else if (state === 'NSW') dynamicStateLabel = curLang === 'cn' ? "新州电池/VPP 补贴" : "NSW PDRS/VPP Incentive";
+        else if (state === 'SA') dynamicStateLabel = curLang === 'cn' ? "南澳 VPP 加入奖励" : "SA VPP Join Bonus";
+        else if (state === 'ACT') dynamicStateLabel = curLang === 'cn' ? "ACT 无息贷款权益" : "ACT Loan Benefit";
+
         const rowStateDiv = document.getElementById('row-state');
         if (rowStateDiv) {
             const labelSpan = rowStateDiv.querySelector('span');
             if (labelSpan) labelSpan.innerText = dynamicStateLabel;
         }
 
-        // 3. 找到这一行里的第一个 span (就是显示文字的那个标签)，并修改它
-        if (rowStateDiv) {
-            // querySelector('span') 会默认抓取第一个 span，也就是左边的文字标签
-            const labelSpan = rowStateDiv.querySelector('span');
-            if (labelSpan) {
-                labelSpan.innerText = dynamicStateLabel;
-            }
-        }
+        // 显示选中档位的 Gross 
+        let activeGross = 0;
+        if (selectedTier === 'entry') activeGross = grossEntryTotal;
+        else if (selectedTier === 'medium') activeGross = grossMediumTotal;
+        else activeGross = grossPremiumTotal;
 
         safeSetText('lbl-gross-title', `${i18n[curLang].res_gross} (${i18n[curLang]['tier_' + selectedTier]})`);
-        safeSetText('out-gross', grossPricesFmt[selectedTier]);
+        safeSetText('out-gross', fmt.format(activeGross));
+
+        // 更新补贴数值显示
         safeSetText('out-stc-solar', "-" + fmt.format(stcSolarValue));
         safeSetText('out-stc-battery', "-" + fmt.format(stcBatteryValue));
-
         safeSetText('out-state', "-" + fmt.format(stateRebateVal));
-        safeSetText('net-entry', netPricesFmt['entry']);
-        safeSetText('net-medium', netPricesFmt['medium']);
-        safeSetText('net-premium', netPricesFmt['premium']);
-        safeSetText('out-net', netPricesFmt[selectedTier]);
 
-        // 🟢 [Sticky Footer] 同步价格
-        const stickyPriceEl = document.getElementById('sticky-net-price');
-        if (stickyPriceEl) stickyPriceEl.innerText = netPricesFmt[selectedTier];
-
+        // Rows visibility
         const rowSolar = document.getElementById('row-stc-solar'); if (rowSolar) rowSolar.style.display = stcSolarValue > 0 ? 'flex' : 'none';
         const rowBat = document.getElementById('row-stc-battery'); if (rowBat) rowBat.style.display = stcBatteryValue > 0 ? 'flex' : 'none';
-        const rowState = document.getElementById('row-state'); if (rowState) rowState.style.display = stateRebateVal > 0 ? 'flex' : 'none';
 
+        if (rowStateDiv) {
+            rowStateDiv.style.display = stateRebateVal > 0 ? 'flex' : 'none';
+        }
+
+        // Solar Only Logic
         const grid = document.querySelector('.comparison-grid');
         const gridTitle = document.querySelector('.section-title[data-i18n="res_final_comparison"]');
-        if (curMode === 'solar') { if (grid) grid.style.display = 'none'; if (gridTitle) gridTitle.style.display = 'none'; safeSetText('lbl-gross-title', i18n[curLang].res_gross); }
-        else { if (grid) grid.style.display = 'grid'; if (gridTitle) gridTitle.style.display = 'block'; }
+        if (curMode === 'solar') {
+            if (grid) grid.style.display = 'none';
+            if (gridTitle) gridTitle.style.display = 'none';
 
+            const solarOnlyGross = grossSolarBase + siteExtras;
+            safeSetText('out-gross', fmt.format(solarOnlyGross));
+            const solarOnlyNet = solarOnlyGross - totalSTC - stateRebateVal;
+            safeSetText('out-net', fmt.format(solarOnlyNet));
+
+            currentBasePrices['entry'] = solarOnlyNet;
+            currentBasePrices['medium'] = solarOnlyNet;
+            currentBasePrices['premium'] = solarOnlyNet;
+        } else {
+            if (grid) grid.style.display = 'grid';
+            if (gridTitle) gridTitle.style.display = 'block';
+        }
+
+        // 🔥 找回太阳能板 Logo 逻辑
+        const panelBox = document.getElementById('panel-brand-container');
+        if (panelBox) {
+            panelBox.style.display = (curMode === 'battery') ? 'none' : 'block';
+        }
+
+        // --- 9. 推荐与图表更新 ---
         const billAmount = parseFloat(document.getElementById('bill-input').value);
-        const shadeCostRaw = parseFloat(document.getElementById('shade-select').value);
-        const hasBat = curMode !== 'solar';
-
-        let rec = recommendationMap[0];
-        for (let i = 0; i < recommendationMap.length; i++) {
-            if (billAmount >= recommendationMap[i].bill) rec = recommendationMap[i];
-        }
-        let maxRecBat = (rec.validBats && rec.validBats.length > 0) ? Math.max(...rec.validBats) : rec.bat;
-        const isSolarTooSmall = hasBat && (batteryKwh > maxRecBat) && (activeSolarKw * config.roi_logic.battery_savings_penalty_threshold < batteryKwh);
-
-        // 找到这一行并确保它传递了 activeSolarKw
+        let activeSolarKw = (curMode === 'battery') ? solarTiers[parseInt(document.getElementById('exist-solar-input').value)] : solarNewKw;
         const recEl = document.getElementById('rec-text');
+
+        // 无警告逻辑
+        let isSolarTooSmall = (activeSolarKw * 2.5 < batteryKwh);
         if (recEl) {
-            recEl.innerHTML = generateRecommendation(
-                state,
-                billAmount,
-                'day',
-                shadeCostRaw,
-                hasBat,
-                batteryKwh,
-                isSolarTooSmall,
-                activeSolarKw // <--- 必须确保传了这个参数
-            );
+            recEl.innerHTML = generateRecommendation(state, billAmount, 'day', 0, curMode !== 'solar', batteryKwh, isSolarTooSmall, activeSolarKw);
         }
 
-        const netPremiumVal = parseFloat(netPricesRaw[selectedTier]);
-        updateChart(netPremiumVal, billAmount, hasBat, batteryKwh, activeSolarKw);
+        const currentNetPrice = parseFloat(document.getElementById('out-net').innerText.replace(/[^0-9.-]+/g, ""));
+        updateChart(currentNetPrice || currentBasePrices['medium'], billAmount, curMode !== 'solar', batteryKwh, activeSolarKw);
 
+        // --- 10. 显示结果 & 刷新 ---
         card.style.display = 'block';
-
-        // Handle Unlock/Lock UI
-        // 🟢 注意：此处不应再定义 const isUnlocked，直接使用顶部的变量
-        const overlay = document.getElementById('unlock-overlay');
-        const blurSpans = document.querySelectorAll('.price-number');
-        const vppBanner = document.getElementById('vpp-banner');
-        const finalBtn = document.getElementById('btn-final-enquiry');
+        selectTier(selectedTier);
 
         if (isUnlocked) {
-            overlay.classList.add('hidden');
-            blurSpans.forEach(el => el.classList.remove('locked'));
-            if (vppBanner) vppBanner.style.display = (curMode !== 'solar') ? 'flex' : 'none';
-            if (finalBtn) finalBtn.style.display = 'flex';
-
-            // 🟢 [Sticky Footer] 刷新页面时如果已解锁，也要启动监听
+            document.getElementById('unlock-overlay').classList.add('hidden');
+            document.querySelectorAll('.price-number').forEach(el => el.classList.remove('locked'));
             setupStickyObserver();
         } else {
-            overlay.classList.remove('hidden');
-            blurSpans.forEach(el => el.classList.add('locked'));
-            document.getElementById('submit-msg').innerText = "";
-            document.getElementById('btn-submit').disabled = false;
-            document.getElementById('btn-submit').innerText = i18n[curLang].btn_unlock;
-            if (vppBanner) vppBanner.style.display = 'none';
-            if (finalBtn) finalBtn.style.display = 'none';
+            document.getElementById('unlock-overlay').classList.remove('hidden');
+            document.querySelectorAll('.price-number').forEach(el => el.classList.add('locked'));
         }
+
         if (forceShow) card.scrollIntoView({ behavior: "smooth" });
 
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error("Calculate Error:", err);
+    }
 }
-
 let myChart = null;
 function updateChart(netPrice, quarterlyBill, hasBattery, batterySize, solarSizeKw) {
     const annualBill = quarterlyBill * 4;

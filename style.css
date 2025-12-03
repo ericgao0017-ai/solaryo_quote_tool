@@ -880,10 +880,12 @@ input[type=range]:hover::-webkit-slider-runnable-track {
 }
 
 .price-value {
-    display: block;
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: white;
+    /* 🟢 稍微缩小字体，以容纳 "xxx ~ xxx" 的长格式 */
+    font-size: 1.0rem !important;
+    white-space: nowrap;
+    /* 防止换行 */
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* --- Unlock Overlay --- */
@@ -1000,6 +1002,13 @@ input[type=range]:hover::-webkit-slider-runnable-track {
 
     100% {
         left: 100%;
+    }
+}
+
+@media (max-width: 500px) {
+    .price-value {
+        font-size: 0.85rem !important;
+        /* 手机上更小一点 */
     }
 }
 
@@ -3455,4 +3464,257 @@ body.hide-fomo .chat-widget-container {
         /* 手机号和邮编在极小屏下换行排列 */
         gap: 12px !important;
     }
+}
+
+/* --- Brand Selection Grid (新品牌选择区) --- */
+.brand-selection-area {
+    margin-top: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    animation: fadeIn 0.5s ease;
+}
+
+.brand-section-title {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+}
+
+.brand-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* 默认3列 */
+    gap: 10px;
+}
+
+/* --- Brand Grid Card Styles (品牌卡片样式 - 毛玻璃版) --- */
+
+.brand-card {
+    /* 🟢 [修改点 1] 背景改为半透明白色，融入整体环境 */
+    background: rgba(255, 255, 255, 0.4);
+
+    /* 🟢 [新增] 增加毛玻璃模糊效果，提升质感 */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    /* 🟢 [新增] 加上淡淡的白色边框，让卡片轮廓更清晰 */
+    border: 1px solid rgba(255, 255, 255, 0.4);
+
+    border-radius: 12px;
+    padding: 8px 4px;
+    /* 上下8px，左右4px */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    /* 稍微调小一点高度，更紧凑 */
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    /* 阴影改淡一点 */
+}
+
+/* 选中状态 */
+.brand-card.active {
+    border-color: var(--accent);
+
+    /* 🟢 [修改点 2] 选中时背景稍微变亮，带一点点品牌绿色的 tint */
+    background: rgba(16, 185, 129, 0.15);
+
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    transform: translateY(-2px);
+}
+
+.brand-card:hover {
+    background: rgba(255, 255, 255, 0.6);
+    /* 悬停时稍微变白 */
+    transform: translateY(-2px);
+}
+
+/* 🟢 [黑科技] 如果你的 Logo 图片自带白色背景去不掉，加上这行代码 */
+.brand-logo-img {
+    /* mix-blend-mode: multiply; */
+    /* 如果你的Logo是白底JPG，把上面这行的注释去掉，白色背景就会神奇消失 */
+
+    max-width: 85%;
+    max-height: 36px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+/* 模拟 Logo 文字样式 (替换图片后可移除) */
+.brand-name {
+    font-weight: 800;
+    color: #334155;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.brand-price-tag {
+    display: none !important;
+    /* 🟢 强制隐藏品牌卡片内的小价格 */
+}
+
+.brand-card.active .brand-price-tag {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* --- Solar Panel Brands (太阳能板展示区) --- */
+.panel-brands-row {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* --- Solar Panel Brands Styles (太阳能板区域样式) --- */
+
+.panel-list {
+    display: grid;
+    /* 🟢 核心修改：无论电脑还是手机，强制 4 列 */
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px;
+    /* 间距稍微改小一点点 */
+}
+
+.panel-item {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+
+    /* 🟢 调整内边距：为了在手机一行塞4个，padding要小 */
+    padding: 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* 🟢 细长条高度：设定一个较小的高度 */
+    height: 40px;
+
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+}
+
+.panel-item:hover {
+    background: rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+}
+
+.panel-logo-img {
+    /* 图片自适应，保证塞得进小格子 */
+    max-width: 95%;
+    max-height: 28px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* 覆盖之前的手机端设置，确保不变成2列 */
+@media (max-width: 500px) {
+    .panel-list {
+        /* 强制保持 4 列 */
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 4px !important;
+        /* 手机上间距更紧凑 */
+    }
+
+    .panel-item {
+        height: 36px !important;
+        /* 手机上高度再压扁一点，形成“细长条” */
+        border-radius: 8px;
+        /* 圆角稍微小一点 */
+        padding: 2px !important;
+    }
+
+    .panel-logo-img {
+        max-height: 22px !important;
+        /* 图标缩小适配 */
+    }
+}
+
+/* --- Brand Logo Styles (Logo 图片样式) --- */
+
+.brand-logo-img {
+    /* 限制最大宽高，防止 Logo 撑破卡片 */
+    max-width: 90%;
+    max-height: 40px;
+    width: auto;
+    height: auto;
+
+    /* 保持图片比例 */
+    object-fit: contain;
+
+    /* 稍微把图片往下居中一点 */
+    display: block;
+    margin: 0 auto;
+
+    /* 增加一点滤镜让深色Logo变清晰 (可选，如果你是深色背景模式) */
+    /* filter: brightness(0) invert(0.8); */
+}
+
+/* 兜底文字样式 (只有图片挂了才会显示这个) */
+.brand-name-fallback {
+    font-weight: 700;
+    color: #334155;
+    font-size: 0.8rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* 手机端适配 */
+@media (max-width: 500px) {
+    .brand-logo-img {
+        max-height: 30px;
+        /* 手机上 Logo稍微小一点 */
+    }
+
+    /* 调整卡片内边距，让 Logo 垂直居中 */
+    .brand-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* --- style.css --- */
+
+/* --- style.css (修改禁用状态样式) --- */
+
+/* 禁用状态的 Tier Box：仅变灰、透明、不可点 */
+.tier-box.disabled {
+    opacity: 0.3;
+    /* 透明度更低一点，显出禁用感 */
+    pointer-events: none;
+    /* 禁止点击 */
+    filter: grayscale(100%);
+    /* 黑白滤镜 */
+    background: rgba(0, 0, 0, 0.1);
+    border-color: transparent;
+    cursor: not-allowed;
+}
+
+/* 3. 🟢 核心新增：把里面的价格数字彻底模糊掉 */
+.tier-box.disabled .price-value {
+    filter: blur(10px);
+    /* 10px 模糊，完全看不清数字 */
+    opacity: 0.5;
+    /* 再次降低透明度 */
+    user-select: none;
+    /* 禁止用户选中复制文字 */
+    transform: scale(0.9);
+    /* 稍微缩小一点 */
 }

@@ -357,20 +357,55 @@
                 <div class="section-title" style="margin-top: 25px; text-align: left;" data-i18n="res_final_comparison">
                     Final Net Price Comparison</div>
                 <div class="comparison-grid">
-                    <div class="tier-box entry active" onclick="selectTier('entry')" id="box-entry">
+                    <div class="tier-box entry" onclick="selectTier('entry')" id="box-entry">
                         <span class="tier-label" data-i18n="tier_entry">Entry</span>
                         <span class="price-value price-number" id="net-entry">$0</span>
                     </div>
-                    <div class="tier-box medium" onclick="selectTier('medium')" id="box-medium">
+
+                    <div class="tier-box medium active" onclick="selectTier('medium')" id="box-medium">
                         <span class="tier-label" data-i18n="tier_medium">Medium</span>
                         <span class="price-value price-number" id="net-medium">$0</span>
                     </div>
+
                     <div class="tier-box premium" onclick="selectTier('premium')" id="box-premium">
                         <span class="tier-label" data-i18n="tier_premium">Premium</span>
                         <span class="price-value price-number" id="net-premium">$0</span>
                     </div>
                 </div>
+                <div id="brand-selection-container" class="brand-selection-area" style="display:none;">
+                    <div class="brand-section-title" id="brand-area-title">Select Inverter/Battery Brand</div>
+                    <div class="brand-grid" id="brand-list">
+                    </div>
+                </div>
 
+                <div id="panel-brand-container" class="panel-brands-row" style="display:none;">
+                    <div class="brand-section-title">SOLAR PANELS RECOMMENDED</div>
+                    <div class="panel-list">
+                        <div class="panel-item">
+                            <img src="longi.png" class="panel-logo-img" alt="Longi"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <span class="panel-name-fallback" style="display:none;">Longi Solar</span>
+                        </div>
+
+                        <div class="panel-item">
+                            <img src="jinko.png" class="panel-logo-img" alt="Jinko"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <span class="panel-name-fallback" style="display:none;">Jinko Solar</span>
+                        </div>
+
+                        <div class="panel-item">
+                            <img src="trina.png" class="panel-logo-img" alt="Trina"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <span class="panel-name-fallback" style="display:none;">Trina Solar</span>
+                        </div>
+
+                        <div class="panel-item">
+                            <img src="tongwei.png" class="panel-logo-img" alt="Tongwei"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <span class="panel-name-fallback" style="display:none;">Tongwei</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="row total" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #555;">
                     <span data-i18n="res_net">Total Net Price (Inc. GST)</span>
                     <span id="out-net" class="price-number">$0</span>
