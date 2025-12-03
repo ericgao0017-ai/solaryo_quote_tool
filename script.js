@@ -2197,10 +2197,13 @@ async function fetchBrandData() {
         if (data) {
             // 将数组转换为之前的对象格式 { 'slug': {data} }
             brandDataDB = {};
+            const storagePrefix = "https://iytxwgyhemetdkmqoxoa.supabase.co/storage/v1/object/public/Brands/";
+
             data.forEach(item => {
-                // 🟢 本地模式：直接使用数据库里的文件名
-                // 比如数据库存的是 "tesla.png"，这里就直接用 "tesla.png"
-                // 你的图片必须放在 index.html 同级目录下
+                // 如果 logo 只是文件名（不含 http），就加上前缀
+                if (item.logo && !item.logo.startsWith('http')) {
+                    item.logo = storagePrefix + item.logo;
+                }
                 brandDataDB[item.slug] = item;
             });
             
@@ -2297,7 +2300,7 @@ function showBrandDetail(brandKey) {
     
     // 3. 🟢 核心修复：根据语言读取 desc_cn 或 desc_en
     const descText = isCN ? brand.desc_cn : brand.desc_en;
-    document.getElementById('detail-desc').innerHTML = descText || "No description available.";
+    document.getElementById('detail-desc').innerText = descText || "No description available.";
 
     // 4. 🟢 核心修复：读取 tags_cn 或 tags_en
     const tagsContainer = document.getElementById('detail-tags');
