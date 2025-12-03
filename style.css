@@ -3720,238 +3720,148 @@ body.hide-fomo .chat-widget-container {
 }
 
 /* ==========================================================================
-   [iPhone SE/Mini Ultra-Compact Fixes] 
-   针对超小屏设备 (宽度 < 390px) 的终极适配
-   放在 CSS 文件最底部以确保覆盖
+   [iPhone SE/Mini Balanced Fix] 
+   平衡版适配：字体放大 + 布局极致压缩
+   (放在 CSS 文件最底部)
    ========================================================================== */
 
-@media (max-width: 390px) {
+@media (max-width: 410px) {
 
-    /* 1. 全局基准调整：稍微减小根字体大小，让使用 rem 单位的元素整体缩小 */
+    /* 1. 稍微调回基准字号，提升整体可读性 */
     :root {
-        font-size: 14px;
+        font-size: 15px;
+        /* 从之前的 14px 回调到 15px */
     }
 
-    body {
-        padding: 10px 5px !important;
-        /* 减少最外层内边距 */
-    }
-
+    /* 2. 容器：压榨左右边距，把空间留给内容 */
     .container {
-        padding: 20px 8px !important;
-        /* 极致压缩容器左右内边距 */
-        border-radius: 16px !important;
-        /* 圆角也稍微小一点 */
+        padding: 24px 6px !important;
+        /* 左右仅留 6px */
+        width: 100% !important;
+        box-sizing: border-box;
     }
 
-    /* --- 2. 头部 Logo 区域压缩 --- */
-    .brand-text {
-        font-size: 1.2rem !important;
-        /* 缩小 Logo 文字 */
-    }
-
-    h2 {
-        font-size: 0.75rem !important;
-        /* 缩小中间标题 */
-    }
-
-    .lang-switch button {
-        width: 28px !important;
-        /* 缩小语言按钮 */
-        height: 24px !important;
-        font-size: 0.7rem !important;
-    }
-
-    /* --- 3. 关键组件：模式选择器 (Mode Selector) --- */
-    .mode-selector {
-        gap: 4px !important;
-        /* 极小间距 */
-    }
-
-    .mode-btn {
-        padding: 10px 2px !important;
-        /* 极窄内边距 */
-        border-radius: 16px;
-    }
-
-    .mode-icon {
-        width: 28px;
-        /* 缩小图标 */
-        height: 28px;
-        margin-bottom: 6px;
-    }
-
-    /* 组合图标特殊处理 */
-    .combo-icon .mode-icon:first-child {
-        width: 24px !important;
-        height: 24px !important;
-    }
-
-    .combo-icon .mode-icon:last-child {
-        width: 20px !important;
-        height: 20px !important;
-    }
-
-    .mode-btn span {
-        font-size: 0.6rem !important;
-        /* 极小文字，防止两行 */
-        letter-spacing: -0.02em;
-        /* 收紧字间距 */
-    }
-
-    /* --- 4. 关键组件：推荐配置网格 (Spec Grid) --- */
-    .spec-grid {
-        gap: 4px !important;
-    }
-
-    .spec-item {
-        padding: 8px 2px !important;
-    }
-
-    .spec-icon {
-        font-size: 1rem;
-    }
-
-    .spec-label {
-        font-size: 0.6rem;
-    }
-
-    .spec-value {
-        font-size: 0.8rem;
-    }
-
-
-    /* --- 5. 核心组件：价格对比栏 (Comparison Grid) --- */
-    /* 这是最容易溢出的地方，需要最激进的压缩 */
+    /* 3. 价格对比栏 (最核心区域) */
     .comparison-grid {
         gap: 3px !important;
-        /* 几乎贴在一起 */
+        /* 间距压到最小 */
         margin-left: 0 !important;
         margin-right: 0 !important;
     }
 
     .tier-box {
-        padding: 12px 1px !important;
-        /* 几乎没有左右内边距 */
-        border-radius: 12px;
+        padding: 14px 2px !important;
+        /* 盒子内部几乎无边距 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 70px;
+        /* 保证高度一致 */
     }
 
     .tier-label {
-        font-size: 0.6rem !important;
-        /* 缩小档位名称 (如 Premium/Tesla) */
-        margin-bottom: 6px;
+        /* 字体调大，但在小屏上如果文字太长(Premium/Tesla)，允许它稍微压缩字间距 */
+        font-size: 0.7rem !important;
+        /* 约 10.5px，比之前大 */
+        margin-bottom: 4px;
+        letter-spacing: -0.05em;
+        /* 收紧字间距，防止换行 */
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        /* 如果实在太长就省略号 */
     }
 
     .price-value {
-        font-size: 0.75rem !important;
-        /* 缩小价格数字 */
-        font-weight: 700;
-    }
-
-    /* --- 6. 其他组件微调 --- */
-    /* 输入框和标题 */
-    input[type="number"],
-    input[type="text"],
-    input[type="tel"],
-    input[type="email"],
-    select {
-        height: 48px !important;
-        /* 输入框变矮 */
-        font-size: 0.9rem !important;
-    }
-
-    label {
+        /* 价格数字调大，这是用户最关心的 */
         font-size: 0.85rem !important;
-        margin-bottom: 6px;
+        /* 约 12.75px */
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        /* 紧凑排列 */
     }
 
-    .section-title {
-        font-size: 0.75rem !important;
-        margin: 24px 0 12px 0;
+    /* 针对 "Medium" 这种有 "~" 范围价格的长文字，特殊处理 */
+    .price-value {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+        /* 不显示省略号，尽量展示数字 */
     }
 
-    .val-display {
-        font-size: 1rem !important;
-        /* 滑块旁边的数字变小 */
-        padding: 2px 6px !important;
+    /* 4. 模式选择按钮 (Mode Selector) */
+    .mode-selector {
+        gap: 5px !important;
     }
 
-    /* 结果行 */
-    .row {
-        font-size: 0.8rem !important;
+    .mode-btn {
+        padding: 10px 4px !important;
+        min-width: 0 !important;
+        /* 允许按钮被压缩 */
     }
 
-    .row.total {
-        font-size: 1.1rem !important;
+    .mode-btn span {
+        font-size: 0.7rem !important;
+        /* 约 10.5px */
+        line-height: 1.1;
+        white-space: nowrap;
     }
 
-    /* 信任徽章 */
-    .trust-badge svg {
-        width: 20px;
-        height: 20px;
+    /* 5. 顶部标题和 Logo */
+    .brand-text {
+        font-size: 1.4rem !important;
+        /* Logo 稍微大一点 */
     }
 
-    .trust-badge span {
-        font-size: 0.55rem;
+    h2 {
+        font-size: 0.85rem !important;
+        /* 标题字号适中 (约12.75px) */
+        white-space: normal;
+        /* 允许标题换行，以免撑宽屏幕 */
+        line-height: 1.2;
     }
 
-    .badge-img {
-        height: 24px;
-    }
-
-    /* 底部悬浮栏 */
+    /* 6. 底部悬浮栏 */
     .sticky-footer {
-        padding: 6px 10px !important;
+        padding: 8px 8px !important;
     }
 
     .sticky-label {
-        font-size: 0.55rem !important;
+        font-size: 0.65rem !important;
     }
 
     .sticky-price {
-        font-size: 0.9rem !important;
+        font-size: 1rem !important;
     }
 
+    /* 价格放大 */
     .sticky-btn {
-        padding: 6px 12px !important;
-        font-size: 0.8rem !important;
+        font-size: 0.85rem !important;
+        padding: 8px 14px !important;
     }
 }
 
 /* ==========================================================================
-   [iPhone 5S/SE 1st Gen 终极保底] 
-   针对宽度 <= 360px 的极古老设备，允许关键区域横向滚动，防止布局崩坏
+   [极限情况] 针对 iPhone 5S/SE 1代 (宽度 <= 320px)
+   只有在极窄屏幕下，才强制允许横向滚动，保证不重叠
    ========================================================================== */
-@media (max-width: 360px) {
+@media (max-width: 330px) {
+    .tier-label {
+        font-size: 0.65rem !important;
+    }
 
-    /* 如果文字实在压不下去了，允许模式选择器和价格栏横向滑动 */
-    .mode-selector,
+    .price-value {
+        font-size: 0.8rem !important;
+    }
+
+    /* 允许价格栏左右滑动，防止数字重叠 */
     .comparison-grid {
         overflow-x: auto;
-        flex-wrap: nowrap;
         justify-content: flex-start;
-        /* 隐藏滚动条美化 */
-        scrollbar-width: none;
-        /* Firefox */
-        -ms-overflow-style: none;
-        /* IE 10+ */
+        padding-bottom: 5px;
+        /* 留出滚动条位置 */
     }
 
-    .mode-selector::-webkit-scrollbar,
-    .comparison-grid::-webkit-scrollbar {
-        display: none;
-        /* Chrome/Safari/Webkit */
-    }
-
-    /* 保证滑动时元素有最小宽度，不会被挤扁 */
-    .mode-btn,
     .tier-box {
-        min-width: 85px !important;
+        min-width: 80px;
+        /* 保证最小宽度 */
         flex-shrink: 0;
-        /* 防止被压缩 */
     }
 }
