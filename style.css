@@ -4065,3 +4065,35 @@ body.hide-fomo .chat-widget-container {
     .brand-hub-grid { grid-template-columns: repeat(2, 1fr); }
     /*.fixed-brand-badge { left: 15px; bottom: 85px; width: 50px; height: 50px; }*/
 }
+/* ==========================================
+   [Mobile Fix] 强制修复手机端品牌空白问题
+   ========================================== */
+@media (max-width: 600px) {
+    /* 1. 强制显示文字名称 (覆盖 JS 的隐藏逻辑) */
+    .hub-brand-name {
+        display: block !important;
+        font-size: 0.7rem !important;
+        margin-top: 4px;
+        color: #334155;
+    }
+
+    /* 2. 调整图片大小，让图片和文字能共存 */
+    .hub-brand-img {
+        max-height: 30px !important; 
+        margin-bottom: 2px !important;
+    }
+
+    /* 3. 如果图片彻底挂了，隐藏破损图标，只留文字 */
+    img[src=""][alt], img[src="#"][alt] {
+        display: none !important;
+    }
+    
+    /* 4. 确保卡片有最小高度，不会塌陷 */
+    .hub-brand-item {
+        min-height: 80px !important;
+        padding: 10px 4px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }
+}
