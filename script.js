@@ -2198,6 +2198,9 @@ async function fetchBrandData() {
             // 将数组转换为之前的对象格式 { 'slug': {data} }
             brandDataDB = {};
             data.forEach(item => {
+                // 🟢 本地模式：直接使用数据库里的文件名
+                // 比如数据库存的是 "tesla.png"，这里就直接用 "tesla.png"
+                // 你的图片必须放在 index.html 同级目录下
                 brandDataDB[item.slug] = item;
             });
             
@@ -2354,4 +2357,5 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 🟢 新增：启动时抓取品牌数据
     fetchBrandData(); 
+
 });
