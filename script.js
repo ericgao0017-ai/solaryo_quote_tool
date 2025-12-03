@@ -189,15 +189,6 @@ const i18n = {
         use_hws: "电热水器", use_gas2elec: "煤气改电", use_backup: "需要停电备份", use_others: "其他设备",
         selected_count: "已选择 {n} 项",
 
-        // ... 原有的翻译 ...
-        hub_title: "甄选品牌展示",
-        hub_subtitle: "点击品牌图标查看详细参数",
-        hub_sec_battery: "🔋 储能电池品牌",
-        hub_sec_solar: "☀️ 太阳能板品牌",
-        hub_back: "‹ 返回列表",
-        hub_features_title: "核心优势",
-        btn_got_it: "了解了",
-
         // [新增] 底部悬浮栏 & 假加载
         sticky_net: "预估净价",
         btn_book_now: "立即预约",
@@ -276,14 +267,6 @@ const i18n = {
         use_ev_now: "EV (Existing)", use_ev_plan: "EV (Planned)",
         use_hws: "Elec Hot Water", use_gas2elec: "Gas to Electric", use_backup: "Need Backup", use_others: "Others",
         selected_count: "{n} items selected",
-        // ... 原有的翻译 ...
-        hub_title: "Trusted Partners",
-        hub_subtitle: "Select a brand to view details",
-        hub_sec_battery: "🔋 Energy Storage (Battery)",
-        hub_sec_solar: "☀️ Solar Panels",
-        hub_back: "‹ Back",
-        hub_features_title: "Key Features",
-        btn_got_it: "Got it",
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
@@ -2176,97 +2159,143 @@ window.setLang = function (lang) {
 // ==========================================
 // [NEW] Brand Hub & Detail Logic
 // ==========================================
-// ==========================================
-// [UPDATED] Brand Hub Logic with Local Fallback
-// ==========================================
 
-// 1. 本地兜底数据 (当数据库为空或加载失败时使用)
-const fallbackBrands = [
-    // --- 电池品牌 ---
-    { slug: 'tesla', name: 'Tesla', type: 'battery', logo: 'tesla.png', desc_en: 'Premium active thermal management.', features_en: ['13.5kWh Capacity', 'Built-in Inverter', 'Backup Gateway'] },
-    { slug: 'sungrow', name: 'Sungrow', type: 'battery', logo: 'sungrow.png', desc_en: 'High voltage LFP battery.', features_en: ['Modular Design', '9.6kWh - 25.6kWh', '10 Year Warranty'] },
-    { slug: 'goodwe', name: 'GoodWe', type: 'battery', logo: 'goodwe.png', desc_en: 'Reliable and affordable.', features_en: ['Lynx Home F Series', 'High Voltage', 'Smart Control'] },
-    { slug: 'alpha', name: 'AlphaESS', type: 'battery', logo: 'alpha.png', desc_en: 'All-in-one design.', features_en: ['Built-in EMS', 'VPP Ready', 'Sleek Design'] },
-    { slug: 'sigenergy', name: 'Sigenergy', type: 'battery', logo: 'sigenergy.png', desc_en: 'AI-optimised 5-in-1 system.', features_en: ['Fastest Install', '28kWh Capacity', 'AI Protection'] },
-    
-    // --- 太阳能板品牌 ---
-    { slug: 'jinko', name: 'Jinko Solar', type: 'solar', logo: 'jinko.png', desc_en: 'World leading PV supplier.', features_en: ['N-Type Tiger Neo', 'High Efficiency', '30 Year Warranty'] },
-    { slug: 'longi', name: 'Longi', type: 'solar', logo: 'longi.png', desc_en: 'Hi-MO 6 technology.', features_en: ['HPBC Cell', 'Aesthetic Design', 'Reliable Yield'] },
-    { slug: 'trina', name: 'Trina Solar', type: 'solar', logo: 'trina.png', desc_en: 'Vertex S+ dual glass.', features_en: ['210mm Cells', 'Dual Glass', '25 Year Product Warranty'] },
-    { slug: 'rec', name: 'REC', type: 'solar', logo: 'rec.png', desc_en: 'Premium European brand.', features_en: ['Alpha Pure-R', 'Lead Free', 'High Power Density'] }
-];
+// 1. 品牌数据库 (9 Batteries + 4 Solar Panels)
+const brandDataDB = {
+    // --- 9 Battery Brands ---
+    'tesla': {
+        name: 'Tesla',
+        type: 'battery',
+        logo: 'tesla.png', // 需确保您有此图片，否则会显示名字
+        desc: 'The Tesla Powerwall 2 is one of the most advanced residential energy storage systems in the world. Known for its sleek design and liquid thermal control.',
+        tags: ['Premium', 'US Brand', 'High Tech'],
+        features: ['13.5 kWh Usable Capacity', 'Integrated Inverter (AC Coupled)', 'Liquid Thermal Control System', 'App Control & Monitoring']
+    },
+    'sungrow': {
+        name: 'Sungrow',
+        type: 'battery',
+        logo: 'sungrow.png',
+        desc: 'A global leader in clean energy. Sungrow batteries are modular, reliable, and integrate perfectly with their market-leading hybrid inverters.',
+        tags: ['Tier 1', 'Modular', 'High Value'],
+        features: ['Modular Design (Stackable)', 'High Voltage LFP Battery', 'Seamless Backup Power', '10-Year Warranty']
+    },
+    'goodwe': {
+        name: 'GoodWe',
+        type: 'battery',
+        logo: 'goodwe.png',
+        desc: 'GoodWe offers reliable and cost-effective energy storage solutions. Their Lynx Home series is designed for safety and ease of installation.',
+        tags: ['Smart', 'Reliable', 'Top Value'],
+        features: ['LFP (Lithium Iron Phosphate)', 'Remote Diagnosis & Upgrade', 'IP65 Outdoor Rated', 'Auto Under-voltage Reboot']
+    },
+    'alpha': {
+        name: 'AlphaESS',
+        type: 'battery',
+        logo: 'alpha.png',
+        desc: 'AlphaESS specialises in advanced battery storage products. Their systems are aesthetically pleasing and offer excellent monitoring capabilities.',
+        tags: ['Design', 'Smart Cloud', 'Global'],
+        features: ['Integrated Cable Design', '24/7 Monitoring via App', 'Cobalt-free LFP Chemistry', 'VPP Ready']
+    },
+    'fox': {
+        name: 'FoxESS',
+        type: 'battery',
+        logo: 'fox.png',
+        desc: 'FoxESS creates high-performance batteries using advanced engineering. Their high-voltage cubes offer high efficiency and long life cycles.',
+        tags: ['High Efficiency', 'High Voltage'],
+        features: ['High Voltage Efficiency', 'Expandable Storage', 'Plug and Play Installation', 'Durable Construction']
+    },
+    'dyness': {
+        name: 'Dyness',
+        type: 'battery',
+        logo: 'dyness.png',
+        desc: 'Dyness focuses on battery innovation. Their products are compatible with most leading inverters and offer great flexibility for homeowners.',
+        tags: ['Flexible', 'Compatible'],
+        features: ['Wide Inverter Compatibility', 'Safe LFP Technology', 'Compact Size', 'Long Cycle Life (>6000)']
+    },
+    'solplanet': {
+        name: 'Solplanet',
+        type: 'battery',
+        logo: 'solplanet.png',
+        desc: 'Powered by AISWEI, Solplanet brings German engineering standards to affordable energy storage, focusing on ease of use.',
+        tags: ['German Tech', 'User Friendly'],
+        features: ['Simple BMS Management', 'Reliable LFP Cells', 'Easy Commissioning', 'Clean Aesthetic']
+    },
+    'sigenergy': {
+        name: 'Sigenergy',
+        type: 'battery',
+        logo: 'sigenergy.png',
+        desc: 'The new innovator on the block. Sigenergy combines solar, storage, and EV charging into one seamless AI-integrated 5-in-1 system.',
+        tags: ['5-in-1', 'AI Integrated', 'Future'],
+        features: ['Solar + Battery + EV Charger', 'AI-Assisted Safety', '15-minute Installation', 'Stackable Design']
+    },
+    'felicity': {
+        name: 'Felicity',
+        type: 'battery',
+        logo: 'felicity.png',
+        desc: 'Felicity Solar provides robust and affordable industrial-grade battery solutions scaled down for residential use. Known for large capacity options.',
+        tags: ['High Capacity', 'Robust'],
+        features: ['Deep Cycle Battery', 'Built-in BMS', 'Cost Effective', 'Support Parallel Connection']
+    },
 
-let brandDataDB = {}; // 全局变量
-
-// 2. 从 Supabase 获取数据 (含自动兜底)
-async function fetchBrandData() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('brands')
-            .select('*')
-            .eq('is_active', true)
-            .order('sort_order', { ascending: true });
-
-        // 如果数据库有数据，使用数据库的数据
-        if (!error && data && data.length > 0) {
-            brandDataDB = {};
-            const storagePrefix = "https://iytxwgyhemetdkmqoxoa.supabase.co/storage/v1/object/public/Brands/";
-
-            data.forEach(item => {
-                // 处理 Logo URL
-                if (item.logo && !item.logo.startsWith('http')) {
-                    item.logo = storagePrefix + item.logo;
-                }
-                brandDataDB[item.slug] = item;
-            });
-            console.log("✅ Brands loaded from Supabase");
-        } else {
-            // 如果数据库为空，抛出错误以触发兜底
-            throw new Error("No data in Supabase");
-        }
-    } catch (err) {
-        console.warn("⚠️ Using Local Fallback Brands (DB not ready):", err.message);
-        // 使用本地兜底数据
-        brandDataDB = {};
-        fallbackBrands.forEach(item => {
-            brandDataDB[item.slug] = item;
-        });
-    } finally {
-        // 无论成功还是失败，最后都要渲染界面
-        renderBrandHub();
+    // --- 4 Solar Panel Brands ---
+    'jinko': {
+        name: 'Jinko Solar',
+        type: 'solar',
+        logo: 'jinko.png',
+        desc: 'One of the largest and most innovative solar module manufacturers in the world. Their N-Type Tiger Neo panels are industry leaders.',
+        tags: ['Tier 1', 'World #1', 'N-Type'],
+        features: ['TopCon N-Type Technology', 'Ultra-High Efficiency', 'Better Low-light Performance', '30-Year Linear Warranty']
+    },
+    'longi': {
+        name: 'Longi Solar',
+        type: 'solar',
+        logo: 'longi.png',
+        desc: 'LONGi leads the solar PV industry to new heights with product innovations and optimized power-cost ratio with breakthrough monocrystalline technologies.',
+        tags: ['Tier 1', 'Hi-MO Series', 'Reliable'],
+        features: ['Hi-MO 6 Technology', 'Anti-PID Performance', 'Reduced Hot-spot Risk', 'High Aesthetic Value']
+    },
+    'trina': {
+        name: 'Trina Solar',
+        type: 'solar',
+        logo: 'trina.png',
+        desc: 'A pioneer in the solar industry since 1997. Trina Vertex S+ panels utilize double-glass technology for supreme durability.',
+        tags: ['Tier 1', 'Double Glass', 'Durable'],
+        features: ['Dual Glass Design', '25-Year Product Warranty', 'High Power Output', 'Fire Class A Rating']
+    },
+    'tongwei': {
+        name: 'Tongwei (TW)',
+        type: 'solar',
+        logo: 'tongwei.png',
+        desc: 'A massive Fortune 500 company and the world’s largest producer of high-purity crystalline silicon and solar cells.',
+        tags: ['Tier 1', 'Vertical Integration'],
+        features: ['Shingled Tech Options', 'Low Risk of Micro-cracks', 'Eco-friendly Manufacturing', 'Excellent Value']
     }
-}
+};
 
-// 3. 渲染品牌列表
-// 3. 渲染品牌列表 (简化版：不再隐藏文字，全靠CSS控制)
+// 2. 渲染品牌列表 (在页面加载或首次打开时调用)
 function renderBrandHub() {
     const batteryGrid = document.getElementById('hub-grid-battery');
     const solarGrid = document.getElementById('hub-grid-solar');
     
+    // 清空现有内容 (防止重复)
     if(batteryGrid) batteryGrid.innerHTML = '';
     if(solarGrid) solarGrid.innerHTML = '';
 
-    // 使用全局数据 brandDataDB
-    const keys = Object.keys(brandDataDB);
-    if (keys.length === 0) return;
-
-    keys.forEach(key => {
+    Object.keys(brandDataDB).forEach(key => {
         const brand = brandDataDB[key];
         
+        // 创建卡片 HTML
         const card = document.createElement('div');
         card.className = 'hub-brand-item';
         card.onclick = () => showBrandDetail(key);
         
-        // 🟢 修改重点：去掉行内样式 (style="display:none")
-        // 让 CSS 决定显不显示。手机端 CSS 会强制显示名字。
-        // onerror 依然保留，确保坏图隐藏。
         const html = `
             <img src="${brand.logo}" class="hub-brand-img" alt="${brand.name}" 
-                 onerror="this.style.display='none'">
-            <span class="hub-brand-name">${brand.name}</span>
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <span class="hub-brand-name" ${brand.logo ? 'style="display:none;"' : ''}>${brand.name}</span>
         `;
         card.innerHTML = html;
 
+        // 分类插入
         if (brand.type === 'battery' && batteryGrid) {
             batteryGrid.appendChild(card);
         } else if (brand.type === 'solar' && solarGrid) {
@@ -2274,6 +2303,7 @@ function renderBrandHub() {
         }
     });
 }
+
 // 3. 打开品牌中心 (Level 1)
 // 🟢 [修改 1] 打开品牌中心时 -> 隐藏悬浮按钮
 function openBrandHub() {
@@ -2303,51 +2333,28 @@ function closeBrandHub(e) {
 }
 
 // 4. 打开品牌详情 (Level 2)
-// 4. 打开品牌详情 (Level 2) - 修复版 (适配 Supabase 字段)
 function showBrandDetail(brandKey) {
     const brand = brandDataDB[brandKey];
     if (!brand) return;
 
-    // 1. 判断当前语言
-    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
-
-    // 2. 填充 Logo 和 名字
+    // 填充数据
     const logoEl = document.getElementById('detail-logo');
-    // 如果你存的是完整URL就直接用，如果只是文件名且在本地，就拼接路径
-    // 假设 Supabase 里存的是文件名 "tesla.png" 且图片在本地根目录:
-    logoEl.src = brand.logo.startsWith('http') ? brand.logo : brand.logo; 
-    
+    logoEl.src = brand.logo;
     logoEl.onerror = () => { logoEl.style.display = 'none'; }; 
     logoEl.onload = () => { logoEl.style.display = 'block'; };
 
     document.getElementById('detail-name').innerText = brand.name;
-    
-    // 3. 🟢 核心修复：根据语言读取 desc_cn 或 desc_en
-    const descText = isCN ? brand.desc_cn : brand.desc_en;
-    document.getElementById('detail-desc').innerText = descText || "No description available.";
+    document.getElementById('detail-desc').innerText = brand.desc;
 
-    // 4. 🟢 核心修复：读取 tags_cn 或 tags_en
+    // 渲染标签
     const tagsContainer = document.getElementById('detail-tags');
-    // 确保 tags 是一个数组 (Supabase 的 JSONB 字段有时需要判空)
-    let tags = isCN ? brand.tags_cn : brand.tags_en;
-    if (!tags) tags = []; // 防止报错
-    if (typeof tags === 'string') {
-        try { tags = JSON.parse(tags); } catch(e) {} // 防止意外的字符串格式
-    }
-    
-    tagsContainer.innerHTML = tags.map(t => `<span class="d-tag">${t}</span>`).join('');
+    tagsContainer.innerHTML = brand.tags.map(t => `<span class="d-tag">${t}</span>`).join('');
 
-    // 5. 🟢 核心修复：读取 features_cn 或 features_en
+    // 渲染特性列表
     const featuresList = document.getElementById('detail-features-list');
-    let features = isCN ? brand.features_cn : brand.features_en;
-    if (!features) features = []; // 防止报错
-    if (typeof features === 'string') {
-        try { features = JSON.parse(features); } catch(e) {}
-    }
+    featuresList.innerHTML = brand.features.map(f => `<li>${f}</li>`).join('');
 
-    featuresList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
-
-    // 6. 切换模态框显示 (这一步最后执行)
+    // 切换模态框显示
     document.getElementById('brand-hub-modal').style.display = 'none'; // 隐藏列表
     document.getElementById('brand-detail-modal').style.display = 'flex'; // 显示详情
 }
@@ -2379,9 +2386,5 @@ window.closeBrandDetail = closeBrandDetail;
 
 // 初始化渲染
 document.addEventListener('DOMContentLoaded', () => {
-    initAutocomplete(); // 之前的逻辑
-    initFomoBar();      // 之前的逻辑
-    
-    // 🟢 新增：启动时抓取品牌数据
-    fetchBrandData(); 
+    renderBrandHub();
 });
