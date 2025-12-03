@@ -2176,57 +2176,80 @@ window.setLang = function (lang) {
 // ==========================================
 // [NEW] Brand Hub & Detail Logic
 // ==========================================
-
-// 1. 品牌数据库 (9 Batteries + 4 Solar Panels)
 // ==========================================
-// [NEW] Dynamic Brand Data (From Supabase)
+// [UPDATED] Brand Hub Logic with Local Fallback
 // ==========================================
-let brandDataDB = {}; // 初始化为空对象
 
-// 从 Supabase 获取品牌数据
+// 1. 本地兜底数据 (当数据库为空或加载失败时使用)
+const fallbackBrands = [
+    // --- 电池品牌 ---
+    { slug: 'tesla', name: 'Tesla', type: 'battery', logo: 'tesla.png', desc_en: 'Premium active thermal management.', features_en: ['13.5kWh Capacity', 'Built-in Inverter', 'Backup Gateway'] },
+    { slug: 'sungrow', name: 'Sungrow', type: 'battery', logo: 'sungrow.png', desc_en: 'High voltage LFP battery.', features_en: ['Modular Design', '9.6kWh - 25.6kWh', '10 Year Warranty'] },
+    { slug: 'goodwe', name: 'GoodWe', type: 'battery', logo: 'goodwe.png', desc_en: 'Reliable and affordable.', features_en: ['Lynx Home F Series', 'High Voltage', 'Smart Control'] },
+    { slug: 'alpha', name: 'AlphaESS', type: 'battery', logo: 'alpha.png', desc_en: 'All-in-one design.', features_en: ['Built-in EMS', 'VPP Ready', 'Sleek Design'] },
+    { slug: 'sigenergy', name: 'Sigenergy', type: 'battery', logo: 'sigenergy.png', desc_en: 'AI-optimised 5-in-1 system.', features_en: ['Fastest Install', '28kWh Capacity', 'AI Protection'] },
+    
+    // --- 太阳能板品牌 ---
+    { slug: 'jinko', name: 'Jinko Solar', type: 'solar', logo: 'jinko.png', desc_en: 'World leading PV supplier.', features_en: ['N-Type Tiger Neo', 'High Efficiency', '30 Year Warranty'] },
+    { slug: 'longi', name: 'Longi', type: 'solar', logo: 'longi.png', desc_en: 'Hi-MO 6 technology.', features_en: ['HPBC Cell', 'Aesthetic Design', 'Reliable Yield'] },
+    { slug: 'trina', name: 'Trina Solar', type: 'solar', logo: 'trina.png', desc_en: 'Vertex S+ dual glass.', features_en: ['210mm Cells', 'Dual Glass', '25 Year Product Warranty'] },
+    { slug: 'rec', name: 'REC', type: 'solar', logo: 'rec.png', desc_en: 'Premium European brand.', features_en: ['Alpha Pure-R', 'Lead Free', 'High Power Density'] }
+];
+
+let brandDataDB = {}; // 全局变量
+
+// 2. 从 Supabase 获取数据 (含自动兜底)
 async function fetchBrandData() {
     try {
         const { data, error } = await supabaseClient
             .from('brands')
             .select('*')
-            .eq('is_active', true) // 只获取激活的品牌
-            .order('sort_order', { ascending: true }); // 按顺序排列
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
 
-        if (error) throw error;
-
-        if (data) {
-            // 将数组转换为之前的对象格式 { 'slug': {data} }
+        // 如果数据库有数据，使用数据库的数据
+        if (!error && data && data.length > 0) {
             brandDataDB = {};
             const storagePrefix = "https://iytxwgyhemetdkmqoxoa.supabase.co/storage/v1/object/public/Brands/";
 
             data.forEach(item => {
-                // 如果 logo 只是文件名（不含 http），就加上前缀
+                // 处理 Logo URL
                 if (item.logo && !item.logo.startsWith('http')) {
                     item.logo = storagePrefix + item.logo;
                 }
                 brandDataDB[item.slug] = item;
             });
-            
-            // 数据加载完成后，渲染界面
-            renderBrandHub(); 
-            console.log("✅ Brands loaded from Supabase:", Object.keys(brandDataDB).length);
+            console.log("✅ Brands loaded from Supabase");
+        } else {
+            // 如果数据库为空，抛出错误以触发兜底
+            throw new Error("No data in Supabase");
         }
     } catch (err) {
-        console.error("❌ Error fetching brands:", err);
-        // 这里可以保留一个极简的本地兜底数据，或者提示错误
+        console.warn("⚠️ Using Local Fallback Brands (DB not ready):", err.message);
+        // 使用本地兜底数据
+        brandDataDB = {};
+        fallbackBrands.forEach(item => {
+            brandDataDB[item.slug] = item;
+        });
+    } finally {
+        // 无论成功还是失败，最后都要渲染界面
+        renderBrandHub();
     }
 }
 
-// 2. 渲染品牌列表 (在页面加载或首次打开时调用)
+// 3. 渲染品牌列表
 function renderBrandHub() {
     const batteryGrid = document.getElementById('hub-grid-battery');
     const solarGrid = document.getElementById('hub-grid-solar');
     
-    // 清空现有内容 (防止重复)
+    // 清空现有内容
     if(batteryGrid) batteryGrid.innerHTML = '';
     if(solarGrid) solarGrid.innerHTML = '';
 
-    Object.keys(brandDataDB).forEach(key => {
+    const keys = Object.keys(brandDataDB);
+    if (keys.length === 0) return; // 如果真的一条数据都没有，就退出
+
+    keys.forEach(key => {
         const brand = brandDataDB[key];
         
         // 创建卡片 HTML
@@ -2234,6 +2257,7 @@ function renderBrandHub() {
         card.className = 'hub-brand-item';
         card.onclick = () => showBrandDetail(key);
         
+        // 🟢 关键：onerror 会在图片加载失败(如本地没图)时，自动隐藏图片并显示下面的 span 文字
         const html = `
             <img src="${brand.logo}" class="hub-brand-img" alt="${brand.name}" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
@@ -2249,7 +2273,6 @@ function renderBrandHub() {
         }
     });
 }
-
 // 3. 打开品牌中心 (Level 1)
 // 🟢 [修改 1] 打开品牌中心时 -> 隐藏悬浮按钮
 function openBrandHub() {
