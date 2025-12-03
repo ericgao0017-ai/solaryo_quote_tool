@@ -2357,5 +2357,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 🟢 新增：启动时抓取品牌数据
     fetchBrandData(); 
-
 });
