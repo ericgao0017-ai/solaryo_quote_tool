@@ -189,6 +189,15 @@ const i18n = {
         use_hws: "电热水器", use_gas2elec: "煤气改电", use_backup: "需要停电备份", use_others: "其他设备",
         selected_count: "已选择 {n} 项",
 
+        // ... 原有的翻译 ...
+        hub_title: "甄选品牌展示",
+        hub_subtitle: "点击品牌图标查看详细参数",
+        hub_sec_battery: "🔋 储能电池品牌",
+        hub_sec_solar: "☀️ 太阳能板品牌",
+        hub_back: "‹ 返回列表",
+        hub_features_title: "核心优势",
+        btn_got_it: "了解了",
+
         // [新增] 底部悬浮栏 & 假加载
         sticky_net: "预估净价",
         btn_book_now: "立即预约",
@@ -267,6 +276,14 @@ const i18n = {
         use_ev_now: "EV (Existing)", use_ev_plan: "EV (Planned)",
         use_hws: "Elec Hot Water", use_gas2elec: "Gas to Electric", use_backup: "Need Backup", use_others: "Others",
         selected_count: "{n} items selected",
+        // ... 原有的翻译 ...
+        hub_title: "Trusted Partners",
+        hub_subtitle: "Select a brand to view details",
+        hub_sec_battery: "🔋 Energy Storage (Battery)",
+        hub_sec_solar: "☀️ Solar Panels",
+        hub_back: "‹ Back",
+        hub_features_title: "Key Features",
+        btn_got_it: "Got it",
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
@@ -2156,3 +2173,185 @@ window.setLang = function (lang) {
     if (originalSetLang) originalSetLang(lang); // 执行原逻辑
     updateFomoContent(); // 执行 FOMO 更新
 };
+// ==========================================
+// [NEW] Brand Hub & Detail Logic
+// ==========================================
+
+// 1. 品牌数据库 (9 Batteries + 4 Solar Panels)
+// ==========================================
+// [NEW] Dynamic Brand Data (From Supabase)
+// ==========================================
+let brandDataDB = {}; // 初始化为空对象
+
+// 从 Supabase 获取品牌数据
+async function fetchBrandData() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('brands')
+            .select('*')
+            .eq('is_active', true) // 只获取激活的品牌
+            .order('sort_order', { ascending: true }); // 按顺序排列
+
+        if (error) throw error;
+
+        if (data) {
+            // 将数组转换为之前的对象格式 { 'slug': {data} }
+            brandDataDB = {};
+            data.forEach(item => {
+                brandDataDB[item.slug] = item;
+            });
+            
+            // 数据加载完成后，渲染界面
+            renderBrandHub(); 
+            console.log("✅ Brands loaded from Supabase:", Object.keys(brandDataDB).length);
+        }
+    } catch (err) {
+        console.error("❌ Error fetching brands:", err);
+        // 这里可以保留一个极简的本地兜底数据，或者提示错误
+    }
+}
+
+// 2. 渲染品牌列表 (在页面加载或首次打开时调用)
+function renderBrandHub() {
+    const batteryGrid = document.getElementById('hub-grid-battery');
+    const solarGrid = document.getElementById('hub-grid-solar');
+    
+    // 清空现有内容 (防止重复)
+    if(batteryGrid) batteryGrid.innerHTML = '';
+    if(solarGrid) solarGrid.innerHTML = '';
+
+    Object.keys(brandDataDB).forEach(key => {
+        const brand = brandDataDB[key];
+        
+        // 创建卡片 HTML
+        const card = document.createElement('div');
+        card.className = 'hub-brand-item';
+        card.onclick = () => showBrandDetail(key);
+        
+        const html = `
+            <img src="${brand.logo}" class="hub-brand-img" alt="${brand.name}" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <span class="hub-brand-name" ${brand.logo ? 'style="display:none;"' : ''}>${brand.name}</span>
+        `;
+        card.innerHTML = html;
+
+        // 分类插入
+        if (brand.type === 'battery' && batteryGrid) {
+            batteryGrid.appendChild(card);
+        } else if (brand.type === 'solar' && solarGrid) {
+            solarGrid.appendChild(card);
+        }
+    });
+}
+
+// 3. 打开品牌中心 (Level 1)
+// 🟢 [修改 1] 打开品牌中心时 -> 隐藏悬浮按钮
+function openBrandHub() {
+    // 确保数据已渲染
+    if (document.getElementById('hub-grid-battery').children.length === 0) {
+        renderBrandHub();
+    }
+    
+    // 显示模态框
+    document.getElementById('brand-hub-modal').style.display = 'flex';
+    
+    // 🔥 新增：隐藏 Top Brand 悬浮按钮
+    const badge = document.querySelector('.fixed-brand-badge');
+    if (badge) badge.style.display = 'none';
+}
+
+// 🟢 [修改 2] 关闭品牌中心时 -> 恢复悬浮按钮
+function closeBrandHub(e) {
+    const overlay = document.getElementById('brand-hub-modal');
+    if (!e || e.target === overlay || e.target.classList.contains('close-btn')) {
+        overlay.style.display = 'none';
+        
+        // 🔥 新增：恢复显示 Top Brand 悬浮按钮
+        const badge = document.querySelector('.fixed-brand-badge');
+        if (badge) badge.style.display = 'flex'; // 注意这里是用 flex 恢复布局
+    }
+}
+
+// 4. 打开品牌详情 (Level 2)
+// 4. 打开品牌详情 (Level 2) - 修复版 (适配 Supabase 字段)
+function showBrandDetail(brandKey) {
+    const brand = brandDataDB[brandKey];
+    if (!brand) return;
+
+    // 1. 判断当前语言
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+
+    // 2. 填充 Logo 和 名字
+    const logoEl = document.getElementById('detail-logo');
+    // 如果你存的是完整URL就直接用，如果只是文件名且在本地，就拼接路径
+    // 假设 Supabase 里存的是文件名 "tesla.png" 且图片在本地根目录:
+    logoEl.src = brand.logo.startsWith('http') ? brand.logo : brand.logo; 
+    
+    logoEl.onerror = () => { logoEl.style.display = 'none'; }; 
+    logoEl.onload = () => { logoEl.style.display = 'block'; };
+
+    document.getElementById('detail-name').innerText = brand.name;
+    
+    // 3. 🟢 核心修复：根据语言读取 desc_cn 或 desc_en
+    const descText = isCN ? brand.desc_cn : brand.desc_en;
+    document.getElementById('detail-desc').innerHTML = descText || "No description available.";
+
+    // 4. 🟢 核心修复：读取 tags_cn 或 tags_en
+    const tagsContainer = document.getElementById('detail-tags');
+    // 确保 tags 是一个数组 (Supabase 的 JSONB 字段有时需要判空)
+    let tags = isCN ? brand.tags_cn : brand.tags_en;
+    if (!tags) tags = []; // 防止报错
+    if (typeof tags === 'string') {
+        try { tags = JSON.parse(tags); } catch(e) {} // 防止意外的字符串格式
+    }
+    
+    tagsContainer.innerHTML = tags.map(t => `<span class="d-tag">${t}</span>`).join('');
+
+    // 5. 🟢 核心修复：读取 features_cn 或 features_en
+    const featuresList = document.getElementById('detail-features-list');
+    let features = isCN ? brand.features_cn : brand.features_en;
+    if (!features) features = []; // 防止报错
+    if (typeof features === 'string') {
+        try { features = JSON.parse(features); } catch(e) {}
+    }
+
+    featuresList.innerHTML = features.map(f => `<li>${f}</li>`).join('');
+
+    // 6. 切换模态框显示 (这一步最后执行)
+    document.getElementById('brand-hub-modal').style.display = 'none'; // 隐藏列表
+    document.getElementById('brand-detail-modal').style.display = 'flex'; // 显示详情
+}
+
+// 5. 返回列表 (Back Button)
+function backToHub() {
+    document.getElementById('brand-detail-modal').style.display = 'none';
+    document.getElementById('brand-hub-modal').style.display = 'flex';
+}
+
+// 🟢 [修改 3] 关闭详情页时 -> 恢复悬浮按钮
+function closeBrandDetail(e) {
+    const overlay = document.getElementById('brand-detail-modal');
+    // 注意：增加了 btn-modal-ok 的点击判断
+    if (!e || e.target === overlay || e.target.classList.contains('close-btn') || e.target.classList.contains('btn-modal-ok')) {
+        overlay.style.display = 'none';
+        
+        // 🔥 新增：恢复显示 Top Brand 悬浮按钮
+        const badge = document.querySelector('.fixed-brand-badge');
+        if (badge) badge.style.display = 'flex';
+    }
+}
+
+// 将函数暴露给 window 以便 HTML 调用
+window.openBrandHub = openBrandHub;
+window.closeBrandHub = closeBrandHub;
+window.backToHub = backToHub;
+window.closeBrandDetail = closeBrandDetail;
+
+// 初始化渲染
+document.addEventListener('DOMContentLoaded', () => {
+    initAutocomplete(); // 之前的逻辑
+    initFomoBar();      // 之前的逻辑
+    
+    // 🟢 新增：启动时抓取品牌数据
+    fetchBrandData(); 
+});

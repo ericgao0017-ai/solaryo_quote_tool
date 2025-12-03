@@ -31,6 +31,55 @@
         </div>
         <span class="fomo-arrow">›</span>
     </div>
+    <div class="fixed-brand-badge" onclick="openBrandHub()" title="View Top Brands">
+    <img src="topbrand.png" alt="Top Brands" />
+    <span class="trust-tooltip">Top Brands</span>
+</div>
+
+<div id="brand-hub-modal" class="modal-overlay" onclick="closeBrandHub(event)">
+    <div class="modal-content brand-hub-content">
+        <span class="close-btn" onclick="closeBrandHub(event)">&times;</span>
+        
+        <h3 class="hub-title" data-i18n="hub_title">Trusted Partners</h3>
+        <p class="hub-subtitle" data-i18n="hub_subtitle">Select a brand to view details</p>
+
+        <div class="brand-section-header" data-i18n="hub_sec_battery">🔋 Energy Storage (Battery)</div>
+        <div class="brand-hub-grid" id="hub-grid-battery">
+            </div>
+
+        <div class="brand-section-header" data-i18n="hub_sec_solar">☀️ Solar Panels</div>
+        <div class="brand-hub-grid" id="hub-grid-solar">
+            </div>
+    </div>
+</div>
+
+<div id="brand-detail-modal" class="modal-overlay" onclick="closeBrandDetail(event)">
+    <div class="modal-content brand-detail-content">
+        <div class="detail-nav">
+            <button class="back-btn" onclick="backToHub()">‹ Back</button>
+            <span class="close-btn" onclick="closeBrandDetail(event)">&times;</span>
+        </div>
+
+        <div id="detail-dynamic-container">
+            <div class="detail-header">
+                <img id="detail-logo" src="" alt="Brand Logo">
+                <h2 id="detail-name">Brand Name</h2>
+            </div>
+            <div class="detail-tags" id="detail-tags">
+                </div>
+            <div class="detail-desc" id="detail-desc">
+                Description goes here...
+            </div>
+            <div class="detail-features">
+                <h4>Key Features</h4>
+                <ul id="detail-features-list">
+                    </ul>
+            </div>
+        </div>
+        
+        <button class="btn-modal-ok" onclick="closeBrandDetail(event)">Got it</button>
+    </div>
+</div>
     <div class="fixed-trust-badge" title="CEC Accredited Installer">
         <img src="ceclogo.png" alt="CEC Logo" />
         <span class="trust-tooltip">CEC Accredited</span>
