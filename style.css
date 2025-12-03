@@ -4097,3 +4097,57 @@ body.hide-fomo .chat-widget-container {
         justify-content: center !important;
     }
 }
+/* ==========================================
+   [Mobile FORCE FIX] 手机端品牌弹窗强制修复补丁
+   ========================================== */
+@media (max-width: 600px) {
+    /* 1. 强制网格布局生效，防止塌陷 */
+    .brand-hub-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; /* 强制两列 */
+        gap: 10px !important;
+        width: 100% !important;
+        min-height: 200px !important; /* 给一个最小高度 */
+    }
+
+    /* 2. 强制卡片有背景色和边框，确保肉眼可见 */
+    .hub-brand-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #f8fafc !important; /* 浅灰背景 */
+        border: 1px solid #cbd5e1 !important; /* 深灰边框 */
+        border-radius: 8px !important;
+        padding: 10px !important;
+        min-height: 80px !important; /* 强制高度 */
+        margin-bottom: 0 !important;
+        opacity: 1 !important; /* 防止透明 */
+        visibility: visible !important;
+    }
+
+    /* 3. 强制显示文字！不管图片有没有加载 */
+    .hub-brand-name {
+        display: block !important; /* 强制显示 */
+        font-size: 0.8rem !important;
+        color: #0f172a !important; /* 深黑色文字 */
+        font-weight: 700 !important;
+        text-align: center !important;
+        margin-top: 5px !important;
+        width: 100%;
+    }
+
+    /* 4. 图片样式修正，防止图片挂了占位太怪 */
+    .hub-brand-img {
+        max-width: 80% !important;
+        max-height: 40px !important;
+        object-fit: contain !important;
+        display: block !important; 
+        margin: 0 auto !important;
+    }
+
+    /* 5. 极端情况：如果图片加载失败，利用CSS隐藏破图图标，只看文字 */
+    img[src=""][alt], img:not([src]) {
+        display: none !important;
+    }
+}

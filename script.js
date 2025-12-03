@@ -2238,34 +2238,35 @@ async function fetchBrandData() {
 }
 
 // 3. 渲染品牌列表
+// 3. 渲染品牌列表 (简化版：不再隐藏文字，全靠CSS控制)
 function renderBrandHub() {
     const batteryGrid = document.getElementById('hub-grid-battery');
     const solarGrid = document.getElementById('hub-grid-solar');
     
-    // 清空现有内容
     if(batteryGrid) batteryGrid.innerHTML = '';
     if(solarGrid) solarGrid.innerHTML = '';
 
+    // 使用全局数据 brandDataDB
     const keys = Object.keys(brandDataDB);
-    if (keys.length === 0) return; // 如果真的一条数据都没有，就退出
+    if (keys.length === 0) return;
 
     keys.forEach(key => {
         const brand = brandDataDB[key];
         
-        // 创建卡片 HTML
         const card = document.createElement('div');
         card.className = 'hub-brand-item';
         card.onclick = () => showBrandDetail(key);
         
-        // 🟢 关键：onerror 会在图片加载失败(如本地没图)时，自动隐藏图片并显示下面的 span 文字
+        // 🟢 修改重点：去掉行内样式 (style="display:none")
+        // 让 CSS 决定显不显示。手机端 CSS 会强制显示名字。
+        // onerror 依然保留，确保坏图隐藏。
         const html = `
             <img src="${brand.logo}" class="hub-brand-img" alt="${brand.name}" 
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-            <span class="hub-brand-name" ${brand.logo ? 'style="display:none;"' : ''}>${brand.name}</span>
+                 onerror="this.style.display='none'">
+            <span class="hub-brand-name">${brand.name}</span>
         `;
         card.innerHTML = html;
 
-        // 分类插入
         if (brand.type === 'battery' && batteryGrid) {
             batteryGrid.appendChild(card);
         } else if (brand.type === 'solar' && solarGrid) {
