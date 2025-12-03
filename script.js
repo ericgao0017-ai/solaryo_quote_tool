@@ -7,6 +7,8 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 全局变量：存聊天记录
 let globalChatHistory = [];
+// 🟢 [新增] 全局变量：存储当前选中的电池/逆变器品牌名称
+let currentSelectedBrandName = "";
 // ==========================================
 // 1. 全局变量与配置 (Global Config & Variables)
 // ==========================================
@@ -503,8 +505,12 @@ function selectBrand(brandId, markup, tier, isAutoSelect = false) {
     const tierConfig = brandConfig[tier];
     if (tierConfig) {
         const brandObj = tierConfig.brands.find(b => b.id === brandId);
-        if (brandObj && brandObj.markupPerKwh) {
-            extraCost += (brandObj.markupPerKwh * batSize);
+        if (brandObj) {
+            currentSelectedBrandName = brandObj.name;
+
+            if (brandObj.markupPerKwh) {
+                extraCost += (brandObj.markupPerKwh * batSize);
+            }
         }
     }
 
@@ -1057,10 +1063,24 @@ function calculate(forceShow = false) {
         if (isUnlocked) {
             document.getElementById('unlock-overlay').classList.add('hidden');
             document.querySelectorAll('.price-number').forEach(el => el.classList.remove('locked'));
+
+            // 🟢 [修复开始]：刷新后，如果检测到已解锁，必须强制把按钮和 VPP Banner 显示出来
+            const finalBtn = document.getElementById('btn-final-enquiry');
+            if (finalBtn) finalBtn.style.display = 'flex';
+
+            const vppBanner = document.getElementById('vpp-banner');
+            // 注意：VPP Banner 只有在非纯光伏模式下才显示
+            if (vppBanner && curMode !== 'solar') vppBanner.style.display = 'flex';
+            // 🟢 [修复结束]
+
             setupStickyObserver();
         } else {
             document.getElementById('unlock-overlay').classList.remove('hidden');
             document.querySelectorAll('.price-number').forEach(el => el.classList.add('locked'));
+
+            // 🟢 [建议]：如果是未解锁状态，确保按钮是隐藏的（防止逻辑冲突）
+            const finalBtn = document.getElementById('btn-final-enquiry');
+            if (finalBtn) finalBtn.style.display = 'none';
         }
 
         if (forceShow) card.scrollIntoView({ behavior: "smooth" });
@@ -1357,6 +1377,8 @@ async function sendFinalEnquiry() {
             existing_solar_size: document.getElementById('exist-solar-val').innerText,
             quote_tier: selectedTier,
             estimated_price: document.getElementById('out-net').innerText,
+            // 🟢 [新增] 记录用户选的品牌
+            selected_brand: (curMode === 'solar') ? 'Solar Only (Panels)' : currentSelectedBrandName,
             notes: notesEl.value,
 
             // 高级数据
