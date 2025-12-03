@@ -1237,38 +1237,122 @@ function isValidAustralianPhone(p) { return /^(?:04|\+?614)\d{8}$|^(?:02|03|07|0
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPostcode(p) { return /^\d{4}$/.test(p); }
 
-function submitLead() {
+// ==========================================
+// [UPDATED] 提交初步线索 (Unlock Quote) - 保存到 Supabase
+// ==========================================
+async function submitLead() {
     const name = document.getElementById('lead-name').value.trim();
     const email = document.getElementById('lead-email').value.trim();
     const phone = document.getElementById('lead-phone').value.trim();
+    const address = document.getElementById('lead-address').value.trim(); // 获取地址
     const msgEl = document.getElementById('submit-msg');
+
+    // 清除错误信息
     msgEl.innerText = '';
 
-    if (!name || !email || !phone) { msgEl.style.color = '#ef5350'; msgEl.innerText = i18n[curLang].err_required; return; }
-    if (!isValidEmail(email)) { msgEl.style.color = '#ef5350'; msgEl.innerText = i18n[curLang].err_email; return; }
-    if (!isValidAustralianPhone(phone)) { msgEl.style.color = '#ef5350'; msgEl.innerText = i18n[curLang].err_phone; return; }
+    // 1. 基础验证
+    if (!name || !email || !phone) {
+        msgEl.style.color = '#ef5350';
+        msgEl.innerText = i18n[curLang].err_required;
+        return;
+    }
+    if (!isValidEmail(email)) {
+        msgEl.style.color = '#ef5350';
+        msgEl.innerText = i18n[curLang].err_email;
+        return;
+    }
+    if (!isValidAustralianPhone(phone)) {
+        msgEl.style.color = '#ef5350';
+        msgEl.innerText = i18n[curLang].err_phone;
+        return;
+    }
 
     const btn = document.getElementById('btn-submit');
-    btn.innerText = curLang === 'cn' ? "发送中..." : "Processing...";
+    const originalBtnText = btn.innerText; // 保存原始按钮文字
+
+    // 2. 更改按钮状态 (防止重复点击)
+    btn.innerText = curLang === 'cn' ? "处理中..." : "Processing...";
     btn.disabled = true;
 
-    setTimeout(() => {
+    try {
+        // --- [新增] 3. 构建数据包 (Payload) ---
+        // 即使没有最终确认，我们也把当前计算器里的所有配置存下来
+        const payload = {
+            created_at: new Date().toISOString(),
+            language: curLang,
+            installation_mode: curMode,
+            state: document.getElementById('state-select').value,
+
+            // 核心联系方式
+            name: name,
+            phone: phone,
+            email: email,
+            address: address,
+            postcode: extractedPostcode || "", // 如果 Google Maps 提取到了邮编
+
+            // 标记这是一个 "解锁阶段" 的线索，而非最终确认
+            notes: "[System] User Unlocked Price (Preliminary Lead)",
+
+            // 系统配置数据
+            bill_amount: document.getElementById('bill-input').value,
+            solar_size: document.getElementById('solar-val').innerText,
+            battery_size: document.getElementById('bat-val').innerText,
+            existing_solar_size: document.getElementById('exist-solar-val').innerText,
+            quote_tier: selectedTier,
+            estimated_price: document.getElementById('out-net').innerText,
+
+            // 用户画像
+            user_profile: userApplianceProfile,
+
+            // 聊天记录 (如果有)
+            chat_history: globalChatHistory
+        };
+
+        // --- [新增] 4. 发送给 Supabase ---
+        const { error } = await supabaseClient.from('leads').insert([payload]);
+
+        if (error) {
+            console.error("Supabase Save Error:", error);
+            // 这里可以选择是否报错，或者静默失败继续解锁
+            // throw error; // 如果想让失败时阻止解锁，取消注释这行
+        }
+
+        // --- 5. 成功后的 UI 逻辑 (保持原有动效) ---
+
+        // 存入 Session 避免刷新后重新锁住
         sessionStorage.setItem('quoteUnlocked', 'true');
+
+        // 隐藏遮罩层
         document.getElementById('unlock-overlay').classList.add('hidden');
+
+        // 解锁价格模糊
         document.querySelectorAll('.price-number').forEach(el => el.classList.remove('locked'));
+
+        // 显示 VPP Banner 和 最终预约按钮
         const vppBanner = document.getElementById('vpp-banner');
         if (vppBanner && curMode !== 'solar') vppBanner.style.display = 'flex';
+
         const finalBtn = document.getElementById('btn-final-enquiry');
         if (finalBtn) finalBtn.style.display = 'flex';
 
-        // 🟢 [Sticky Footer] 解锁成功后，立即启动底部栏监听
+        // 启动底部悬浮栏监听
         setupStickyObserver();
 
+        // 提示信息和彩带特效
         msgEl.style.color = '#66bb6a';
         msgEl.innerText = i18n[curLang].alert_sent;
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#f59e0b', '#0f172a'] });
-        btn.innerText = curLang === 'cn' ? "已发送" : "Sent";
-    }, 1000);
+
+        btn.innerText = curLang === 'cn' ? "解锁成功" : "Unlocked!";
+
+    } catch (err) {
+        // 如果出错，恢复按钮状态，提示用户
+        console.error("Submit Lead Error:", err);
+        msgEl.style.color = '#ef5350';
+        msgEl.innerText = "Network Error. Please try again.";
+        btn.disabled = false;
+        btn.innerText = originalBtnText;
+    }
 }
 // 辅助函数：获取 Select 选中的文本
 function getSelectedText(elementId) {
