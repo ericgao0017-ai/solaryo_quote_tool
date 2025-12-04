@@ -2305,7 +2305,6 @@ function renderBrandHub() {
 }
 
 // 3. 打开品牌中心 (Level 1)
-// 🟢 [修改 1] 打开品牌中心时 -> 隐藏悬浮按钮
 function openBrandHub() {
     // 确保数据已渲染
     if (document.getElementById('hub-grid-battery').children.length === 0) {
@@ -2315,20 +2314,31 @@ function openBrandHub() {
     // 显示模态框
     document.getElementById('brand-hub-modal').style.display = 'flex';
     
-    // 🔥 新增：隐藏 Top Brand 悬浮按钮
+    // 隐藏 Top Brand 悬浮按钮
     const badge = document.querySelector('.fixed-brand-badge');
     if (badge) badge.style.display = 'none';
+
+    // 🟢 [新增] 打开品牌墙时，隐藏顶部的 FOMO Bar
+    const fomo = document.getElementById('fomo-bar');
+    if (fomo) fomo.style.display = 'none';
 }
 
-// 🟢 [修改 2] 关闭品牌中心时 -> 恢复悬浮按钮
+// 🟢 [修改 2] 关闭品牌中心时 -> 恢复悬浮按钮 & FOMO Bar
 function closeBrandHub(e) {
     const overlay = document.getElementById('brand-hub-modal');
     if (!e || e.target === overlay || e.target.classList.contains('close-btn')) {
         overlay.style.display = 'none';
         
-        // 🔥 新增：恢复显示 Top Brand 悬浮按钮
+        // 恢复显示 Top Brand 悬浮按钮
         const badge = document.querySelector('.fixed-brand-badge');
-        if (badge) badge.style.display = 'flex'; // 注意这里是用 flex 恢复布局
+        if (badge) badge.style.display = 'flex'; 
+
+        // 🟢 [新增] 关闭品牌墙时，恢复 FOMO Bar
+        // (加个判断：只有当确实有新闻数据时才显示，防止空条出现)
+        const fomo = document.getElementById('fomo-bar');
+        if (fomo && typeof fomoData !== 'undefined' && fomoData.length > 0) {
+            fomo.style.display = 'flex';
+        }
     }
 }
 
@@ -2365,16 +2375,22 @@ function backToHub() {
     document.getElementById('brand-hub-modal').style.display = 'flex';
 }
 
-// 🟢 [修改 3] 关闭详情页时 -> 恢复悬浮按钮
+// 🟢 [修改 3] 关闭详情页时 -> 恢复悬浮按钮 & FOMO Bar
 function closeBrandDetail(e) {
     const overlay = document.getElementById('brand-detail-modal');
     // 注意：增加了 btn-modal-ok 的点击判断
     if (!e || e.target === overlay || e.target.classList.contains('close-btn') || e.target.classList.contains('btn-modal-ok')) {
         overlay.style.display = 'none';
         
-        // 🔥 新增：恢复显示 Top Brand 悬浮按钮
+        // 恢复显示 Top Brand 悬浮按钮
         const badge = document.querySelector('.fixed-brand-badge');
         if (badge) badge.style.display = 'flex';
+
+        // 🟢 [新增] 关闭详情页时，恢复 FOMO Bar
+        const fomo = document.getElementById('fomo-bar');
+        if (fomo && typeof fomoData !== 'undefined' && fomoData.length > 0) {
+            fomo.style.display = 'flex';
+        }
     }
 }
 
