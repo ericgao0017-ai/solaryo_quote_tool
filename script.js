@@ -190,6 +190,10 @@ const i18n = {
         use_hws: "电热水器", use_gas2elec: "煤气改电", use_backup: "需要停电备份", use_others: "其他设备",
         selected_count: "已选择 {n} 项",
 
+        // 在 i18n.cn 中添加:
+        flash_title: "⚡ 60秒获取精准报价",
+        flash_subtitle: "电池补贴即将调整，立即查看您的资格！",
+
         // [新增] 底部悬浮栏 & 假加载
         sticky_net: "预估净价",
         btn_book_now: "立即锁定",
@@ -203,6 +207,7 @@ const i18n = {
         chat_welcome: "👋 您好！我是您的太阳能助手。<br>关于报价、电池或补贴有什么可以帮您的吗？",
         chat_placeholder: "请输入您的问题...",
         chat_just_now: "刚刚"
+        
     },
     en: {
         lbl_notes: "Notes / Special Requirements (Optional)",
@@ -269,6 +274,9 @@ const i18n = {
         use_ev_now: "EV (Existing)", use_ev_plan: "EV (Planned)",
         use_hws: "Elec Hot Water", use_gas2elec: "Gas to Electric", use_backup: "Need Backup", use_others: "Others",
         selected_count: "{n} items selected",
+        // 在 i18n.en 中添加:
+        flash_title: "⚡ Discover Savings in 60s",
+        flash_subtitle: "Rebates are changing soon. Check eligibility now!",
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
@@ -2448,4 +2456,21 @@ window.closeBrandDetail = closeBrandDetail;
 // 初始化渲染
 document.addEventListener('DOMContentLoaded', () => {
     renderBrandHub();
+});
+// ==========================================
+// [NEW] Welcome Flash Logic
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. 延迟 0.5秒 显示，给用户一点反应时间
+    setTimeout(() => {
+        const flash = document.getElementById('welcome-flash');
+        if (flash) {
+            flash.classList.add('show');
+            
+            // 2. 3.5秒后自动隐藏 (配合 CSS 的进度条时间)
+            setTimeout(() => {
+                flash.classList.remove('show');
+            }, 4500); 
+        }
+    }, 800);
 });

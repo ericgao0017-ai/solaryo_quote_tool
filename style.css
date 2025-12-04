@@ -3910,7 +3910,7 @@ body.hide-fomo .chat-widget-container {
 
 /* 图片大小控制 */
 .fixed-brand-badge img {
-    width: 45px; /* 50px 容器内放 32px 图片 */
+    width: 49px; /* 50px 容器内放 32px 图片 */
     height: auto;
     display: block;
 }
@@ -3955,7 +3955,7 @@ body.hide-fomo .chat-widget-container {
 
     /* 3. 调整内部图片大小 (按比例缩小) */
     .fixed-brand-badge img {
-        width: 35px !important; /* 40px 容器放 26px 图片合适 */
+        width: 39px !important; /* 40px 容器放 26px 图片合适 */
     }
 
     /* 4. 调整 Tooltip 位置 (避免遮挡) */
@@ -4097,4 +4097,118 @@ body.hide-fomo .chat-widget-container {
     animation: pulse-btn 1s infinite;
     background: linear-gradient(135deg, #059669 0%, #10b981 100%); /* 这里的颜色改成更加显眼的绿色，而不是深黑 */
     border: 1px solid #34d399;
+}
+/* ==========================================
+   [FINAL TWEAK] Welcome Flash (Translucent Dark Glass)
+   ========================================== */
+.welcome-flash {
+    position: fixed;
+    /* 🟢 保持刚才调整的位置：避开 Logo */
+    top: -120px; 
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10002;
+    
+    /* 🟢 核心修改：
+       1. 使用 rgba 降低不透明度 (0.75)，让背景变浅且透明
+       2. 增加 blur 模糊，营造"若隐若现"的景深感
+    */
+    background: rgba(15, 23, 42, 0.75); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    
+    /* 🟢 边框也稍微调透一点点，更融合 */
+    border: 2px solid rgba(245, 158, 11, 0.6); 
+    
+    /* 投影稍微柔和一点，配合透明材质 */
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3), 
+        0 0 20px rgba(245, 158, 11, 0.2); 
+    
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 350px;
+    max-width: 92%;
+    
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* 显示状态 - 保持下移位置 */
+.welcome-flash.show {
+    top: 70px; /* 电脑端位置 */
+}
+
+/* 图标动画 */
+.flash-icon {
+    font-size: 2.4rem;
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));
+    animation: flashPulseStrong 1.5s infinite alternate;
+    opacity: 0.9; /* 图标微透 */
+}
+
+@keyframes flashPulseStrong {
+    from { transform: scale(1); }
+    to { transform: scale(1.15); }
+}
+
+.flash-content {
+    flex: 1;
+}
+
+.flash-title {
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    /* 稍微加深文字阴影，防止背景太透看不清字 */
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.flash-subtitle {
+    color: var(--solar-gold);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* 进度条 */
+.flash-timer-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--solar-gold), #fbbf24, #fff);
+    width: 0%;
+    box-shadow: 0 -2px 10px rgba(245, 158, 11, 0.4);
+    opacity: 0.9;
+}
+
+.welcome-flash.show .flash-timer-bar {
+    width: 100%;
+    transition: width 4.2s linear; 
+}
+
+/* 手机适配 */
+@media (max-width: 500px) {
+    .welcome-flash {
+        padding: 14px 18px;
+        min-width: auto;
+        width: 92%;
+    }
+    
+    .welcome-flash.show {
+        top: 56px; /* 手机端位置 */
+    }
+
+    .flash-icon { font-size: 2rem; }
+    .flash-title { font-size: 0.9rem; }
+    .flash-subtitle { font-size: 0.75rem; }
 }
