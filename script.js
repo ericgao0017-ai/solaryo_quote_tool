@@ -190,6 +190,8 @@ const i18n = {
         use_hws: "电热水器", use_gas2elec: "煤气改电", use_backup: "需要停电备份", use_others: "其他设备",
         selected_count: "已选择 {n} 项",
 
+        lbl_budget: "您的心理预算", // 🟢 新增
+
         // 在 i18n.cn 中添加:
         flash_title: "⚡ 60秒获取精准报价",
         flash_subtitle: "电池补贴即将调整，立即查看您的资格！",
@@ -277,6 +279,8 @@ const i18n = {
         // 在 i18n.en 中添加:
         flash_title: "⚡ Discover Savings in 60 seconds",
         flash_subtitle: "Rebates are changing soon. Check eligibility now!",
+
+        lbl_budget: "Target Budget", // 🟢 新增
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
@@ -387,7 +391,16 @@ function updateVal(type) {
     }
 
     if (type === 'bill') document.getElementById('bill-val').innerText = document.getElementById('bill-input').value;
-
+    // 🟢 [新增] 预算滑块逻辑
+    if (type === 'budget') {
+        const val = parseInt(document.getElementById('budget-input').value);
+        document.getElementById('budget-val').innerText = val.toLocaleString();
+        
+        // 如果结果已显示，拖动时实时切换推荐档位
+        if (document.getElementById('result-card').style.display === 'block') {
+            autoSelectTierByBudget(val);
+        }
+    }
     // 2. 账单滑块的特殊逻辑 (智能推荐)
     if (type === 'bill') {
         const billVal = parseFloat(document.getElementById('bill-input').value);
@@ -1068,7 +1081,8 @@ function calculate(forceShow = false) {
 
         // --- 10. 显示结果 & 刷新 ---
         card.style.display = 'block';
-        selectTier(selectedTier);
+        const budgetVal = parseFloat(document.getElementById('budget-input').value);
+        autoSelectTierByBudget(budgetVal);
 
         if (isUnlocked) {
             document.getElementById('unlock-overlay').classList.add('hidden');
@@ -1337,6 +1351,7 @@ async function submitLead() {
             property_phase: getSelectedText('phase-select'),
             // 系统配置数据
             bill_amount: document.getElementById('bill-input').value,
+            budget_target: document.getElementById('budget-input').value, // 🟢 新增
             solar_size: document.getElementById('solar-val').innerText,
             battery_size: document.getElementById('bat-val').innerText,
             existing_solar_size: document.getElementById('exist-solar-val').innerText,
@@ -1498,6 +1513,7 @@ async function sendFinalEnquiry() {
             property_phase: getSelectedText('phase-select'),
             property_type: getSelectedText('property-type-select'),
             bill_amount: billInput.value,
+            budget_target: document.getElementById('budget-input').value, // 🟢 新增
             solar_size: document.getElementById('solar-val').innerText,
             battery_size: document.getElementById('bat-val').innerText,
             existing_solar_size: document.getElementById('exist-solar-val').innerText,
@@ -2006,6 +2022,33 @@ function generateSmartBotReply(input) {
     return fallbackList[randomIdx];
 }
 
+// 🟢 [新增] 根据预算自动选择最接近的 Tier
+function autoSelectTierByBudget(budgetVal) {
+    if (!budgetVal) budgetVal = parseFloat(document.getElementById('budget-input').value);
+
+    // 获取当前计算出的三个档位的净价
+    const pEntry = currentBasePrices.entry; 
+    const pMedium = currentBasePrices.medium;
+    const pPremium = currentBasePrices.premium;
+
+    // 检查 Entry 是否被禁用
+    const isEntryDisabled = document.getElementById('box-entry').classList.contains('disabled');
+
+    // 计算差值 (如果禁用则设为无穷大，确保不被选中)
+    const diffEntry = isEntryDisabled ? Infinity : Math.abs(pEntry - budgetVal);
+    const diffMedium = Math.abs(pMedium - budgetVal);
+    const diffPremium = Math.abs(pPremium - budgetVal);
+
+    // 找出差值最小的那个
+    let bestMatch = 'medium'; 
+    let minDiff = diffMedium;
+
+    if (diffEntry < minDiff) { minDiff = diffEntry; bestMatch = 'entry'; }
+    if (diffPremium < minDiff) { minDiff = diffPremium; bestMatch = 'premium'; }
+
+    // 执行高亮选择
+    selectTier(bestMatch);
+}
 // ==========================================
 // [MODIFIED] FOMO Bar Logic (Supabase Connected)
 // ==========================================

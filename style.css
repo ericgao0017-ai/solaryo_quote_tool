@@ -4217,3 +4217,22 @@ body.hide-fomo .chat-widget-container {
     .flash-title { font-size: 0.85rem; }
     .flash-subtitle { font-size: 0.7rem; }
 }
+/* --- Budget Slider Special Styles (金色主题) --- */
+
+/* 1. 数值显示框变金 */
+.val-display.budget-display {
+    color: var(--solar-gold);
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* 2. 滑块拖动球变金 */
+input[type=range].gold-slider::-webkit-slider-thumb {
+    border-color: var(--solar-gold) !important;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* 3. 悬停时的金色光晕 */
+input[type=range].gold-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.3) !important;
+}
