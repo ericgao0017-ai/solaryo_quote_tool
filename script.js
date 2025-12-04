@@ -1064,6 +1064,13 @@ function calculate(forceShow = false) {
 
         if (isUnlocked) {
             document.getElementById('unlock-overlay').classList.add('hidden');
+            // 🟢 新增：刷新后，也要给小按钮加上呼吸
+            const stickyBtn = document.querySelector('.sticky-btn');
+         if (stickyBtn) {
+             stickyBtn.classList.add('highlight');
+         // 🟢 同样强制写死文案
+             stickyBtn.innerText = (curLang === 'cn') ? "锁定价格" : "Lock In";
+         }
             document.querySelectorAll('.price-number').forEach(el => el.classList.remove('locked'));
 
             // 🟢 [修复开始]：刷新后，如果检测到已解锁，必须强制把按钮和 VPP Banner 显示出来
@@ -1261,6 +1268,12 @@ async function submitLead() {
             finalBtn.style.display = 'flex';
             finalBtn.classList.add('highlight'); // 添加呼吸效果
         }
+    const stickyBtn = document.querySelector('.sticky-btn');
+        if (stickyBtn) {
+    // 强制改成极简文案，节省手机空间
+            stickyBtn.innerText = (curLang === 'cn') ? "锁定价格" : "Lock In"; 
+            stickyBtn.classList.add('highlight');
+        }
 
     // 清除错误信息
     msgEl.innerText = '';
@@ -1307,7 +1320,13 @@ async function submitLead() {
 
             // 标记这是一个 "解锁阶段" 的线索，而非最终确认
             notes: "[System] User Unlocked Price (Preliminary Lead)",
-
+            // 🟢 [新增] 补全房屋详情 (Property Details)
+            // 使用 getSelectedText 获取下拉框的文本 (例如 "Single Storey")
+            property_storeys: getSelectedText('storey-select'),
+            property_roof: getSelectedText('roof-select'),
+            property_shade: getSelectedText('shade-select'),
+            property_type: getSelectedText('property-type-select'),
+            property_phase: getSelectedText('phase-select'),
             // 系统配置数据
             bill_amount: document.getElementById('bill-input').value,
             solar_size: document.getElementById('solar-val').innerText,

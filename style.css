@@ -4081,9 +4081,20 @@ body.hide-fomo .chat-widget-container {
     70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
     100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
+/* 👇 新增：底部悬浮小按钮的呼吸样式 👇 */
+.sticky-btn.highlight {
+    animation: pulse-btn 1s infinite; /* 复用呼吸动画 */
+    
+    /* 让它变绿，和主按钮保持一致 */
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border: 1px solid #34d399; /* 加个亮边框更显眼 */
+    
+    /* 稍微调整一下过渡，避免闪烁 */
+    transition: all 0.3s ease;
+}
 
 .btn-final-enquiry.highlight {
-    animation: pulse-btn 2s infinite;
+    animation: pulse-btn 1s infinite;
     background: linear-gradient(135deg, #059669 0%, #10b981 100%); /* 这里的颜色改成更加显眼的绿色，而不是深黑 */
     border: 1px solid #34d399;
 }
