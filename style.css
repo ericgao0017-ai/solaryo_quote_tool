@@ -3432,6 +3432,24 @@ body.hide-fomo .chat-widget-container {
     .sticky-btn {
         padding: 8px 16px !important;
     }
+    /* 1. 针对 tier-box 内部的 price-value 进行调整 */
+    .price-value {
+        /* 稍微缩小字体 */
+        font-size: 0.9rem !important; 
+        /* 收紧字间距，让文字更紧凑 */
+        letter-spacing: -0.05em; 
+        /* 强制不换行 */
+        white-space: nowrap;
+        /* 超出部分隐藏 */
+        overflow: hidden;
+        /* 超出部分显示省略号 (...) */
+        text-overflow: ellipsis;
+    }
+
+    /* 2. 稍微缩小 tier-box 的内边距，腾出更多空间 */
+    .tier-box {
+        padding: 16px 4px !important;
+    }
 }
 
 /* ==========================================
@@ -3441,6 +3459,10 @@ body.hide-fomo .chat-widget-container {
 @media (max-width: 360px) {
     /* 实在排不下时，将价格对比改为竖排，或者允许横向滚动 */
     /* 这里选择保持横排但更加极限的压缩 */
+    .price-value {
+        /* 再次缩小字体 */
+        font-size: 0.8rem !important;
+    }
 
     .mode-selector {
         /* 如果文字实在太长，允许横向滚动，保持布局不乱 */
