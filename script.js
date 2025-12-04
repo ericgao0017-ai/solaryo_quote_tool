@@ -251,7 +251,7 @@ const i18n = {
         rec_not_rec: "Given your low quarterly bill, payback period would be excessive.",
         vpp_title: "Join VPP & Earn Extra!", vpp_desc: "Connect battery to earn an extra up to $800/year.", vpp_what_is: "(What is VPP?)",
         modal_vpp_title: "What is a Virtual Power Plant (VPP)?", modal_vpp_text: "A VPP connects your home battery to a network of other batteries. During times of high electricity demand, the network automatically sells your stored energy back to the grid at premium rates.<br><br><strong>Benefit:</strong> You earn passive income credits without lifting a finger, helping the grid while reducing your own payback period.",
-        btn_final_enquiry: "Contact us Lock-in Quote",
+        btn_final_enquiry: "Lock This Price",
         no_obligation: "✓ No deposit required today • Risk-free",
         modal_conf_title: "Final Confirmation", modal_conf_desc: "Please verify your details.",
         btn_confirm_send: "Confirm & Send Enquiry",
