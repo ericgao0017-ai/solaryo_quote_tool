@@ -275,7 +275,7 @@ const i18n = {
         use_hws: "Elec Hot Water", use_gas2elec: "Gas to Electric", use_backup: "Need Backup", use_others: "Others",
         selected_count: "{n} items selected",
         // 在 i18n.en 中添加:
-        flash_title: "⚡ Discover Savings in 60s",
+        flash_title: "⚡ Discover Savings in 60 seconds",
         flash_subtitle: "Rebates are changing soon. Check eligibility now!",
 
         // [New] Sticky Footer & Fake Loader
