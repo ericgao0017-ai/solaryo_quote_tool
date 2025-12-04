@@ -3910,7 +3910,7 @@ body.hide-fomo .chat-widget-container {
 
 /* 图片大小控制 */
 .fixed-brand-badge img {
-    width: 49px; /* 50px 容器内放 32px 图片 */
+    width: 45px; /* 50px 容器内放 32px 图片 */
     height: auto;
     display: block;
 }
@@ -3955,7 +3955,7 @@ body.hide-fomo .chat-widget-container {
 
     /* 3. 调整内部图片大小 (按比例缩小) */
     .fixed-brand-badge img {
-        width: 39px !important; /* 40px 容器放 26px 图片合适 */
+        width: 35px !important; /* 40px 容器放 26px 图片合适 */
     }
 
     /* 4. 调整 Tooltip 位置 (避免遮挡) */
