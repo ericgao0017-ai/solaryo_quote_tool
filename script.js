@@ -190,7 +190,7 @@ const i18n = {
         use_hws: "电热水器", use_gas2elec: "煤气改电", use_backup: "需要停电备份", use_others: "其他设备",
         selected_count: "已选择 {n} 项",
 
-        lbl_budget: "您的心理预算", // 🟢 新增
+        lbl_budget: "您的心理预算 （选填）", // 🟢 新增
 
         // 在 i18n.cn 中添加:
         flash_title: "⚡ 60秒获取精准报价",
@@ -280,7 +280,7 @@ const i18n = {
         flash_title: "⚡ Discover Savings in 60 seconds",
         flash_subtitle: "Rebates are changing soon. Check eligibility now!",
 
-        lbl_budget: "Target Budget", // 🟢 新增
+        lbl_budget: "Target Budget (Opt.)", // 🟢 新增
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
