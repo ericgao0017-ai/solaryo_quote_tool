@@ -196,7 +196,7 @@ const i18n = {
 
         // [新增] 底部悬浮栏 & 假加载
         sticky_net: "预估净价",
-        btn_book_now: "立即锁定",
+        btn_book_now: "咨询",
         step_1: "正在分析用电量和系统配置...",
         step_2: "正在计算联邦与州政府补贴...",
         step_3: "正在比对售商报价...",
@@ -280,7 +280,7 @@ const i18n = {
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
-        btn_book_now: "Lock-in",
+        btn_book_now: "Enquiry",
         step_1: "Analyzing usage profile and system configuration...",
         step_2: "Calculating Federal & State Rebates...",
         step_3: "Comparing pricing across retailers...",
@@ -1077,7 +1077,7 @@ function calculate(forceShow = false) {
          if (stickyBtn) {
              stickyBtn.classList.add('highlight');
          // 🟢 同样强制写死文案
-             stickyBtn.innerText = (curLang === 'cn') ? "锁定价格" : "Lock in";
+             stickyBtn.innerText = (curLang === 'cn') ? "咨询" : "Enquiry";
          }
             document.querySelectorAll('.price-number').forEach(el => el.classList.remove('locked'));
 
