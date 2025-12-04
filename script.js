@@ -169,7 +169,8 @@ const i18n = {
         vpp_what_is: "(什么是 VPP?)",
         modal_vpp_title: "什么是虚拟电厂 (VPP)?",
         modal_vpp_text: "虚拟电厂 (VPP) 将您的家用电池与其他用户的电池联网。在用电高峰期，网络会自动将您存储的电能以高价卖回给电网。<br><br><strong>核心收益：</strong> 您无需任何操作即可获得被动收入抵扣电费，既帮助了电网稳定，又缩短了您的回本周期。",
-        btn_final_enquiry: "预约专家咨询 & 敲定报价",
+        btn_final_enquiry: "联系我们锁定价格",
+        no_obligation: "✓ 无需支付定金 • 0风险锁价",
         modal_conf_title: "确认联系方式",
         modal_conf_desc: "请核对您的信息。我们的工程师将尽快联系您以制定最终方案。",
         btn_confirm_send: "确认并发送正式询盘",
@@ -191,7 +192,7 @@ const i18n = {
 
         // [新增] 底部悬浮栏 & 假加载
         sticky_net: "预估净价",
-        btn_book_now: "立即预约",
+        btn_book_now: "立即锁定",
         step_1: "正在分析用电量和系统配置...",
         step_2: "正在计算联邦与州政府补贴...",
         step_3: "正在比对售商报价...",
@@ -250,7 +251,8 @@ const i18n = {
         rec_not_rec: "Given your low quarterly bill, payback period would be excessive.",
         vpp_title: "Join VPP & Earn Extra!", vpp_desc: "Connect battery to earn an extra up to $800/year.", vpp_what_is: "(What is VPP?)",
         modal_vpp_title: "What is a Virtual Power Plant (VPP)?", modal_vpp_text: "A VPP connects your home battery to a network of other batteries. During times of high electricity demand, the network automatically sells your stored energy back to the grid at premium rates.<br><br><strong>Benefit:</strong> You earn passive income credits without lifting a finger, helping the grid while reducing your own payback period.",
-        btn_final_enquiry: "Book Consultation & Finalise Quote",
+        btn_final_enquiry: "Contact us Lock-in Quote",
+        no_obligation: "✓ No deposit required today • Risk-free",
         modal_conf_title: "Final Confirmation", modal_conf_desc: "Please verify your details.",
         btn_confirm_send: "Confirm & Send Enquiry",
         alert_final_success: "Received! We will prioritize your enquiry.",
@@ -270,7 +272,7 @@ const i18n = {
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
-        btn_book_now: "Book Now",
+        btn_book_now: "Lock-in",
         step_1: "Analyzing usage profile and system configuration...",
         step_2: "Calculating Federal & State Rebates...",
         step_3: "Comparing pricing across retailers...",
@@ -1202,8 +1204,12 @@ function closeVPPModal(event) {
 }
 
 function openConfirmModal() {
-    // 1. 【上锁】给 body 加类，CSS 会立刻强制隐藏 FOMO Bar
+    // 1. 【上锁】给 body 加类，隐藏 FOMO Bar
     document.body.classList.add('hide-fomo');
+
+    // 🟢 [新增] 隐藏品牌墙悬浮标
+    const brandBadge = document.querySelector('.fixed-brand-badge');
+    if (brandBadge) brandBadge.style.display = 'none';
 
     // ... (以下是原有逻辑，保持不变) ...
     document.getElementById('conf-name').value = document.getElementById('lead-name').value;
@@ -1230,9 +1236,12 @@ function closeConfirmModal(event) {
 
         // 2. 【解锁】移除类，FOMO Bar 恢复显示
         document.body.classList.remove('hide-fomo');
+
+        // 🟢 [新增] 恢复品牌墙悬浮标
+        const brandBadge = document.querySelector('.fixed-brand-badge');
+        if (brandBadge) brandBadge.style.display = 'flex';
     }
 }
-
 function isValidAustralianPhone(p) { return /^(?:04|\+?614)\d{8}$|^(?:02|03|07|08)\d{8}$/.test(p.replace(/[\s()-]/g, '')); }
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 function isValidPostcode(p) { return /^\d{4}$/.test(p); }
@@ -1246,6 +1255,12 @@ async function submitLead() {
     const phone = document.getElementById('lead-phone').value.trim();
     const address = document.getElementById('lead-address').value.trim(); // 获取地址
     const msgEl = document.getElementById('submit-msg');
+
+    const finalBtn = document.getElementById('btn-final-enquiry');
+        if (finalBtn) {
+            finalBtn.style.display = 'flex';
+            finalBtn.classList.add('highlight'); // 添加呼吸效果
+        }
 
     // 清除错误信息
     msgEl.innerText = '';
@@ -1480,12 +1495,23 @@ async function sendFinalEnquiry() {
         if (error) throw error;
 
         // 6. 成功反馈
+       setTimeout(() => {
+        document.getElementById('final-msg').style.color = '#66bb6a';
+        document.getElementById('final-msg').innerText = i18n[curLang].alert_final_success;
+        btn.innerText = curLang === 'cn' ? "已提交" : "Submitted";
+
         setTimeout(() => {
-            document.getElementById('final-msg').style.color = '#66bb6a';
-            document.getElementById('final-msg').innerText = i18n[curLang].alert_final_success;
-            btn.innerText = curLang === 'cn' ? "已提交" : "Submitted";
-            setTimeout(() => { document.getElementById('confirm-modal').style.display = 'none'; }, 2000);
-        }, 1000);
+            document.getElementById('confirm-modal').style.display = 'none';
+
+            // 【原有逻辑】提交成功关闭弹窗后，解锁 FOMO Bar
+            document.body.classList.remove('hide-fomo');
+
+            // 🟢 [新增] 提交成功后，也要恢复品牌墙悬浮标
+            const brandBadge = document.querySelector('.fixed-brand-badge');
+            if (brandBadge) brandBadge.style.display = 'flex';
+
+        }, 2000);
+    }, 1000);
 
     } catch (error) {
         console.error("Error:", error);

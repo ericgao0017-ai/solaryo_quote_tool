@@ -4048,7 +4048,17 @@ body.hide-fomo .chat-widget-container {
 }
 
 .detail-header { text-align: center; margin-bottom: 20px; }
-.detail-header img { height: 60px; width: auto; object-fit: contain; margin-bottom: 10px; }
+
+/* 修改后：强制居中 */
+.detail-header img { 
+    height: 60px; 
+    width: auto; 
+    object-fit: contain; 
+    
+    /* 核心修改： */
+    display: block;       /* 1. 将图片设为块级元素 */
+    margin: 0 auto 10px;  /* 2. 上0 左右auto(居中) 下10px */
+}
 .detail-header h2 { margin: 0; font-size: 1.5rem; }
 
 .detail-tags { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
@@ -4064,4 +4074,16 @@ body.hide-fomo .chat-widget-container {
 @media (max-width: 480px) {
     .brand-hub-grid { grid-template-columns: repeat(2, 1fr); }
     /*.fixed-brand-badge { left: 15px; bottom: 85px; width: 50px; height: 50px; }*/
+}
+/* 给最终按钮增加呼吸动画 */
+@keyframes pulse-btn {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.btn-final-enquiry.highlight {
+    animation: pulse-btn 2s infinite;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%); /* 这里的颜色改成更加显眼的绿色，而不是深黑 */
+    border: 1px solid #34d399;
 }
