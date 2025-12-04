@@ -4199,16 +4199,21 @@ body.hide-fomo .chat-widget-container {
 /* 手机适配 */
 @media (max-width: 500px) {
     .welcome-flash {
-        padding: 14px 18px;
+        /* 🟢 核心修改：改为 90% (与 fomo-bar.apple-notify 的宽度完全一致) */
+        width: 90%;
+        
+        /* 增加 box-sizing 确保内边距不会把它撑得比 fomo-bar 宽 */
+        box-sizing: border-box; 
+        
         min-width: auto;
-        width: 92%;
+        padding: 12px 16px; /* 稍微调整内边距，保持紧凑 */
     }
     
     .welcome-flash.show {
         top: 56px; /* 手机端位置 */
     }
 
-    .flash-icon { font-size: 2rem; }
-    .flash-title { font-size: 0.9rem; }
-    .flash-subtitle { font-size: 0.75rem; }
+    .flash-icon { font-size: 1.8rem; }
+    .flash-title { font-size: 0.85rem; }
+    .flash-subtitle { font-size: 0.7rem; }
 }
