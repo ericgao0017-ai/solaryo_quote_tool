@@ -169,8 +169,8 @@ const i18n = {
         vpp_what_is: "(什么是 VPP?)",
         modal_vpp_title: "什么是虚拟电厂 (VPP)?",
         modal_vpp_text: "虚拟电厂 (VPP) 将您的家用电池与其他用户的电池联网。在用电高峰期，网络会自动将您存储的电能以高价卖回给电网。<br><br><strong>核心收益：</strong> 您无需任何操作即可获得被动收入抵扣电费，既帮助了电网稳定，又缩短了您的回本周期。",
-        btn_final_enquiry: "联系我们锁定价格",
-        no_obligation: "✓ 无需支付定金 • 0风险锁价",
+        btn_final_enquiry: "提交您的咨询",
+        no_obligation: "✓ 0风险 • 0骚扰 • 优质服务承诺",
         modal_conf_title: "确认联系方式",
         modal_conf_desc: "请核对您的信息。我们的工程师将尽快联系您以制定最终方案。",
         btn_confirm_send: "确认并发送正式询盘",
@@ -256,8 +256,8 @@ const i18n = {
         rec_not_rec: "Given your low quarterly bill, payback period would be excessive.",
         vpp_title: "Join VPP & Earn Extra!", vpp_desc: "Connect battery to earn an extra up to $800/year.", vpp_what_is: "(What is VPP?)",
         modal_vpp_title: "What is a Virtual Power Plant (VPP)?", modal_vpp_text: "A VPP connects your home battery to a network of other batteries. During times of high electricity demand, the network automatically sells your stored energy back to the grid at premium rates.<br><br><strong>Benefit:</strong> You earn passive income credits without lifting a finger, helping the grid while reducing your own payback period.",
-        btn_final_enquiry: "Lock This Price",
-        no_obligation: "✓ No deposit required today • Risk-free",
+        btn_final_enquiry: "submit your enquiry",
+        no_obligation: "✓ Risk-free • No Spam • Premium Service",
         modal_conf_title: "Final Confirmation", modal_conf_desc: "Please verify your details.",
         btn_confirm_send: "Confirm & Send Enquiry",
         alert_final_success: "Received! We will prioritize your enquiry.",
@@ -1077,7 +1077,7 @@ function calculate(forceShow = false) {
          if (stickyBtn) {
              stickyBtn.classList.add('highlight');
          // 🟢 同样强制写死文案
-             stickyBtn.innerText = (curLang === 'cn') ? "锁定价格" : "Lock In";
+             stickyBtn.innerText = (curLang === 'cn') ? "锁定价格" : "Lock in";
          }
             document.querySelectorAll('.price-number').forEach(el => el.classList.remove('locked'));
 
@@ -1279,7 +1279,7 @@ async function submitLead() {
     const stickyBtn = document.querySelector('.sticky-btn');
         if (stickyBtn) {
     // 强制改成极简文案，节省手机空间
-            stickyBtn.innerText = (curLang === 'cn') ? "锁定价格" : "Lock In"; 
+            stickyBtn.innerText = (curLang === 'cn') ? "咨询" : "Enquiry"; 
             stickyBtn.classList.add('highlight');
         }
 
