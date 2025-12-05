@@ -2253,18 +2253,15 @@ window.setLang = function (lang) {
     updateFomoContent(); // 执行 FOMO 更新
 };
 // ==========================================
-// [UPDATED] Brand Hub & Detail Logic (Supabase Version)
+// [FINAL COMPLETE] Brand Hub & Detail Logic (Bilingual + Supabase)
 // ==========================================
 
-// 1. 定义全局变量 (不再是硬编码的 const)
+// 1. 定义全局变量
 let brandDataDB = {};
 
-// 2. [新增] 从 Supabase 拉取数据
+// 2. 从 Supabase 拉取数据 (包含中英文)
 async function fetchBrandDetails() {
     try {
-        // console.log("正在加载品牌详情..."); // 调试用
-        
-        // 查询 brand_details 表，只取激活的数据，按 ID 排序
         const { data, error } = await supabaseClient
             .from('brand_details')
             .select('*')
@@ -2274,75 +2271,121 @@ async function fetchBrandDetails() {
         if (error) throw error;
 
         if (data) {
-            // 清空旧数据
-            brandDataDB = {};
+            brandDataDB = {}; // 清空旧数据
 
-            // 格式转换：数据库字段 -> 前端代码字段
             data.forEach(item => {
                 brandDataDB[item.brand_id] = {
-                    name: item.name,
+                    // 核心字段
                     type: item.type,
-                    // 数据库叫 logo_url -> 前端用 logo
-                    logo: item.logo_url, 
-                    // 数据库叫 description -> 前端用 desc
-                    desc: item.description, 
-                    // 确保是数组，防止 null
-                    tags: item.tags || [],
-                    features: item.features || []
+                    logo: item.logo_url,
+                    
+                    // 英文数据
+                    name_en: item.name,
+                    desc_en: item.description,
+                    tags_en: item.tags || [],
+                    features_en: item.features || [],
+
+                    // 中文数据 (如果没有中文，回退到英文)
+                    name_cn: item.name_cn || item.name,
+                    desc_cn: item.description_cn || item.description,
+                    tags_cn: item.tags_cn || item.tags || [],
+                    features_cn: item.features_cn || item.features || []
                 };
             });
             
-            // 数据准备好后，立即渲染列表
-            renderBrandHub();
+            // 拉取完立即渲染
+            renderBrandHub(); 
         }
 
     } catch (err) {
         console.error("品牌数据加载失败:", err);
-        // 如果失败，你可以在这里保留一份最小化的硬编码数据作为兜底
     }
 }
 
-// 3. 渲染品牌列表 (逻辑基本不变)
+// 3. 渲染品牌列表 (支持语言切换)
 function renderBrandHub() {
     const batteryGrid = document.getElementById('hub-grid-battery');
     const solarGrid = document.getElementById('hub-grid-solar');
     
-    // 清空现有内容
-    if(batteryGrid) batteryGrid.innerHTML = '';
-    if(solarGrid) solarGrid.innerHTML = '';
+    if(!batteryGrid || !solarGrid) return;
+    
+    batteryGrid.innerHTML = '';
+    solarGrid.innerHTML = '';
 
-    // 遍历刚刚从数据库拿到的 brandDataDB
+    // 判断当前语言
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+
     Object.keys(brandDataDB).forEach(key => {
         const brand = brandDataDB[key];
         
+        // 动态获取名字
+        const displayName = isCN ? brand.name_cn : brand.name_en;
+
         const card = document.createElement('div');
         card.className = 'hub-brand-item';
         card.onclick = () => showBrandDetail(key);
         
         const html = `
-            <img src="${brand.logo}" class="hub-brand-img" alt="${brand.name}" 
+            <img src="${brand.logo}" class="hub-brand-img" alt="${displayName}" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-            <span class="hub-brand-name" ${brand.logo ? 'style="display:none;"' : ''}>${brand.name}</span>
+            <span class="hub-brand-name" ${brand.logo ? 'style="display:none;"' : ''}>${displayName}</span>
         `;
         card.innerHTML = html;
 
-        if (brand.type === 'battery' && batteryGrid) {
+        if (brand.type === 'battery') {
             batteryGrid.appendChild(card);
-        } else if (brand.type === 'solar' && solarGrid) {
+        } else if (brand.type === 'solar') {
             solarGrid.appendChild(card);
         }
     });
 }
 
-// 4. 打开品牌中心 (Level 1)
+// 4. 打开详情页 (支持语言切换 + HTML内容)
+function showBrandDetail(brandKey) {
+    const brand = brandDataDB[brandKey];
+    if (!brand) return;
+
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+
+    // 获取对应语言的数据
+    const dName = isCN ? brand.name_cn : brand.name_en;
+    const dDesc = isCN ? brand.desc_cn : brand.desc_en;
+    const dTags = isCN ? brand.tags_cn : brand.tags_en;
+    const dFeatures = isCN ? brand.features_cn : brand.features_en;
+
+    // 填充 Logo
+    const logoEl = document.getElementById('detail-logo');
+    logoEl.src = brand.logo;
+    logoEl.onerror = () => { logoEl.style.display = 'none'; }; 
+    logoEl.onload = () => { logoEl.style.display = 'block'; };
+
+    // 填充文字 (注意使用 innerHTML 支持 Supabase 里的图片代码)
+    document.getElementById('detail-name').innerText = dName;
+    document.getElementById('detail-desc').innerHTML = dDesc; 
+
+    // 渲染标签
+    const tagsContainer = document.getElementById('detail-tags');
+    tagsContainer.innerHTML = dTags.map(t => `<span class="d-tag">${t}</span>`).join('');
+
+    // 渲染特性列表
+    const featuresList = document.getElementById('detail-features-list');
+    featuresList.innerHTML = dFeatures.map(f => `<li>${f}</li>`).join('');
+
+    // 切换界面：隐藏列表，显示详情
+    document.getElementById('brand-hub-modal').style.display = 'none';
+    document.getElementById('brand-detail-modal').style.display = 'flex';
+}
+
+// 5. 打开品牌中心 (Level 1)
 function openBrandHub() {
-    // 每次打开都尝试刷新一下数据，或者判断如果为空才加载
+    // 每次打开检查数据，如果为空则拉取
     if (Object.keys(brandDataDB).length === 0) {
         fetchBrandDetails();
     }
     
     document.getElementById('brand-hub-modal').style.display = 'flex';
     
+    // 隐藏悬浮元素，防止遮挡
     const badge = document.querySelector('.fixed-brand-badge');
     if (badge) badge.style.display = 'none';
 
@@ -2350,12 +2393,13 @@ function openBrandHub() {
     if (fomo) fomo.style.display = 'none';
 }
 
-// 5. 关闭品牌中心 (Level 1)
+// 6. 关闭品牌中心 (Level 1)
 function closeBrandHub(e) {
     const overlay = document.getElementById('brand-hub-modal');
     if (!e || e.target === overlay || e.target.classList.contains('close-btn')) {
         overlay.style.display = 'none';
         
+        // 恢复悬浮元素
         const badge = document.querySelector('.fixed-brand-badge');
         if (badge) badge.style.display = 'flex'; 
 
@@ -2367,47 +2411,19 @@ function closeBrandHub(e) {
     }
 }
 
-// 6. 打开品牌详情 (Level 2)
-function showBrandDetail(brandKey) {
-    const brand = brandDataDB[brandKey];
-    if (!brand) return;
-
-    // 填充 Logo
-    const logoEl = document.getElementById('detail-logo');
-    logoEl.src = brand.logo;
-    logoEl.onerror = () => { logoEl.style.display = 'none'; }; 
-    logoEl.onload = () => { logoEl.style.display = 'block'; };
-
-    document.getElementById('detail-name').innerText = brand.name;
-
-    // 🟢 [关键修改] 改成 innerHTML 以支持你在 Supabase 里填写的图片代码 <img src...>
-    document.getElementById('detail-desc').innerHTML = brand.desc;
-
-    // 渲染标签
-    const tagsContainer = document.getElementById('detail-tags');
-    tagsContainer.innerHTML = brand.tags.map(t => `<span class="d-tag">${t}</span>`).join('');
-
-    // 渲染特性列表
-    const featuresList = document.getElementById('detail-features-list');
-    featuresList.innerHTML = brand.features.map(f => `<li>${f}</li>`).join('');
-
-    // 切换显示
-    document.getElementById('brand-hub-modal').style.display = 'none';
-    document.getElementById('brand-detail-modal').style.display = 'flex';
-}
-
-// 7. 返回列表
+// 7. 从详情页返回列表
 function backToHub() {
     document.getElementById('brand-detail-modal').style.display = 'none';
     document.getElementById('brand-hub-modal').style.display = 'flex';
 }
 
-// 8. 关闭详情页
+// 8. 关闭详情页 (直接关闭所有弹窗)
 function closeBrandDetail(e) {
     const overlay = document.getElementById('brand-detail-modal');
     if (!e || e.target === overlay || e.target.classList.contains('close-btn') || e.target.classList.contains('btn-modal-ok')) {
         overlay.style.display = 'none';
         
+        // 恢复悬浮元素
         const badge = document.querySelector('.fixed-brand-badge');
         if (badge) badge.style.display = 'flex';
 
@@ -2418,13 +2434,24 @@ function closeBrandDetail(e) {
     }
 }
 
-// 暴露给 window
+// 9. 监听语言切换事件
+// (劫持 setLang 函数，以便在切换语言时重新渲染品牌墙)
+const originalSetLangForBrand = window.setLang; 
+window.setLang = function (lang) {
+    if (originalSetLangForBrand) originalSetLangForBrand(lang); // 执行原逻辑
+    
+    // 执行额外刷新逻辑
+    if (typeof updateFomoContent === 'function') updateFomoContent(); // 更新滚动条语言
+    renderBrandHub();    // 更新品牌墙语言
+};
+
+// 10. 暴露给全局 window
 window.openBrandHub = openBrandHub;
 window.closeBrandHub = closeBrandHub;
 window.backToHub = backToHub;
 window.closeBrandDetail = closeBrandDetail;
 
-// 初始化时拉取数据
+// 11. 初始化加载
 document.addEventListener('DOMContentLoaded', () => {
     fetchBrandDetails();
 });
