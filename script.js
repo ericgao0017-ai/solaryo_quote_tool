@@ -208,7 +208,7 @@ const i18n = {
         p_title: "加入 Solaryo 能源网络",
         p_sub: "成为澳洲增长最快的能源合作伙伴",
         role_inst: "光伏零售商 & 安装商",
-        role_inst_tag: "Leads & 工单",
+        role_inst_tag: "线索 & 供给",
         role_inst_desc: "获取高质量线索。我们负责销售，您专注安装交付。",
         role_inst_req: "要求: CEC 认证 • ABN",
         
@@ -217,7 +217,7 @@ const i18n = {
         role_elec_desc: "承接光伏、储能及充电桩安装工单。灵活补位，填满您的日程空档。",
         role_elec_req: "优先: 电工执照 • CEC • 学徒",
         
-        role_brand: "品牌 & 供应商",
+        role_brand: "品牌方 & 供应商",
         role_brand_desc: "将您的产品上架至我们的智能报价引擎。直连 500+ 安装商，实时洞察市场趋势。",
         role_brand_req: "对象: 厂家 • 分销商",
         
@@ -367,7 +367,7 @@ const i18n = {
         p_title: "Partner Hub",
         p_sub: "Join Australia's fastest-growing energy network.",
         role_inst: "Solar Retailer & Installer",
-        role_inst_tag: "Leads & Jobs",
+        role_inst_tag: "Leads & Supply",
         role_inst_desc: "Access pre-qualifed solar & battery leads. We handle the sales. you handle the jobs.",
         role_inst_req: "Req: CEC Accreditation • ABN",
         
@@ -376,7 +376,7 @@ const i18n = {
         role_elec_desc: "Pick up jobs for solar, battery, EV charger installs, and more. Perfect for flling your schedule.",
         role_elec_req: "Prefer: Elec License • CEC • Apprentice",
         
-        role_brand: "Brand & Supplier",
+        role_brand: "Vendor & Supplier",
         role_brand_desc: "List your products in our guoting engine. Connect directly with 500+ installers and track market trends.",
         role_brand_req: "For: Manufacturers • Distributors",
         
