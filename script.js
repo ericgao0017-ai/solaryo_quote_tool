@@ -206,13 +206,14 @@ const i18n = {
         // --- Partner Hub CN ---
         btn_partner_hub: "服务商入口",
         p_title: "加入 Solaryo 能源网络",
-        p_sub: "成为澳洲增长最快的能源合作伙伴",
+        // 在 i18n.cn 中找到 p_sub 并修改：
+        p_sub: "成为澳洲增长最快的能源合作伙伴<br><span style='font-size:0.9em; font-weight:600; display:block; margin-top:8px;'>请选择您的角色：</span>",
         role_inst: "光伏零售商 & 安装商",
         role_inst_tag: "线索 & 供给",
         role_inst_desc: "获取高质量线索。我们负责销售，您专注安装交付。",
         role_inst_req: "要求: CEC 认证 • ABN",
         
-        role_elec: "持牌电工",
+        role_elec: "电工",
         role_elec_tag: "光伏 & 储能",
         role_elec_desc: "承接光伏、储能及充电桩安装工单。灵活补位，填满您的日程空档。",
         role_elec_req: "优先: 电工执照 • CEC • 学徒",
@@ -365,13 +366,14 @@ const i18n = {
         // --- Partner Hub EN ---
         btn_partner_hub: "Partner Hub",
         p_title: "Partner Hub",
-        p_sub: "Join Australia's fastest-growing energy network.",
+        // 在 i18n.cn 中找到 p_sub 并修改：
+        p_sub: "Join Australia's fastest-growing energy network.<br><span style='font-size:0.9em; font-weight:600; display:block; margin-top:8px;'>Please select your role:</span>",
         role_inst: "Solar Retailer & Installer",
         role_inst_tag: "Leads & Supply",
         role_inst_desc: "Access pre-qualifed solar & battery leads. We handle the sales. you handle the jobs.",
         role_inst_req: "Req: CEC Accreditation • ABN",
         
-        role_elec: "Licensed Electrician",
+        role_elec: "Electrician",
         role_elec_tag: "Solar & ESS",
         role_elec_desc: "Pick up jobs for solar, battery, EV charger installs, and more. Perfect for flling your schedule.",
         role_elec_req: "Prefer: Elec License • CEC • Apprentice",
