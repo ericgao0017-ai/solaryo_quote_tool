@@ -5,6 +5,17 @@ const SUPABASE_URL = 'https://iytxwgyhemetdkmqoxoa.supabase.co'; // 替换这里
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dHh3Z3loZW1ldGRrbXFveG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzI3MDIsImV4cCI6MjA3OTkwODcwMn0.ZsiueMCjwm5FoPlC3IDEgmsPaabkhefw3uHFl6gBm7Q';          // 替换这里
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// 🟢 [新增] 州与区域的映射关系 (Partner Hub)
+const regionMap = {
+    'Nationwide': [],
+    'NSW_ACT': ['Sydney Metro', 'Western Sydney', 'Central Coast', 'Newcastle/Hunter', 'Illawarra/Wollongong', 'ACT (Canberra)', 'Regional NSW'],
+    'VIC': ['Melbourne Metro', 'Geelong', 'Mornington Peninsula', 'Regional VIC'],
+    'QLD': ['Brisbane', 'Gold Coast', 'Sunshine Coast', 'Regional QLD'],
+    'SA': ['Adelaide', 'Regional SA'],
+    'WA': ['Perth', 'Regional WA'],
+    'TAS': ['Hobart', 'Launceston', 'Regional TAS'],
+    'NT': ['Darwin', 'Regional NT']
+};
 // 全局变量：存聊天记录
 let globalChatHistory = [];
 // 🟢 [新增] 全局变量：存储当前选中的电池/逆变器品牌名称
@@ -192,6 +203,74 @@ const i18n = {
 
         lbl_budget: "您的心理预算 (选填)", // 🟢 新增
 
+        // --- Partner Hub CN ---
+        btn_partner_hub: "服务商入口",
+        p_title: "加入 Solaryo 能源网络",
+        p_sub: "成为澳洲增长最快的能源合作伙伴",
+        role_inst: "光伏零售商 & 安装商",
+        role_inst_tag: "Leads & 工单",
+        role_inst_desc: "获取高质量线索。我们负责销售，您专注安装交付。",
+        role_inst_req: "要求: CEC 认证 • ABN",
+        
+        role_elec: "持牌电工",
+        role_elec_tag: "光伏 & 充电桩",
+        role_elec_desc: "承接光伏、储能及充电桩安装工单。灵活补位，填满您的日程空档。",
+        role_elec_req: "优先: 电工执照 • CEC • 学徒",
+        
+        role_brand: "品牌 & 供应商",
+        role_brand_desc: "将您的产品上架至我们的智能报价引擎。直连 500+ 安装商，实时洞察市场趋势。",
+        role_brand_req: "对象: 厂家 • 分销商",
+        
+        p_contact_text: "服务商支持: info@solaryo.com.au",
+        p_back: "‹ 返回",
+        p_reg_title: "注册申请",
+        lbl_biz_details: "详细信息", /* 修改为 Details */
+        
+        lbl_biz_type: "商业实体类型",
+        opt_company: "公司 (Company)",
+        opt_sole: "个体户 (Sole Trader)",
+        opt_partner: "合伙 (Partnership)",
+        opt_private: "个人/私活 (Private)",
+        
+        lbl_company_name: "公司 / 经营名称",
+        lbl_abn: "ABN / ACN",
+        lbl_contact: "联系人姓名",
+        lbl_phone: "电话 (手机/座机)",
+        lbl_email: "电子邮箱",
+        lbl_address: "地址",
+        lbl_notes: "备注 / 其他说明 (选填)",
+        
+        lbl_biz_focus: "业务重心",
+        opt_retailer: "我是零售商 (买线索)",
+        opt_installer: "我是安装商 (接工单)",
+        opt_both: "两者都是",
+        
+        lbl_cec: "CEC 认证编号",
+        lbl_svc_area: "服务区域",
+        lbl_svc_state: "服务所在的州/领地",
+        lbl_svc_regions: "具体服务区域 (可多选)",
+        opt_nationwide: "全澳洲 (Nationwide)",
+        opt_nsw_act: "新州 & 堪培拉 (NSW & ACT)",
+        txt_all_au: "✅ 已选择全澳覆盖模式",
+        
+        lbl_elec_level: "电工等级",
+        opt_licensed: "持牌电工 (General)",
+        opt_cec_elec: "CEC 认证电工",
+        opt_apprentice: "电工学徒",
+        lbl_exp: "安装经验 (多选)",
+        lbl_license: "执照号码 (License No.)",
+        lbl_upload_ins: "上传保险 (COC/Public Liability)",
+        lbl_dist_brands: "代理品牌",
+        lbl_prod_cat: "产品类别",
+        lbl_upload_prod: "上传产品清单/价格表 (选填)",
+        
+        btn_submit_app: "提交申请",
+        msg_submitting: "正在提交...",
+        msg_success: "申请提交成功！✓",
+        msg_err_phone: "错误：请输入有效的澳洲电话号码",
+        msg_err_email: "错误：请输入有效的邮箱地址",
+        msg_err_general: "提交失败，请重试。",
+
         // 在 i18n.cn 中添加:
         flash_title: "⚡ 60秒获取精准报价",
         flash_subtitle: "电池补贴即将调整，立即查看您的资格！",
@@ -281,6 +360,74 @@ const i18n = {
         flash_subtitle: "Rebates are changing soon. Check eligibility now!",
 
         lbl_budget: "Target Budget (Opt.)", // 🟢 新增
+
+        // --- Partner Hub EN ---
+        btn_partner_hub: "Partner Hub",
+        p_title: "Partner Hub",
+        p_sub: "Join Australia's fastest-growing energy network.",
+        role_inst: "Solar Retailer & Installer",
+        role_inst_tag: "Leads & Jobs",
+        role_inst_desc: "Access pre-qualifed solar & battery leads. We handle the sales. you handle the jobs.",
+        role_inst_req: "Req: CEC Accreditation • ABN",
+        
+        role_elec: "Licensed Electrician",
+        role_elec_tag: "Solar & EV",
+        role_elec_desc: "Pick up jobs for solar, battery, EV charger installs, and more. Perfect for flling your schedule.",
+        role_elec_req: "Prefer: Elec License • CEC • Apprentice",
+        
+        role_brand: "Brand & Supplier",
+        role_brand_desc: "List your products in our guoting engine. Connect directly with 500+ installers and track market trends.",
+        role_brand_req: "For: Manufacturers • Distributors",
+        
+        p_contact_text: "Partner Support: info@solaryo.com.au",
+        p_back: "‹ Back",
+        p_reg_title: "Registration",
+        lbl_biz_details: "Details", /* Shortened */
+        
+        lbl_biz_type: "Business / Entity Type",
+        opt_company: "Company (Pty Ltd)",
+        opt_sole: "Sole Trader",
+        opt_partner: "Partnership",
+        opt_private: "Private / Individual",
+        
+        lbl_company_name: "Company / Trading Name",
+        lbl_abn: "ABN / ACN",
+        lbl_contact: "Contact Person",
+        lbl_phone: "Phone (Mobile/Landline)",
+        lbl_email: "Email Address",
+        lbl_address: "Address",
+        lbl_notes: "Notes / Comments (Optional)",
+        
+        lbl_biz_focus: "Business Focus",
+        opt_retailer: "Retailer (Buy Leads)",
+        opt_installer: "Installer (Get Jobs)",
+        opt_both: "Both",
+        
+        lbl_cec: "CEC Accreditation Number",
+        lbl_svc_area: "Service Areas",
+        lbl_svc_state: "Service State / Territory",
+        lbl_svc_regions: "Specific Regions (Multi-select)",
+        opt_nationwide: "Nationwide (All Australia)",
+        opt_nsw_act: "NSW & ACT",
+        txt_all_au: "✅ Nationwide coverage selected",
+        
+        lbl_elec_level: "Electrician Level",
+        opt_licensed: "Licensed Electrician (General)",
+        opt_cec_elec: "CEC Accredited Electrician",
+        opt_apprentice: "Electrician Apprentice",
+        lbl_exp: "Installation Experience (Multi-select)",
+        lbl_license: "License No.",
+        lbl_upload_ins: "Upload Insurance (COC/Public Liability)",
+        lbl_dist_brands: "Brands Distributed",
+        lbl_prod_cat: "Product Categories",
+        lbl_upload_prod: "Upload Product List / Pricing (Optional)",
+        
+        btn_submit_app: "Submit Application",
+        msg_submitting: "Submitting...",
+        msg_success: "Application Received! ✓",
+        msg_err_phone: "Error: Invalid AU Phone Number",
+        msg_err_email: "Error: Invalid Email Address",
+        msg_err_general: "Error. Please try again.",
 
         // [New] Sticky Footer & Fake Loader
         sticky_net: "Total Net Price",
@@ -2472,3 +2619,356 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 800);
 });
+
+// ==========================================
+// [NEW] Partner Hub Logic (Complete & Translated)
+// ==========================================
+
+// 1. 通用电话格式化 (全局调用)
+function formatPhone(input) {
+    let x = input.value.replace(/\D/g, '').match(/(\d{0,4})(\d{0,3})(\d{0,3})/);
+    input.value = !x[2] ? x[1] : x[1] + ' ' + x[2] + (x[3] ? ' ' + x[3] : '');
+}
+
+// 2. 打开/关闭逻辑
+function openPartnerModal() {
+    document.getElementById('partner-step-1').style.display = 'block';
+    document.getElementById('partner-step-2').style.display = 'none';
+    document.getElementById('partner-modal').style.display = 'flex';
+    
+    // 隐藏 FOMO Bar 避免遮挡
+    const fomo = document.getElementById('fomo-bar');
+    if(fomo) fomo.style.display = 'none';
+}
+
+function closePartnerModal(e) {
+    const overlay = document.getElementById('partner-modal');
+    if (!e || e.target === overlay || e.target.classList.contains('close-btn')) {
+        overlay.style.display = 'none';
+        
+        // 恢复 FOMO Bar
+        const fomo = document.getElementById('fomo-bar');
+        if (fomo && typeof fomoData !== 'undefined' && fomoData.length > 0) {
+            fomo.style.display = 'flex';
+        }
+    }
+}
+
+function backToRoles() {
+    document.getElementById('partner-step-1').style.display = 'block';
+    document.getElementById('partner-step-2').style.display = 'none';
+}
+
+// 3. 辅助函数：生成服务区域 HTML (State + Region Tags)
+// 3. 辅助函数：生成服务区域 HTML (State + Region Tags)
+function getServiceAreaHTML() {
+    const t = i18n[curLang];
+    
+    // 🟢 [修改 1] 去掉 grid-2-compact，改为垂直排列
+    // 🟢 [修改 2] Option 显示文本改为全称 (New South Wales, Victoria...)
+    return `
+        <div class="form-group-compact">
+            <label>${t.lbl_svc_state}</label>
+            <select id="p-service-state" onchange="renderServiceRegions(this.value)">
+                <option value="NSW_ACT">New South Wales & ACT</option>
+                <option value="VIC">Victoria</option>
+                <option value="QLD">Queensland</option>
+                <option value="SA">South Australia</option>
+                <option value="WA">Western Australia</option>
+                <option value="TAS">Tasmania</option>
+                <option value="NT">Northern Territory</option>
+                <option value="Nationwide" style="font-weight:bold; color:#1d4ed8;">${t.opt_nationwide}</option>
+            </select>
+        </div>
+        
+        <div class="form-group-compact" id="region-container-wrapper">
+            <label>${t.lbl_svc_regions}</label>
+            <div id="region-pills-container" class="checkbox-group-pills">
+                </div>
+        </div>
+    `;
+}
+
+// 4. 渲染 Region 标签
+function renderServiceRegions(state) {
+    const container = document.getElementById('region-pills-container');
+    if (!container) return;
+
+    container.innerHTML = ''; // 清空
+    const t = i18n[curLang];
+
+    if (state === 'Nationwide') {
+        container.innerHTML = `<div style="font-size:0.85rem; color:#10b981; font-weight:600; padding:8px;">${t.txt_all_au}</div>`;
+        return;
+    }
+
+    const regions = regionMap[state] || [];
+    regions.forEach(region => {
+        const label = document.createElement('label');
+        label.className = 'check-pill';
+        label.innerHTML = `
+            <input type="checkbox" name="svc_region" value="${region}">
+            <span>${region}</span>
+        `;
+        container.appendChild(label);
+    });
+}
+
+// 5. 动态表单生成 (双语 + 备注框)
+function showPartnerForm(role) {
+    document.getElementById('p-role').value = role;
+    const t = i18n[curLang]; 
+
+    // 设置标题
+    document.getElementById('form-role-title').innerText = t.p_reg_title;
+
+    // 刷新静态标签语言
+    document.querySelector('.form-section-title').innerText = t.lbl_biz_details;
+    document.querySelector('label[for="p-company"]').innerText = t.lbl_company_name;
+    document.querySelector('label[for="p-address"]').innerText = t.lbl_address;
+    document.querySelector('label[for="p-abn"]').innerText = t.lbl_abn;
+    document.querySelector('label[for="p-contact"]').innerText = t.lbl_contact;
+    document.querySelector('label[for="p-phone"]').innerText = t.lbl_phone;
+    document.querySelector('label[for="p-email"]').innerText = t.lbl_email;
+    document.querySelector('.btn-partner-submit').innerText = t.btn_submit_app;
+
+    // 更新单选框
+    const radioLabels = document.querySelectorAll('.radio-box-small span');
+    if(radioLabels.length >= 4) {
+        radioLabels[0].innerText = t.opt_company;
+        radioLabels[1].innerText = t.opt_sole;
+        radioLabels[2].innerText = t.opt_partner;
+        radioLabels[3].innerText = t.opt_private;
+    }
+
+    const container = document.getElementById('dynamic-fields-area');
+    container.innerHTML = ''; 
+
+    // --- A. Solar Pro ---
+    if (role === 'solar_pro') {
+        container.innerHTML = `
+            <div class="form-group-compact">
+                <label>${t.lbl_biz_focus}</label>
+                <select id="p-focus">
+                    <option value="retailer_leads">${t.opt_retailer}</option>
+                    <option value="installer_jobs">${t.opt_installer}</option>
+                    <option value="both">${t.opt_both}</option>
+                </select>
+            </div>
+            <div class="form-group-compact">
+                <label>${t.lbl_cec}</label>
+                <input type="text" id="p-cec" placeholder="Axxxxxxx" required>
+            </div>
+            ${getServiceAreaHTML()} 
+        `;
+    } 
+    // --- B. Electrician ---
+    else if (role === 'electrician') {
+        container.innerHTML = `
+            <div class="form-group-compact">
+                <label>${t.lbl_elec_level}</label>
+                <select id="p-elec-type">
+                    <option value="licensed">${t.opt_licensed}</option>
+                    <option value="cec_accredited">${t.opt_cec_elec}</option>
+                    <option value="apprentice">${t.opt_apprentice}</option>
+                </select>
+            </div>
+            <div class="form-group-compact">
+                <label>${t.lbl_exp}</label>
+                <div class="checkbox-group-pills">
+                    <label class="check-pill"><input type="checkbox" name="elec_exp" value="Solar PV"><span>☀️ Solar PV</span></label>
+                    <label class="check-pill"><input type="checkbox" name="elec_exp" value="Battery"><span>🔋 Battery</span></label>
+                    <label class="check-pill"><input type="checkbox" name="elec_exp" value="EV Charger"><span>🚗 EV Charger</span></label>
+                </div>
+            </div>
+            <div class="form-group-compact">
+                <label>${t.lbl_license}</label>
+                <input type="text" id="p-license" required>
+            </div>
+            ${getServiceAreaHTML()}
+            <div class="form-group-compact">
+                <label>${t.lbl_upload_ins}</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="p-file-insurance" accept="image/*,.pdf">
+                </div>
+            </div>
+        `;
+    } 
+    // --- C. Brand ---
+    else if (role === 'brand') {
+        container.innerHTML = `
+            <div class="form-group-compact">
+                <label>${t.lbl_dist_brands}</label>
+                <input type="text" id="p-brands" required>
+            </div>
+            <div class="form-group-compact">
+                <label>${t.lbl_prod_cat}</label>
+                <select id="p-prod-type">
+                    <option value="panels">Solar Panels</option>
+                    <option value="inverter">Inverters</option>
+                    <option value="battery">Batteries</option>
+                    <option value="mounting">Mounting / BoS</option>
+                    <option value="all">Full Range</option>
+                </select>
+            </div>
+            ${getServiceAreaHTML()}
+            <div class="form-group-compact">
+                <label>${t.lbl_upload_prod}</label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="p-file-product" accept=".pdf,.xlsx,.csv">
+                </div>
+            </div>
+        `;
+    }
+
+    // 🟢 插入备注框 (地址框已在HTML静态区)
+    const notesField = document.createElement('div');
+    notesField.innerHTML = `
+        <div class="form-group-compact" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+            <label>${t.lbl_notes}</label>
+            <textarea id="p-notes" rows="2"></textarea>
+        </div>
+    `;
+    container.appendChild(notesField);
+
+    document.getElementById('partner-step-1').style.display = 'none';
+    document.getElementById('partner-step-2').style.display = 'block';
+
+    // 初始化 Google Autocomplete (静态框)
+    initPartnerAddressAutocomplete();
+    
+    // 初始化服务区域 (默认 NSW)
+    renderServiceRegions('NSW_ACT');
+}
+
+// 6. 初始化 Google Autocomplete
+function initPartnerAddressAutocomplete() {
+    const input = document.getElementById('p-address');
+    if (!input) return;
+    const options = {
+        componentRestrictions: { country: "au" },
+        fields: ["formatted_address"],
+        types: ["address"],
+    };
+    new google.maps.places.Autocomplete(input, options);
+}
+
+// 7. 提交逻辑
+async function submitPartner(e) {
+    e.preventDefault();
+    const t = i18n[curLang];
+    const btn = document.querySelector('.btn-partner-submit');
+    const originalText = btn.innerText;
+
+    // --- 验证 ---
+    const phoneInput = document.getElementById('p-phone');
+    const emailInput = document.getElementById('p-email');
+    
+    // 澳洲电话正则 (移除空格后检测)
+    const phoneVal = phoneInput.value.trim().replace(/[\s-]/g, '');
+    if (!/^(?:04\d{8}|0[2378]\d{8})$/.test(phoneVal)) {
+        alert(t.msg_err_phone);
+        phoneInput.focus(); return;
+    }
+
+    // 邮箱正则
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+        alert(t.msg_err_email);
+        emailInput.focus(); return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = t.msg_submitting;
+
+    // 收集基础数据
+    const role = document.getElementById('p-role').value;
+    const bizType = document.querySelector('input[name="biz_type"]:checked')?.value || 'company';
+    
+    // 收集区域字符串
+    const selectedState = document.getElementById('p-service-state')?.value || '';
+    let finalServiceAreaStr = "";
+    if (selectedState === 'Nationwide') {
+        finalServiceAreaStr = "Nationwide";
+    } else if (selectedState) {
+        const regionCheckboxes = document.querySelectorAll('input[name="svc_region"]:checked');
+        const regions = Array.from(regionCheckboxes).map(cb => cb.value);
+        finalServiceAreaStr = regions.length > 0 ? `${selectedState}: ${regions.join(', ')}` : `${selectedState}`;
+    }
+    
+    // 收集电工经验
+    const expCheckboxes = document.querySelectorAll('input[name="elec_exp"]:checked');
+    const expStr = Array.from(expCheckboxes).map(cb => cb.value).join(', ');
+
+    const payload = {
+        created_at: new Date().toISOString(),
+        role: role,
+        business_type: bizType,
+        company_name: document.getElementById('p-company').value,
+        abn_acn: document.getElementById('p-abn').value,
+        contact_name: document.getElementById('p-contact').value,
+        phone: phoneInput.value,
+        email: emailInput.value,
+        address: document.getElementById('p-address').value,
+        notes: document.getElementById('p-notes').value,
+        
+        business_focus: document.getElementById('p-focus')?.value || null,
+        cec_number: document.getElementById('p-cec')?.value || null,
+        service_postcodes: finalServiceAreaStr || null,
+        specialty_brands: document.getElementById('p-brands')?.value || null,
+        electrician_type: document.getElementById('p-elec-type')?.value || null,
+        install_experience: expStr || null,
+        license_number: document.getElementById('p-license')?.value || null,
+        product_category: document.getElementById('p-prod-type')?.value || null,
+        
+        status: 'pending'
+    };
+
+    try {
+        // 文件上传
+        let fileInput = null;
+        if (role === 'electrician') fileInput = document.getElementById('p-file-insurance');
+        if (role === 'brand') fileInput = document.getElementById('p-file-product');
+
+        if (fileInput && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const fileName = `${role}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('uploads').upload(fileName, file);
+            if (uploadError) throw uploadError;
+            const { data: urlData } = supabaseClient.storage.from('uploads').getPublicUrl(uploadData.path);
+            payload.file_url = urlData.publicUrl;
+        }
+
+        // 插入数据库
+        const { error } = await supabaseClient.from('partners').insert([payload]);
+        if (error) throw error;
+
+        btn.innerText = t.msg_success;
+        btn.style.background = "#10b981";
+        
+        setTimeout(() => {
+            closePartnerModal();
+            btn.disabled = false;
+            btn.innerText = originalText;
+            btn.style.background = ""; 
+            document.getElementById('partner-form').reset();
+            backToRoles();
+            showToast(t.msg_success);
+        }, 1500);
+
+    } catch (err) {
+        console.error("Partner Submit Error:", err);
+        btn.innerText = t.msg_err_general;
+        btn.style.background = "#ef5350";
+        btn.disabled = false;
+    }
+}
+
+// 挂载到全局
+window.openPartnerModal = openPartnerModal;
+window.closePartnerModal = closePartnerModal;
+window.backToRoles = backToRoles;
+window.showPartnerForm = showPartnerForm;
+window.submitPartner = submitPartner;
+window.formatPhone = formatPhone;
+window.renderServiceRegions = renderServiceRegions;
+window.initPartnerAddressAutocomplete = initPartnerAddressAutocomplete;

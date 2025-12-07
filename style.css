@@ -4258,3 +4258,148 @@ input[type=range].gold-slider::-webkit-slider-thumb {
 input[type=range].gold-slider::-webkit-slider-thumb:hover {
     box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.3) !important;
 }
+/* ==========================================
+   [NEW] Partner Hub Styles (Final)
+   ========================================== */
+
+/* 1. 行内入口按钮 */
+.label-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.partner-inline-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.partner-inline-btn:hover {
+    background: #f8fafc;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.p-icon-small { font-size: 0.9rem; line-height: 1; }
+.p-text-small {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* 2. 弹窗 & 卡片 */
+.partner-modal-card {
+    max-width: 500px !important;
+    background: #ffffff;
+    padding: 30px 25px;
+    text-align: left;
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.partner-title { text-align: center; margin: 0 0 5px 0; color: var(--primary); font-size: 1.3rem; }
+.partner-subtitle { text-align: center; color: #64748b; margin-bottom: 25px; font-size: 0.9rem; }
+
+.role-list { display: flex; flex-direction: column; gap: 12px; }
+
+.role-card-wide {
+    background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+    padding: 16px; cursor: pointer; display: flex; align-items: flex-start; gap: 16px;
+    transition: all 0.2s ease; position: relative;
+}
+.role-card-wide:hover {
+    border-color: var(--primary); background: #f8fafc;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); transform: translateY(-2px);
+}
+
+.role-icon-box {
+    width: 48px; height: 48px; background: #f1f5f9; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;
+}
+.role-info { flex: 1; }
+.role-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.role-header h4 { margin: 0; font-size: 0.95rem; color: var(--primary); font-weight: 800; }
+.role-tag {
+    background: #dbeafe; color: #2563eb; font-size: 0.6rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
+}
+.role-desc-detail { font-size: 0.8rem; color: #64748b; line-height: 1.5; margin: 0 0 8px 0; }
+.role-reqs { font-size: 0.7rem; color: #94a3b8; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+.role-reqs::before { content: '•'; color: var(--solar-gold); font-weight: bold; }
+.role-arrow { color: #cbd5e1; font-size: 1.5rem; font-weight: 300; align-self: center; }
+
+/* 3. 表单组件 */
+.form-header { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; }
+.back-link { position: absolute; left: 0; background: none; border: none; color: #64748b; cursor: pointer; font-weight: 600; font-size: 0.9rem; padding: 0; }
+.form-title-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+
+.form-section-title {
+    font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em;
+    margin: 20px 0 10px 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; font-weight: 700;
+}
+
+.form-group-compact { margin-bottom: 12px; }
+.form-group-compact label { font-size: 0.8rem; color: #334155; margin-bottom: 4px; display: block; font-weight: 600; }
+.form-group-compact input, .form-group-compact select, .form-group-compact textarea {
+    width: 100%; height: 40px; font-size: 0.9rem; border-radius: 8px;
+    background: #f8fafc; border: 1px solid #e2e8f0; padding: 0 12px; box-sizing: border-box;
+    font-family: inherit; color: var(--primary);
+}
+.form-group-compact textarea { height: auto; padding: 8px 12px; }
+.grid-2-compact { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* 4. Business Type Grid */
+.radio-group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px; }
+.radio-box-small span {
+    font-size: 0.8rem; padding: 8px 5px; border: 1px solid #e2e8f0; border-radius: 8px;
+    background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; color: #64748b; width: 100%; box-sizing: border-box; text-align: center;
+}
+.radio-box-small input { display: none; }
+.radio-box-small input:checked + span {
+    background: var(--primary); color: white; border-color: var(--primary); font-weight: 600;
+}
+
+/* 5. Tags & Pills */
+.checkbox-group-pills {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;
+    max-height: 220px; overflow-y: auto; padding: 2px;
+}
+.check-pill span {
+    display: inline-block; padding: 6px 12px; background: #f1f5f9;
+    border: 1px solid #e2e8f0; border-radius: 20px; font-size: 0.8rem;
+    color: #64748b; cursor: pointer; transition: all 0.2s ease; font-weight: 500;
+}
+.check-pill input { display: none; }
+.check-pill input:checked + span {
+    background: var(--primary); color: white; border-color: var(--primary);
+}
+
+.file-upload-wrapper input[type=file] { 
+    font-size: 0.8rem; padding: 6px; height: auto; border: 2px dashed #cbd5e1; background: #fff;
+}
+
+.btn-partner-submit {
+    width: 100%; background: linear-gradient(135deg, var(--primary) 0%, #334155 100%);
+    color: white; padding: 12px; border-radius: 10px; font-weight: 700; border: none;
+    margin-top: 20px; cursor: pointer; transition: transform 0.1s;
+}
+
+@media (max-width: 500px) {
+    .partner-modal-card { padding: 20px 15px; }
+    .partner-inline-btn { padding: 4px 10px; }
+    .role-card-wide { padding: 12px; gap: 12px; }
+}

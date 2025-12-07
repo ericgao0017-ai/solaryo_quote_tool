@@ -111,7 +111,14 @@
         </div>
 
 
-        <label data-i18n="lbl_mode">Installation Type</label>
+        <div class="label-row-header">
+            <label data-i18n="lbl_mode" style="margin-bottom: 0;">Installation Type</label>
+    
+            <div class="partner-inline-btn" onclick="openPartnerModal()">
+            <span class="p-icon-small">🤝</span>
+            <span class="p-text-small" data-i18n="btn_partner_hub">Partner Hub</span>
+            </div>
+        </div>
 
         <div class="mode-selector">
             <div class="mode-btn active" onclick="setMode('solar')" id="btn-solar">
@@ -786,6 +793,141 @@
             </div>
         </div>
     </div>
+
+    <div id="partner-modal" class="modal-overlay" onclick="closePartnerModal(event)">
+    <div class="modal-content partner-modal-card">
+        <span class="close-btn" onclick="closePartnerModal(event)">&times;</span>
+        
+        <div id="partner-step-1">
+            <h3 class="partner-title" data-i18n="p_title">Partner Hub</h3>
+            <p class="partner-subtitle" data-i18n="p_sub">Join Australia's fastest-growing energy network.</p>
+            
+            <div class="role-list">
+                <div class="role-card-wide" onclick="showPartnerForm('solar_pro')">
+                    <div class="role-icon-box">🛠️</div>
+                    <div class="role-info">
+                        <div class="role-header">
+                            <h4 data-i18n="role_inst">Solar Retailer & Installer</h4>
+                            <span class="role-tag" data-i18n="role_inst_tag" style="background:#fef3c7; color:#d97706;">Leads & Jobs</span>
+                        </div>
+                        <p class="role-desc-detail" data-i18n="role_inst_desc">
+                            Retailers: Buy high-intent leads. Installers: Pick up ready-to-go jobs.
+                        </p>
+                        <div class="role-reqs" data-i18n="role_inst_req">Req: CEC Accreditation • ABN</div>
+                    </div>
+                    <div class="role-arrow">›</div>
+                </div>
+                
+                <div class="role-card-wide" onclick="showPartnerForm('electrician')">
+                    <div class="role-icon-box">⚡</div>
+                    <div class="role-info">
+                        <div class="role-header">
+                            <h4 data-i18n="role_elec">Licensed Electrician</h4>
+                            <span class="role-tag" data-i18n="role_elec_tag">Solar & EV</span>
+                        </div>
+                        <p class="role-desc-detail" data-i18n="role_elec_desc">
+                            Specialized jobs for Solar, Battery Storage, and EV Charger installations.
+                        </p>
+                        <div class="role-reqs" data-i18n="role_elec_req">Prefer: Elec License • CEC • Apprentice</div>
+                    </div>
+                    <div class="role-arrow">›</div>
+                </div>
+                
+                <div class="role-card-wide" onclick="showPartnerForm('brand')">
+                    <div class="role-icon-box">🏢</div>
+                    <div class="role-info">
+                        <div class="role-header">
+                            <h4 data-i18n="role_brand">Brand & Supplier</h4>
+                        </div>
+                        <p class="role-desc-detail" data-i18n="role_brand_desc">
+                            List products in our engine. Connect with 500+ installers.
+                        </p>
+                        <div class="role-reqs" data-i18n="role_brand_req">For: Manufacturers • Distributors</div>
+                    </div>
+                    <div class="role-arrow">›</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center; font-size: 0.8rem; color: #94a3b8;">
+                <a href="mailto:info@solaryo.com.au" style="color:var(--primary); font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;" >
+                    ✉️ <span data-i18n="p_contact_text">Partner Support: info@solaryo.com.au</span>
+                </a>
+            </div>
+        </div>
+
+        <div id="partner-step-2" style="display:none;">
+            <div class="form-header">
+                <button class="back-link" type="button" onclick="backToRoles()" data-i18n="p_back">‹ Back</button>
+                <span id="form-role-title" class="form-title-badge">Registration</span>
+            </div>
+
+            <form id="partner-form" onsubmit="submitPartner(event)">
+                <input type="hidden" id="p-role">
+                
+                <div class="form-section-title" data-i18n="lbl_biz_details">Details</div>
+                
+                <div class="form-group-compact">
+                    <label data-i18n="lbl_biz_type">Business / Entity Type</label>
+                    <div class="radio-group-grid">
+                        <label class="radio-box-small">
+                            <input type="radio" name="biz_type" value="company" checked> 
+                            <span data-i18n="opt_company">Company (Pty Ltd)</span>
+                        </label>
+                        <label class="radio-box-small">
+                            <input type="radio" name="biz_type" value="sole_trader"> 
+                            <span data-i18n="opt_sole">Sole Trader</span>
+                        </label>
+                        <label class="radio-box-small">
+                            <input type="radio" name="biz_type" value="partnership"> 
+                            <span data-i18n="opt_partner">Partnership</span>
+                        </label>
+                        <label class="radio-box-small">
+                            <input type="radio" name="biz_type" value="private"> 
+                            <span data-i18n="opt_private">Private / Individual</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group-compact">
+                    <label for="p-company" data-i18n="lbl_company_name">Company Name</label>
+                    <input type="text" id="p-company" required>
+                </div>
+
+                <div class="form-group-compact">
+                    <label for="p-address" data-i18n="lbl_address">Address (Auto-fill)</label>
+                    <input type="text" id="p-address" placeholder="" autocomplete="off">
+                </div>
+
+                <div class="grid-2-compact">
+                    <div class="form-group-compact">
+                        <label for="p-abn" data-i18n="lbl_abn">ABN / ACN</label>
+                        <input type="text" id="p-abn" required>
+                    </div>
+                    <div class="form-group-compact">
+                        <label for="p-contact" data-i18n="lbl_contact">Contact Person</label>
+                        <input type="text" id="p-contact" required>
+                    </div>
+                </div>
+
+                <div class="grid-2-compact">
+                    <div class="form-group-compact">
+                        <label for="p-phone" data-i18n="lbl_phone">Phone</label>
+                        <input type="tel" id="p-phone" placeholder="04xx xxx xxx" required oninput="formatPhone(this)">
+                    </div>
+                    <div class="form-group-compact">
+                        <label for="p-email" data-i18n="lbl_email">Email</label>
+                        <input type="email" id="p-email" required>
+                    </div>
+                </div>
+
+                <div id="dynamic-fields-area"></div>
+
+                <button type="submit" class="btn-partner-submit" data-i18n="btn_submit_app">Submit Application</button>
+            </form>
+        </div>
+    </div>
+</div>
+
     <script src="script.js"></script>
 
 
