@@ -213,7 +213,7 @@ const i18n = {
         role_inst_req: "要求: CEC 认证 • ABN",
         
         role_elec: "持牌电工",
-        role_elec_tag: "光伏 & 充电桩",
+        role_elec_tag: "光伏 & 储能",
         role_elec_desc: "承接光伏、储能及充电桩安装工单。灵活补位，填满您的日程空档。",
         role_elec_req: "优先: 电工执照 • CEC • 学徒",
         
@@ -372,7 +372,7 @@ const i18n = {
         role_inst_req: "Req: CEC Accreditation • ABN",
         
         role_elec: "Licensed Electrician",
-        role_elec_tag: "Solar & EV",
+        role_elec_tag: "Solar & ESS",
         role_elec_desc: "Pick up jobs for solar, battery, EV charger installs, and more. Perfect for flling your schedule.",
         role_elec_req: "Prefer: Elec License • CEC • Apprentice",
         
