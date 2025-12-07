@@ -4403,3 +4403,43 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
     .partner-inline-btn { padding: 4px 10px; }
     .role-card-wide { padding: 12px; gap: 12px; }
 }
+/* ==========================================
+   [FIX] Partner Hub 关闭按钮专用修正
+   ========================================== */
+
+/* 1. 针对 Partner 弹窗，调整关闭按钮位置 */
+.partner-modal-card .close-btn {
+    /* 调整垂直位置，让它跟 "Registration" 标题处于同一水平线 */
+    top: 25px;   
+    right: 20px; 
+
+    /* 2. 增大点击热区 (Hitbox) */
+    width: 40px;
+    height: 40px;
+    
+    /* 3. 强制居中符号 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* 4. 视觉优化 */
+    background: #f8fafc; /* 给一个极淡的背景，让用户看清按钮范围 */
+    border-radius: 50%;
+    color: #64748b;
+    z-index: 20; /* 确保层级最高，不被表单遮挡 */
+}
+
+/* 悬停效果 */
+.partner-modal-card .close-btn:hover {
+    background: #fee2e2; /* 淡红色背景 */
+    color: #ef4444;       /* 红色叉叉 */
+    transform: rotate(90deg); /* 旋转动效 */
+}
+
+/* 5. 针对手机端的微调 */
+@media (max-width: 500px) {
+    .partner-modal-card .close-btn {
+        top: 20px; /* 手机上稍微靠上一点 */
+        right: 15px;
+    }
+}

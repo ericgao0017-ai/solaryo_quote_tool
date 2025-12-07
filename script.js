@@ -241,9 +241,10 @@ const i18n = {
         lbl_notes: "备注 / 其他说明 (选填)",
         
         lbl_biz_focus: "业务重心",
-        opt_retailer: "我是零售商 (买线索)",
-        opt_installer: "我是安装商 (接工单)",
-        opt_both: "两者都是",
+        opt_retailer: "销售线索",
+        opt_installer: "招聘电工",
+        opt_both: "寻找货源",
+        opt_all: "以上都要", // 🟢 新增
         
         lbl_cec: "CEC 认证编号",
         lbl_svc_area: "服务区域",
@@ -399,9 +400,10 @@ const i18n = {
         lbl_notes: "Notes / Comments (Optional)",
         
         lbl_biz_focus: "Business Focus",
-        opt_retailer: "Retailer (Buy Leads)",
-        opt_installer: "Installer (Get Jobs)",
-        opt_both: "Both",
+        opt_retailer: "Get Leads",
+        opt_installer: "Find Electrician",
+        opt_both: "Source suppliers",
+        opt_all: "All of the above", // 🟢 新增
         
         lbl_cec: "CEC Accreditation Number",
         lbl_svc_area: "Service Areas",
@@ -2630,27 +2632,60 @@ function formatPhone(input) {
     input.value = !x[2] ? x[1] : x[1] + ' ' + x[2] + (x[3] ? ' ' + x[3] : '');
 }
 
-// 2. 打开/关闭逻辑
+// 1. 打开/关闭逻辑 (控制 FOMO 和 底部悬浮按钮 显隐)
 function openPartnerModal() {
     document.getElementById('partner-step-1').style.display = 'block';
     document.getElementById('partner-step-2').style.display = 'none';
     document.getElementById('partner-modal').style.display = 'flex';
     
-    // 隐藏 FOMO Bar 避免遮挡
-    const fomo = document.getElementById('fomo-bar');
-    if(fomo) fomo.style.display = 'none';
+    // 🟢 [修改] 隐藏所有干扰元素 (FOMO + 右下角三件套)
+    const elementsToHide = [
+        'fomo-bar',                // 顶部通知条
+        '.chat-widget-container',  // 客服聊天
+        '.fixed-trust-badge',      // CEC Logo
+        '.fixed-brand-badge'       // Top Brand Logo
+    ];
+
+    elementsToHide.forEach(selector => {
+        // 判断是 ID 还是 Class
+        const el = selector.startsWith('.') 
+            ? document.querySelector(selector) 
+            : document.getElementById(selector);
+        if(el) el.style.display = 'none';
+    });
 }
 
 function closePartnerModal(e) {
     const overlay = document.getElementById('partner-modal');
+    // 判断点击的是遮罩层还是关闭按钮
     if (!e || e.target === overlay || e.target.classList.contains('close-btn')) {
         overlay.style.display = 'none';
         
-        // 恢复 FOMO Bar
-        const fomo = document.getElementById('fomo-bar');
-        if (fomo && typeof fomoData !== 'undefined' && fomoData.length > 0) {
-            fomo.style.display = 'flex';
-        }
+        // 🟢 [修改] 恢复所有干扰元素
+        const elementsToShow = [
+            'fomo-bar',
+            '.chat-widget-container',
+            '.fixed-trust-badge',
+            '.fixed-brand-badge'
+        ];
+
+        elementsToShow.forEach(selector => {
+            const el = selector.startsWith('.') 
+                ? document.querySelector(selector) 
+                : document.getElementById(selector);
+            
+            if(el) {
+                // 特殊处理 FOMO Bar: 只有当有数据时才恢复 flex，否则保持 none
+                if (selector === 'fomo-bar') {
+                    if (typeof fomoData !== 'undefined' && fomoData.length > 0) {
+                        el.style.display = 'flex';
+                    }
+                } else {
+                    // 其他元素：清空内联样式，让它恢复 CSS 里的默认值 (flex 或 block)
+                    el.style.display = ''; 
+                }
+            }
+        });
     }
 }
 
@@ -2753,6 +2788,7 @@ function showPartnerForm(role) {
                     <option value="retailer_leads">${t.opt_retailer}</option>
                     <option value="installer_jobs">${t.opt_installer}</option>
                     <option value="both">${t.opt_both}</option>
+                    <option value="Allofabove">${t.opt_all}</option>
                 </select>
             </div>
             <div class="form-group-compact">
