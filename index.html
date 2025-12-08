@@ -666,9 +666,9 @@
             <div class="form-group" style="margin-bottom:20px;">
                 <label style="font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;">
                     <span data-i18n="lbl_file">Upload Bill or Photo (Optional)</span>
-                    <span style="font-size:0.7rem; color:#94a3b8; font-weight:normal;">Max 5MB</span>
+                    <span style="font-size:0.7rem; color:#94a3b8; font-weight:normal;">Max 5MB / file</span>
                 </label>
-                <input type="file" id="conf-file" accept="image/*,.pdf">
+                <input type="file" id="conf-file" accept="image/*,.pdf" multiple>
                 <div id="file-name-display" style="font-size:0.75rem; color:#64748b; margin-top:4px; display:none;">
                 </div>
             </div>
@@ -890,18 +890,18 @@
 
                 <div class="form-group-compact">
                     <label for="p-company" data-i18n="lbl_company_name">Company Name</label>
-                    <input type="text" id="p-company" required>
+                    <input type="text" id="p-company" >
                 </div>
 
                 <div class="form-group-compact">
-                    <label for="p-address" data-i18n="lbl_address">Address (Auto-fill)</label>
+                    <label for="p-address" data-i18n="lbl_address">Address</label>
                     <input type="text" id="p-address" placeholder="" autocomplete="off">
                 </div>
 
                 <div class="grid-2-compact">
                     <div class="form-group-compact">
                         <label for="p-abn" data-i18n="lbl_abn">ABN / ACN</label>
-                        <input type="text" id="p-abn" required>
+                        <input type="text" id="p-abn">
                     </div>
                     <div class="form-group-compact">
                         <label for="p-contact" data-i18n="lbl_contact">Contact Person</label>

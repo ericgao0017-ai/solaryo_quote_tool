@@ -210,7 +210,7 @@ const i18n = {
         p_sub: "成为澳洲增长最快的能源合作伙伴<br><span style='font-size:0.9em; font-weight:600; display:block; margin-top:8px;'>请选择您的角色：</span>",
         role_inst: "光伏零售商 & 安装商",
         role_inst_tag: "线索 & 供给",
-        role_inst_desc: "获取高质量线索。我们负责销售，您专注安装交付。",
+        role_inst_desc: "获取高质量线索，寻找优质货源及电工。这些交给我们，您专注安装交付。",
         role_inst_req: "要求: CEC 认证 • ABN",
         
         role_elec: "电工",
@@ -261,7 +261,7 @@ const i18n = {
         opt_apprentice: "电工学徒",
         lbl_exp: "安装经验 (多选)",
         lbl_license: "执照号码 (License No.)",
-        lbl_upload_ins: "上传保险 (COC/Public Liability)",
+        lbl_upload_ins: "上传文件 (COC/Lic/Others)",
         lbl_dist_brands: "代理品牌",
         lbl_prod_cat: "产品类别",
         lbl_upload_prod: "上传产品清单/价格表 (选填)",
@@ -370,7 +370,7 @@ const i18n = {
         p_sub: "Join Australia's fastest-growing energy network.<br><span style='font-size:0.9em; font-weight:600; display:block; margin-top:8px;'>Please select your role:</span>",
         role_inst: "Solar Retailer & Installer",
         role_inst_tag: "Leads & Supply",
-        role_inst_desc: "Access pre-qualifed solar & battery leads. We handle the sales. you handle the jobs.",
+        role_inst_desc: "Access pre-qualifed solar & battery leads but also stocks & electricians. We handle the these. you handle the jobs.",
         role_inst_req: "Req: CEC Accreditation • ABN",
         
         role_elec: "Electrician",
@@ -421,7 +421,7 @@ const i18n = {
         opt_apprentice: "Electrician Apprentice",
         lbl_exp: "Installation Experience (Multi-select)",
         lbl_license: "License No.",
-        lbl_upload_ins: "Upload Insurance (COC/Public Liability)",
+        lbl_upload_ins: "Upload files (COC/Lic/Others)",
         lbl_dist_brands: "Brands Distributed",
         lbl_prod_cat: "Product Categories",
         lbl_upload_prod: "Upload Product List / Pricing (Optional)",
@@ -1583,7 +1583,7 @@ function getSelectedText(elementId) {
     if (el && el.selectedIndex !== -1) return el.options[el.selectedIndex].text;
     return "";
 }
-// 🔥 终极提交函数 (修复版)
+// [MODIFIED] C端最终询价 (支持多文件上传)
 async function sendFinalEnquiry() {
     // 1. 获取 DOM 元素
     const nameEl = document.getElementById('conf-name');
@@ -1609,36 +1609,40 @@ async function sendFinalEnquiry() {
     btn.innerText = curLang === 'cn' ? "提交中..." : "Sending...";
 
     try {
-        // 3. 文件上传 (使用 supabaseClient)
+        // 🟢 [核心修改] 多文件上传逻辑
         let fileUrl = null;
         let fileName = null;
 
         if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            // 限制 10MB
-            if (file.size > 10 * 1024 * 1024) {
-                throw new Error(curLang === 'cn' ? "文件过大 (需小于10MB)" : "File too large (Max 10MB)");
+            const files = Array.from(fileInput.files);
+            
+            // 检查大小
+            for (let file of files) {
+                if (file.size > 10 * 1024 * 1024) {
+                    throw new Error((curLang === 'cn' ? "文件过大: " : "File too large: ") + file.name);
+                }
             }
 
-            // 唯一文件名
-            const uniqueName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            // 并行上传
+            const uploadPromises = files.map(async (file) => {
+                const uniqueName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                
+                const { data: uploadData, error: uploadError } = await supabaseClient
+                    .storage.from('uploads').upload(uniqueName, file);
 
-            // 🔥 注意：这里用了 supabaseClient
-            const { data: uploadData, error: uploadError } = await supabaseClient
-                .storage
-                .from('uploads')
-                .upload(uniqueName, file);
+                if (uploadError) throw uploadError;
 
-            if (uploadError) throw uploadError;
+                const { data: publicUrlData } = supabaseClient
+                    .storage.from('uploads').getPublicUrl(uploadData.path);
 
-            // 获取公开链接
-            const { data: publicUrlData } = supabaseClient
-                .storage
-                .from('uploads')
-                .getPublicUrl(uploadData.path);
+                return { url: publicUrlData.publicUrl, name: file.name };
+            });
 
-            fileUrl = publicUrlData.publicUrl;
-            fileName = file.name;
+            const results = await Promise.all(uploadPromises);
+            
+            // 拼接字符串存入
+            fileUrl = results.map(r => r.url).join(',');
+            fileName = results.map(r => r.name).join(', ');
         }
 
         // 4. 构建数据包
@@ -1647,8 +1651,6 @@ async function sendFinalEnquiry() {
             language: curLang,
             installation_mode: curMode,
             state: stateEl.value,
-
-            // 联系人
             name: nameEl.value,
             phone: phoneEl.value,
             email: emailEl.value,
@@ -1656,56 +1658,44 @@ async function sendFinalEnquiry() {
             address: addressEl ? addressEl.value : "",
             contact_method: contactMethodEl ? contactMethodEl.value : 'phone',
             install_timeframe: getSelectedText('conf-timeframe'),
-
-            // 房屋与系统
             property_storeys: getSelectedText('storey-select'),
             property_roof: getSelectedText('roof-select'),
             property_shade: getSelectedText('shade-select'),
             property_phase: getSelectedText('phase-select'),
             property_type: getSelectedText('property-type-select'),
             bill_amount: billInput.value,
-            budget_target: document.getElementById('budget-input').value, // 🟢 新增
+            budget_target: document.getElementById('budget-input').value,
             solar_size: document.getElementById('solar-val').innerText,
             battery_size: document.getElementById('bat-val').innerText,
             existing_solar_size: document.getElementById('exist-solar-val').innerText,
             quote_tier: selectedTier,
             estimated_price: document.getElementById('out-net').innerText,
-            // 🟢 [新增] 记录用户选的品牌
             selected_brand: (curMode === 'solar') ? 'Solar Only (Panels)' : currentSelectedBrandName,
             notes: notesEl.value,
-
-            // 高级数据
             user_profile: userApplianceProfile,
-            chat_history: globalChatHistory, // 聊天记录
-
-            // 文件链接
+            chat_history: globalChatHistory,
+            
             file_name: fileName,
             file_url: fileUrl
         };
 
-        // 5. 写入数据库 (🔥 注意：这里也用了 supabaseClient)
+        // 5. 写入数据库
         const { error } = await supabaseClient.from('leads').insert([payload]);
-
         if (error) throw error;
 
         // 6. 成功反馈
-       setTimeout(() => {
-        document.getElementById('final-msg').style.color = '#66bb6a';
-        document.getElementById('final-msg').innerText = i18n[curLang].alert_final_success;
-        btn.innerText = curLang === 'cn' ? "已提交" : "Submitted";
-
         setTimeout(() => {
-            document.getElementById('confirm-modal').style.display = 'none';
+            document.getElementById('final-msg').style.color = '#66bb6a';
+            document.getElementById('final-msg').innerText = i18n[curLang].alert_final_success;
+            btn.innerText = curLang === 'cn' ? "已提交" : "Submitted";
 
-            // 【原有逻辑】提交成功关闭弹窗后，解锁 FOMO Bar
-            document.body.classList.remove('hide-fomo');
-
-            // 🟢 [新增] 提交成功后，也要恢复品牌墙悬浮标
-            const brandBadge = document.querySelector('.fixed-brand-badge');
-            if (brandBadge) brandBadge.style.display = 'flex';
-
-        }, 2000);
-    }, 1000);
+            setTimeout(() => {
+                document.getElementById('confirm-modal').style.display = 'none';
+                document.body.classList.remove('hide-fomo');
+                const brandBadge = document.querySelector('.fixed-brand-badge');
+                if (brandBadge) brandBadge.style.display = 'flex';
+            }, 2000);
+        }, 1000);
 
     } catch (error) {
         console.error("Error:", error);
@@ -1716,20 +1706,6 @@ async function sendFinalEnquiry() {
         btn.disabled = false;
         btn.innerText = i18n[curLang].btn_confirm_send;
     }
-    // 在 sendFinalEnquiry 函数底部...
-    setTimeout(() => {
-        document.getElementById('final-msg').style.color = '#66bb6a';
-        document.getElementById('final-msg').innerText = i18n[curLang].alert_final_success;
-        btn.innerText = curLang === 'cn' ? "已提交" : "Submitted";
-
-        setTimeout(() => {
-            document.getElementById('confirm-modal').style.display = 'none';
-
-            // 【新增】提交成功关闭弹窗后，也记得解锁
-            document.body.classList.remove('hide-fomo');
-
-        }, 2000);
-    }, 1000);
 }
 // --- Inline Validation ---
 const phoneInput = document.getElementById('lead-phone');
@@ -2006,12 +1982,24 @@ function toggleChat() {
     const win = document.getElementById('chat-window');
     const badge = document.querySelector('.chat-badge');
 
+    // 获取悬浮标元素
+    const cecBadge = document.querySelector('.fixed-trust-badge');
+    const brandBadge = document.querySelector('.fixed-brand-badge');
+
     if (isChatOpen) {
         win.classList.add('open');
         if (badge) badge.style.display = 'none'; // 打开后隐藏小红点
         setTimeout(() => document.getElementById('chat-input').focus(), 300);
+
+        // 🟢 [新增] 打开聊天时隐藏悬浮标，防止遮挡
+        if (cecBadge) cecBadge.style.display = 'none';
+        if (brandBadge) brandBadge.style.display = 'none';
     } else {
         win.classList.remove('open');
+
+        // 🟢 [新增] 关闭聊天时恢复显示
+        if (cecBadge) cecBadge.style.display = 'flex';
+        if (brandBadge) brandBadge.style.display = 'flex';
     }
 }
 
@@ -2752,14 +2740,13 @@ function renderServiceRegions(state) {
 }
 
 // 5. 动态表单生成 (双语 + 备注框)
+// [MODIFIED] 动态生成表单 (已添加 multiple 属性)
 function showPartnerForm(role) {
     document.getElementById('p-role').value = role;
     const t = i18n[curLang]; 
 
-    // 设置标题
+    // 设置标题 & 标签
     document.getElementById('form-role-title').innerText = t.p_reg_title;
-
-    // 刷新静态标签语言
     document.querySelector('.form-section-title').innerText = t.lbl_biz_details;
     document.querySelector('label[for="p-company"]').innerText = t.lbl_company_name;
     document.querySelector('label[for="p-address"]').innerText = t.lbl_address;
@@ -2769,7 +2756,6 @@ function showPartnerForm(role) {
     document.querySelector('label[for="p-email"]').innerText = t.lbl_email;
     document.querySelector('.btn-partner-submit').innerText = t.btn_submit_app;
 
-    // 更新单选框
     const radioLabels = document.querySelectorAll('.radio-box-small span');
     if(radioLabels.length >= 4) {
         radioLabels[0].innerText = t.opt_company;
@@ -2790,12 +2776,12 @@ function showPartnerForm(role) {
                     <option value="retailer_leads">${t.opt_retailer}</option>
                     <option value="installer_jobs">${t.opt_installer}</option>
                     <option value="both">${t.opt_both}</option>
-                    <option value="Allofabove">${t.opt_all}</option>
+                    <option value="both">${t.opt_all}</option>
                 </select>
             </div>
             <div class="form-group-compact">
                 <label>${t.lbl_cec}</label>
-                <input type="text" id="p-cec" placeholder="Axxxxxxx" required>
+                <input type="text" id="p-cec" placeholder="Axxxxxxx">
             </div>
             ${getServiceAreaHTML()} 
         `;
@@ -2821,13 +2807,13 @@ function showPartnerForm(role) {
             </div>
             <div class="form-group-compact">
                 <label>${t.lbl_license}</label>
-                <input type="text" id="p-license" required>
+                <input type="text" id="p-license">
             </div>
             ${getServiceAreaHTML()}
             <div class="form-group-compact">
                 <label>${t.lbl_upload_ins}</label>
                 <div class="file-upload-wrapper">
-                    <input type="file" id="p-file-insurance" accept="image/*,.pdf">
+                    <input type="file" id="p-file-insurance" accept="image/*,.pdf" multiple>
                 </div>
             </div>
         `;
@@ -2853,13 +2839,13 @@ function showPartnerForm(role) {
             <div class="form-group-compact">
                 <label>${t.lbl_upload_prod}</label>
                 <div class="file-upload-wrapper">
-                    <input type="file" id="p-file-product" accept=".pdf,.xlsx,.csv">
+                    <input type="file" id="p-file-product" accept=".pdf,.xlsx,.csv" multiple>
                 </div>
             </div>
         `;
     }
 
-    // 🟢 插入备注框 (地址框已在HTML静态区)
+    // 备注框
     const notesField = document.createElement('div');
     notesField.innerHTML = `
         <div class="form-group-compact" style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
@@ -2872,10 +2858,7 @@ function showPartnerForm(role) {
     document.getElementById('partner-step-1').style.display = 'none';
     document.getElementById('partner-step-2').style.display = 'block';
 
-    // 初始化 Google Autocomplete (静态框)
     initPartnerAddressAutocomplete();
-    
-    // 初始化服务区域 (默认 NSW)
     renderServiceRegions('NSW_ACT');
 }
 
@@ -2892,6 +2875,7 @@ function initPartnerAddressAutocomplete() {
 }
 
 // 7. 提交逻辑
+// [MODIFIED] 提交 Partner 申请 (支持多文件上传)
 async function submitPartner(e) {
     e.preventDefault();
     const t = i18n[curLang];
@@ -2901,28 +2885,23 @@ async function submitPartner(e) {
     // --- 验证 ---
     const phoneInput = document.getElementById('p-phone');
     const emailInput = document.getElementById('p-email');
-    
-    // 澳洲电话正则 (移除空格后检测)
     const phoneVal = phoneInput.value.trim().replace(/[\s-]/g, '');
+    
     if (!/^(?:04\d{8}|0[2378]\d{8})$/.test(phoneVal)) {
-        alert(t.msg_err_phone);
-        phoneInput.focus(); return;
+        alert(t.msg_err_phone); phoneInput.focus(); return;
     }
-
-    // 邮箱正则
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
-        alert(t.msg_err_email);
-        emailInput.focus(); return;
+        alert(t.msg_err_email); emailInput.focus(); return;
     }
 
     btn.disabled = true;
     btn.innerText = t.msg_submitting;
 
-    // 收集基础数据
+    // 收集数据
     const role = document.getElementById('p-role').value;
     const bizType = document.querySelector('input[name="biz_type"]:checked')?.value || 'company';
     
-    // 收集区域字符串
+    // 区域 & 经验
     const selectedState = document.getElementById('p-service-state')?.value || '';
     let finalServiceAreaStr = "";
     if (selectedState === 'Nationwide') {
@@ -2933,7 +2912,6 @@ async function submitPartner(e) {
         finalServiceAreaStr = regions.length > 0 ? `${selectedState}: ${regions.join(', ')}` : `${selectedState}`;
     }
     
-    // 收集电工经验
     const expCheckboxes = document.querySelectorAll('input[name="elec_exp"]:checked');
     const expStr = Array.from(expCheckboxes).map(cb => cb.value).join(', ');
 
@@ -2957,26 +2935,34 @@ async function submitPartner(e) {
         install_experience: expStr || null,
         license_number: document.getElementById('p-license')?.value || null,
         product_category: document.getElementById('p-prod-type')?.value || null,
-        
         status: 'pending'
     };
 
     try {
-        // 文件上传
+        // 🟢 [核心修改] 批量文件上传逻辑
         let fileInput = null;
         if (role === 'electrician') fileInput = document.getElementById('p-file-insurance');
         if (role === 'brand') fileInput = document.getElementById('p-file-product');
 
         if (fileInput && fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            const fileName = `${role}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-            const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('uploads').upload(fileName, file);
-            if (uploadError) throw uploadError;
-            const { data: urlData } = supabaseClient.storage.from('uploads').getPublicUrl(uploadData.path);
-            payload.file_url = urlData.publicUrl;
+            const files = Array.from(fileInput.files);
+            
+            // 并行上传
+            const uploadPromises = files.map(async (file) => {
+                const fileName = `${role}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                const { data: uploadData, error: uploadError } = await supabaseClient
+                    .storage.from('uploads').upload(fileName, file);
+                
+                if (uploadError) throw uploadError;
+                
+                const { data: urlData } = supabaseClient.storage.from('uploads').getPublicUrl(uploadData.path);
+                return urlData.publicUrl;
+            });
+
+            const uploadedUrls = await Promise.all(uploadPromises);
+            payload.file_url = uploadedUrls.join(','); // 逗号拼接存入
         }
 
-        // 插入数据库
         const { error } = await supabaseClient.from('partners').insert([payload]);
         if (error) throw error;
 
