@@ -231,7 +231,7 @@ const i18n = {
         opt_company: "公司 (Company)",
         opt_sole: "个体户 (Sole Trader)",
         opt_partner: "合伙 (Partnership)",
-        opt_private: "个人/私活 (Private)",
+        opt_private: "私人 (Private)",
         
         lbl_company_name: "公司 / 经营名称",
         lbl_abn: "ABN / ACN",
@@ -2995,4 +2995,5 @@ window.showPartnerForm = showPartnerForm;
 window.submitPartner = submitPartner;
 window.formatPhone = formatPhone;
 window.renderServiceRegions = renderServiceRegions;
+
 window.initPartnerAddressAutocomplete = initPartnerAddressAutocomplete;
