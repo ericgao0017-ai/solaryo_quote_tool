@@ -2995,5 +2995,4 @@ window.showPartnerForm = showPartnerForm;
 window.submitPartner = submitPartner;
 window.formatPhone = formatPhone;
 window.renderServiceRegions = renderServiceRegions;
-
 window.initPartnerAddressAutocomplete = initPartnerAddressAutocomplete;
