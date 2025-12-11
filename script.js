@@ -246,6 +246,9 @@ const i18n = {
         opt_installer: "招聘电工",
         opt_both: "寻找货源",
         opt_all: "以上都要", // 🟢 新增
+
+        map_mode_consumer: "我是房主",
+        map_mode_provider: "我是安装商",
         
         lbl_cec: "CEC 认证编号",
         lbl_svc_area: "服务区域",
@@ -362,6 +365,10 @@ const i18n = {
         flash_subtitle: "Rebates are changing soon. Check eligibility now!",
 
         lbl_budget: "Target Budget (Opt.)", // 🟢 新增
+
+        // 在 en 对象里找到合适的位置加入：
+        map_mode_consumer: "I'm a Homeowner",
+        map_mode_provider: "I'm an Installer",
 
         // --- Partner Hub EN ---
         btn_partner_hub: "Partner Hub",
@@ -2875,98 +2882,100 @@ function initPartnerAddressAutocomplete() {
 }
 
 // 7. 提交逻辑
-// [MODIFIED] 提交 Partner 申请 (支持多文件上传)
+// [REPLACED] 合作伙伴申请提交 (仅存数据库，不创建 Auth 账号)
 async function submitPartner(e) {
     e.preventDefault();
     const t = i18n[curLang];
     const btn = document.querySelector('.btn-partner-submit');
     const originalText = btn.innerText;
 
-    // --- 验证 ---
+    // --- 1. 获取输入值 ---
     const phoneInput = document.getElementById('p-phone');
     const emailInput = document.getElementById('p-email');
-    const phoneVal = phoneInput.value.trim().replace(/[\s-]/g, '');
     
+    // 注意：这里不再获取 passwordInput
+    
+    const phoneVal = phoneInput.value.trim().replace(/[\s-]/g, '');
+    const emailVal = emailInput.value.trim();
+
+    // --- 2. 验证 ---
     if (!/^(?:04\d{8}|0[2378]\d{8})$/.test(phoneVal)) {
         alert(t.msg_err_phone); phoneInput.focus(); return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
         alert(t.msg_err_email); emailInput.focus(); return;
     }
 
     btn.disabled = true;
     btn.innerText = t.msg_submitting;
 
-    // 收集数据
-    const role = document.getElementById('p-role').value;
-    const bizType = document.querySelector('input[name="biz_type"]:checked')?.value || 'company';
-    
-    // 区域 & 经验
-    const selectedState = document.getElementById('p-service-state')?.value || '';
-    let finalServiceAreaStr = "";
-    if (selectedState === 'Nationwide') {
-        finalServiceAreaStr = "Nationwide";
-    } else if (selectedState) {
-        const regionCheckboxes = document.querySelectorAll('input[name="svc_region"]:checked');
-        const regions = Array.from(regionCheckboxes).map(cb => cb.value);
-        finalServiceAreaStr = regions.length > 0 ? `${selectedState}: ${regions.join(', ')}` : `${selectedState}`;
-    }
-    
-    const expCheckboxes = document.querySelectorAll('input[name="elec_exp"]:checked');
-    const expStr = Array.from(expCheckboxes).map(cb => cb.value).join(', ');
-
-    const payload = {
-        created_at: new Date().toISOString(),
-        role: role,
-        business_type: bizType,
-        company_name: document.getElementById('p-company').value,
-        abn_acn: document.getElementById('p-abn').value,
-        contact_name: document.getElementById('p-contact').value,
-        phone: phoneInput.value,
-        email: emailInput.value,
-        address: document.getElementById('p-address').value,
-        notes: document.getElementById('p-notes').value,
-        
-        business_focus: document.getElementById('p-focus')?.value || null,
-        cec_number: document.getElementById('p-cec')?.value || null,
-        service_postcodes: finalServiceAreaStr || null,
-        specialty_brands: document.getElementById('p-brands')?.value || null,
-        electrician_type: document.getElementById('p-elec-type')?.value || null,
-        install_experience: expStr || null,
-        license_number: document.getElementById('p-license')?.value || null,
-        product_category: document.getElementById('p-prod-type')?.value || null,
-        status: 'pending'
-    };
-
     try {
-        // 🟢 [核心修改] 批量文件上传逻辑
+        // --- [修改点] 不再创建 Auth 账号 ---
+        // 我们直接跳过 auth.signUp，只处理文件上传和数据库写入
+
+        // --- 3. 准备数据 ---
+        const role = document.getElementById('p-role').value;
+        const bizType = document.querySelector('input[name="biz_type"]:checked')?.value || 'company';
+        const selectedState = document.getElementById('p-service-state')?.value || '';
+        
+        let finalServiceAreaStr = "";
+        if (selectedState === 'Nationwide') finalServiceAreaStr = "Nationwide";
+        else if (selectedState) {
+            const regions = Array.from(document.querySelectorAll('input[name="svc_region"]:checked')).map(cb => cb.value);
+            finalServiceAreaStr = regions.length > 0 ? `${selectedState}: ${regions.join(', ')}` : `${selectedState}`;
+        }
+
+        const payload = {
+            // [注意] 我们不再传 id: userId，让数据库自动生成主键 ID
+            created_at: new Date().toISOString(),
+            role: role,
+            business_type: bizType,
+            company_name: document.getElementById('p-company').value,
+            abn_acn: document.getElementById('p-abn').value,
+            contact_name: document.getElementById('p-contact').value,
+            phone: phoneInput.value,
+            email: emailInput.value,
+            address: document.getElementById('p-address').value,
+            notes: document.getElementById('p-notes').value,
+            
+            // 业务字段
+            business_focus: document.getElementById('p-focus')?.value || null,
+            cec_number: document.getElementById('p-cec')?.value || null,
+            service_postcodes: finalServiceAreaStr || null,
+            specialty_brands: document.getElementById('p-brands')?.value || null,
+            electrician_type: document.getElementById('p-elec-type')?.value || null,
+            install_experience: Array.from(document.querySelectorAll('input[name="elec_exp"]:checked')).map(cb => cb.value).join(', ') || null,
+            license_number: document.getElementById('p-license')?.value || null,
+            product_category: document.getElementById('p-prod-type')?.value || null,
+            
+            // [关键] 状态设为待审核
+            status: 'pending_review' 
+        };
+
+        // --- 4. 文件上传 (保持不变) ---
         let fileInput = null;
         if (role === 'electrician') fileInput = document.getElementById('p-file-insurance');
         if (role === 'brand') fileInput = document.getElementById('p-file-product');
 
         if (fileInput && fileInput.files.length > 0) {
             const files = Array.from(fileInput.files);
-            
-            // 并行上传
             const uploadPromises = files.map(async (file) => {
                 const fileName = `${role}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                const { data: uploadData, error: uploadError } = await supabaseClient
-                    .storage.from('uploads').upload(fileName, file);
-                
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('uploads').upload(fileName, file);
                 if (uploadError) throw uploadError;
-                
                 const { data: urlData } = supabaseClient.storage.from('uploads').getPublicUrl(uploadData.path);
                 return urlData.publicUrl;
             });
-
             const uploadedUrls = await Promise.all(uploadPromises);
-            payload.file_url = uploadedUrls.join(','); // 逗号拼接存入
+            payload.file_url = uploadedUrls.join(',');
         }
 
-        const { error } = await supabaseClient.from('partners').insert([payload]);
-        if (error) throw error;
+        // --- 5. 写入数据库 ---
+        const { error: dbError } = await supabaseClient.from('partners').insert([payload]);
+        if (dbError) throw dbError;
 
-        btn.innerText = t.msg_success;
+        // --- 6. 成功反馈 ---
+        btn.innerText = "Application Sent ✓";
         btn.style.background = "#10b981";
         
         setTimeout(() => {
@@ -2976,14 +2985,23 @@ async function submitPartner(e) {
             btn.style.background = ""; 
             document.getElementById('partner-form').reset();
             backToRoles();
-            showToast(t.msg_success);
-        }, 1500);
+            
+            // 提示文案修改
+            const msg = (curLang === 'cn') 
+                ? "申请已提交！审核通过后我们会通过邮件发送注册链接。" 
+                : "Application received! We will email you the registration link upon approval.";
+            showToast(msg);
+            
+        }, 2000);
 
     } catch (err) {
-        console.error("Partner Submit Error:", err);
-        btn.innerText = t.msg_err_general;
-        btn.style.background = "#ef5350";
+        console.error("Application Error:", err);
+        let errMsg = t.msg_err_general;
+        if(err.message) errMsg = err.message;
+        alert(errMsg);
+        btn.innerText = originalText;
         btn.disabled = false;
+        btn.style.background = "#ef5350";
     }
 }
 
@@ -2996,3 +3014,666 @@ window.submitPartner = submitPartner;
 window.formatPhone = formatPhone;
 window.renderServiceRegions = renderServiceRegions;
 window.initPartnerAddressAutocomplete = initPartnerAddressAutocomplete;
+
+// ==========================================
+// [NEW] LIVE MAP LOGIC (Supabase + Clean Map)
+// ==========================================
+
+let mapInstance = null;
+let markerCluster = null;
+let currentMapMode = 'consumer'; 
+let allMarkers = []; 
+let mapData = []; 
+let activeFilters = { type1: true, type2: true }; 
+let userHasLoggedIn = false; 
+let cameFromMap = false; 
+
+// 1. 打开/关闭逻辑
+async function openLiveMap() {
+    // 隐藏主页面的干扰元素
+    document.body.classList.add('hide-fomo');
+    const floaters = document.querySelectorAll('.chat-widget-container, .fixed-trust-badge, .fixed-brand-badge, #fomo-bar');
+    floaters.forEach(el => { if(el) el.style.display = 'none'; });
+
+    document.getElementById('map-modal').style.display = 'flex';
+
+    if (!mapInstance) {
+        await initMap();
+    }
+    
+    renderMarkers(); 
+}
+
+function closeLiveMap() {
+    document.getElementById('map-modal').style.display = 'none';
+    
+    // 恢复主页面元素
+    document.body.classList.remove('hide-fomo');
+    const floaters = document.querySelectorAll('.chat-widget-container, .fixed-trust-badge, .fixed-brand-badge');
+    floaters.forEach(el => { if(el) el.style.display = ''; }); 
+    
+    if(typeof fomoData !== 'undefined' && fomoData.length > 0) {
+        const fomo = document.getElementById('fomo-bar');
+        if(fomo) fomo.style.display = 'flex';
+    }
+}
+
+// 2. 地图初始化 (纯净风格 + 鼠标直缩放 + 修复样式不生效问题)
+async function initMap() {
+    const defaultCenter = { lat: -33.8688, lng: 151.2093 }; // 默认悉尼
+
+    // --- 定义纯净版地图样式 (Clean Style JSON) ---
+    const cleanMapStyles = [
+        {
+            "featureType": "all",
+            "elementType": "labels.text.fill",
+            "stylers": [{ "color": "#64748b" }] // 让地名文字变灰一点，不喧宾夺主
+        },
+        {
+            "featureType": "poi", // 🔥 核心：隐藏所有兴趣点 (商场、学校、医院、公园图标)
+            "elementType": "all",
+            "stylers": [{ "visibility": "off" }]
+        },
+        {
+            "featureType": "transit", // 🔥 核心：隐藏所有交通设施 (地铁站、公交站图标)
+            "elementType": "all",
+            "stylers": [{ "visibility": "off" }]
+        },
+        {
+            "featureType": "road",
+            "elementType": "labels.icon", // 隐藏道路编号图标 (如高速公路盾牌)
+            "stylers": [{ "visibility": "off" }]
+        },
+        {
+            "featureType": "landscape", // 让陆地背景更干净
+            "elementType": "geometry",
+            "stylers": [{ "color": "#f8fafc" }] // 极淡的灰白色，类似你的网页背景
+        },
+        {
+            "featureType": "water", // 让水体颜色变成淡雅的蓝色
+            "elementType": "geometry",
+            "stylers": [{ "color": "#e0f2fe" }] 
+        },
+        {
+            "featureType": "water",
+            "elementType": "labels.text.fill",
+            "stylers": [{ "color": "#94a3b8" }]
+        }
+    ];
+
+    try {
+        mapInstance = new google.maps.Map(document.getElementById("ecosystem-map"), {
+            zoom: 12, 
+            center: defaultCenter,
+            
+            // ❌ 删除下面这一行 mapId，否则 styles 代码会被忽略！
+            // mapId: "DEMO_MAP_ID", 
+            
+            // --- 交互与界面配置 ---
+            disableDefaultUI: true,    // 隐藏默认控件
+            zoomControl: true,         // 只保留右下角的 +/- 缩放按钮
+            gestureHandling: 'greedy', // 🔥 开启鼠标滚轮直接缩放
+            styles: cleanMapStyles,    // 🔥 应用上面的纯净样式
+        });
+
+        // 初始化定位
+        handleUserLocation();
+        
+        // 拉取数据 (加了错误捕获，防止卡死)
+        await fetchMapData(); 
+        
+    } catch (e) {
+        console.error("地图初始化失败:", e);
+        // 如果地图挂了，至少不影响页面其他功能
+    }
+}
+
+function handleUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
+                mapInstance.setCenter(pos);
+                mapInstance.setZoom(13);
+                new google.maps.Marker({
+                    position: pos, map: mapInstance,
+                    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "#3b82f6", fillOpacity: 1, strokeColor: "white", strokeWeight: 2 },
+                    title: "You are here"
+                });
+            },
+            () => { console.log("Geo permission denied"); }
+        );
+    }
+}
+
+function switchMapMode(mode) {
+    currentMapMode = mode;
+    document.querySelectorAll('.map-switch-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-map-${mode}`).classList.add('active');
+    activeFilters = { type1: true, type2: true };
+    renderMarkers();
+}
+
+// 3. 拉取 Supabase 数据
+async function fetchMapData() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('map_markers')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data) {
+            mapData = data;
+            renderMarkers();
+        }
+
+    } catch (err) {
+        console.error("Error fetching map markers:", err);
+    }
+}
+
+// 4. 渲染标记点
+function renderMarkers() {
+    if (markerCluster) { markerCluster.clearMarkers(); }
+    allMarkers.forEach(m => m.setMap(null));
+    allMarkers = [];
+
+    const filtersEl = document.getElementById('map-filters');
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+    
+    let type1 = '', type2 = '';
+    let label1 = '', label2 = '';
+
+    if (currentMapMode === 'consumer') {
+        type1 = 'case'; label1 = isCN ? '真实案例' : 'Real Cases';
+        type2 = 'installer'; label2 = isCN ? '安装商' : 'Installers';
+    } else {
+        type1 = 'lead'; label1 = isCN ? '商机线索' : 'Active Leads';
+        type2 = 'electrician'; label2 = isCN ? '找电工' : 'Electricians';
+    }
+
+    filtersEl.innerHTML = `
+        <div class="map-filter-pill ${activeFilters.type1 ? 'active' : ''}" onclick="toggleMapFilter('type1')">
+            <span class="dot" style="color:${getColor(type1)}">●</span> ${label1}
+        </div>
+        <div class="map-filter-pill ${activeFilters.type2 ? 'active' : ''}" onclick="toggleMapFilter('type2')">
+            <span class="dot" style="color:${getColor(type2)}">●</span> ${label2}
+        </div>
+    `;
+
+    const markers = mapData.map(item => {
+        const isType1 = (item.type === type1);
+        const isType2 = (item.type === type2);
+        if (!isType1 && !isType2) return null; 
+        if (isType1 && !activeFilters.type1) return null; 
+        if (isType2 && !activeFilters.type2) return null;
+
+        const marker = new google.maps.Marker({
+            position: { lat: item.lat, lng: item.lng },
+            label: { text: getIconChar(item.type), fontSize: "16px" },
+            title: item.title
+        });
+
+        marker.addListener("click", () => { showInfoWindow(marker, item); });
+
+        allMarkers.push(marker);
+        return marker;
+    }).filter(m => m !== null);
+
+    markerCluster = new markerClusterer.MarkerClusterer({ map: mapInstance, markers: markers });
+}
+
+function toggleMapFilter(key) {
+    activeFilters[key] = !activeFilters[key];
+    renderMarkers();
+}
+
+function getColor(type) {
+    if(type === 'case') return '#f59e0b'; 
+    if(type === 'installer') return '#3b82f6';
+    if(type === 'lead') return '#10b981';
+    if(type === 'electrician') return '#eab308';
+    return '#ccc';
+}
+
+function getIconChar(type) {
+    if(type === 'case') return '🏠';
+    if(type === 'installer') return '🛠️';
+    if(type === 'lead') return '🟢';
+    if(type === 'electrician') return '⚡';
+    return '?';
+}
+
+// 5. InfoWindow 弹窗逻辑 (适配 SQL 字段)
+// ==========================================
+// [UPDATED] InfoWindow 逻辑 (带关闭键 + 智能需求显示)
+// ==========================================
+
+let currentInfoWindow = null;
+
+function showInfoWindow(marker, item) {
+    if (currentInfoWindow) currentInfoWindow.close();
+
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+    const title = isCN ? (item.title_cn || item.title) : item.title;
+    const desc = isCN ? (item.description_cn || item.description) : item.description;
+    
+    // --- 定义通用的关闭按钮 HTML ---
+    const closeBtnHtml = `<button class="info-close-btn" onclick="currentInfoWindow.close()" title="Close">×</button>`;
+
+    let content = '';
+
+    // [A] 真实案例
+    if (item.type === 'case') {
+        const btnText = isCN ? "查看详情 & 抄作业" : "View Details & Copy";
+        const savingsText = isCN ? (item.savings_cn || item.savings) : item.savings;
+        
+        content = `
+            <div class="info-card">
+                ${closeBtnHtml} <span class="info-tag" style="background:#fffbeb; color:#b45309;">REAL CASE</span>
+                <div class="info-title">${title}</div>
+                <div class="info-desc">${desc}</div>
+                ${savingsText ? `<div style="color:#166534; font-weight:bold; font-size:0.8rem; margin-bottom:8px;">💰 ${savingsText}</div>` : ''}
+                <button class="info-btn" onclick="openCaseDetail(${item.id})">${btnText}</button>
+            </div>
+        `;
+    }
+    // [B] 安装商
+    else if (item.type === 'installer') {
+        const btnText = isCN ? "获取报价" : "Get Quote";
+        content = `
+            <div class="info-card">
+                ${closeBtnHtml}
+                <span class="info-tag" style="background:#eff6ff; color:#1d4ed8;">INSTALLER</span>
+                <div class="info-title">${title}</div>
+                <div class="info-desc">${desc}</div>
+                <button class="info-btn" onclick="triggerQuoteFromMap()">${btnText}</button>
+            </div>
+        `;
+    }
+    // [C] 线索 (核心修改：未解锁也显示需求类型)
+   // [MODIFIED] 线索展示逻辑：未登录时隐藏详情
+    else if (item.type === 'lead') {
+        
+        // --- 1. 智能解析需求类型 (用于显示 Tag) ---
+        const fullText = (item.title + " " + item.description).toLowerCase();
+        let demandTag = isCN ? "光伏系统需求" : "Solar System";
+        let demandIcon = "☀️";
+
+        if (fullText.includes('battery') || fullText.includes('storage') || fullText.includes('电池')) {
+            demandTag = isCN ? "光伏+电池需求" : "Solar + Battery";
+            demandIcon = "⚡";
+        } else if (fullText.includes('repair') || fullText.includes('维修')) {
+            demandTag = isCN ? "维修/维护" : "Maintenance";
+            demandIcon = "🔧";
+        }
+
+        // --- 2. 状态分支 ---
+        if (!userHasLoggedIn) {
+            // [未登录状态] -> 只显示标题，模糊描述
+            
+            // 假的占位文本 (用于制造模糊效果)
+            const blurredPlaceholder = isCN 
+                ? "此线索的详细描述已被锁定。包含具体的屋顶类型、房屋层数以及客户的特殊要求。请登录 Partner Hub 查看完整数据。" 
+                : "The detailed description for this lead is locked. It includes roof type, storeys, and specific customer requirements. Please login to view.";
+
+            content = `
+                <div class="info-card">
+                    ${closeBtnHtml}
+                    <span class="info-tag" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0;">
+                        🔒 ${isCN ? "未解锁" : "LOCKED"}
+                    </span>
+                    <span class="info-tag" style="background:#dcfce7; color:#166534; margin-left:4px;">
+                        ${demandIcon} ${demandTag}
+                    </span>
+                    
+                    <div class="info-title" style="margin-top:8px; color:#0f172a;">
+                        ${title}
+                    </div>
+                    
+                    <div style="font-size:0.85rem; color:#94a3b8; margin: 12px 0; filter: blur(5px); user-select: none; opacity: 0.7; line-height: 1.5;">
+                        ${blurredPlaceholder}
+                    </div>
+
+                    <div style="font-size:0.75rem; color:#64748b; margin-bottom: 15px; display:flex; align-items:center; gap:4px;">
+                        📍 ${item.postcode} <span style="opacity:0.5;">(Exact address hidden)</span>
+                    </div>
+
+                    <button class="info-btn" onclick="openLoginModal()" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);">
+                        ${isCN ? "登录解锁完整线索" : "Login to Unlock Details"}
+                    </button>
+                </div>
+            `;
+        } else {
+            // [已登录状态] -> 显示真实数据
+            // 获取按钮状态（防止重复点击）
+            // 这里为了简单，我们默认显示可点击。如果要做得更细，可以先查库看是否已申请。
+            
+             content = `
+                <div class="info-card">
+                    ${closeBtnHtml}
+                    <span class="info-tag" style="background:#f0fdf4; color:#15803d;">ACTIVE LEAD ✅</span>
+                    
+                    <div class="info-title" style="margin-top:8px;">${title}</div>
+                    
+                    <div class="info-desc" style="margin-top:8px; color:#334155;">
+                        ${desc}
+                    </div>
+                    
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e2e8f0; font-size:0.8rem; color:#475569;">
+                        <div style="margin-bottom:4px;">📍 <strong>Postcode:</strong> ${item.postcode}</div>
+                        <div style="margin-bottom:4px;">👤 <strong>Name:</strong> Hidden (Request to view)</div>
+                        <div style="color:#10b981; font-weight:bold; margin-top:6px;">Ready to quote</div>
+                    </div>
+
+                    <div id="action-area-${item.id}">
+                        <button class="info-btn" onclick="requestConnection('${item.id}')" 
+                                style="margin-top:15px; background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color:white; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);">
+                            ⚡ ${isCN ? "申请对接 / 接单" : "Request Connection"}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    // [D] 电工
+    else if (item.type === 'electrician') {
+        content = `
+            <div class="info-card">
+                ${closeBtnHtml}
+                <span class="info-tag" style="background:#fefce8; color:#a16207;">ELECTRICIAN</span>
+                <div class="info-title">${title}</div>
+                <div class="info-desc">${desc}</div>
+                <button class="info-btn" onclick="connectElectrician()">${isCN ? "联系他" : "Contact"}</button>
+            </div>
+        `;
+    }
+
+    currentInfoWindow = new google.maps.InfoWindow({ content: content });
+    currentInfoWindow.open(mapInstance, marker);
+}
+
+// [NEW] 忘记密码处理逻辑
+// [REPLACED] 真实的发送重置邮件
+async function handleForgotPassword() {
+    const emailInput = document.getElementById('login-email');
+    const email = emailInput.value.trim();
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+    
+    if(!email || !email.includes('@')) {
+        alert(isCN ? "请先在上方输入您的邮箱地址。" : "Please enter your email address above.");
+        emailInput.focus();
+        return;
+    }
+
+    const linkBtn = document.querySelector('.forgot-pwd-link');
+    const originalText = linkBtn.innerText;
+    linkBtn.innerText = isCN ? "发送中..." : "Sending...";
+    linkBtn.style.pointerEvents = "none";
+
+    try {
+        // 指向你的重置页面，这里假设文件名为 reset.html
+        // 注意：你需要在 Supabase 后台 Authentication -> URL Configuration -> Site URL 中配置好你的域名
+        const redirectUrl = window.location.origin + '/reset.html';
+
+        const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: redirectUrl,
+        });
+
+        if (error) throw error;
+
+        alert(isCN ? `重置邮件已发送至 ${email}，请查收。` : `Reset email sent to ${email}. Check your inbox.`);
+        
+    } catch (err) {
+        console.error("Reset Error:", err);
+        let msg = isCN ? "发送失败，请稍后再试" : "Failed to send reset email";
+        if (err.message.includes("limit")) msg = isCN ? "请求太频繁，请稍等几分钟" : "Too many requests, please wait.";
+        alert(msg);
+    } finally {
+        linkBtn.innerText = originalText;
+        linkBtn.style.pointerEvents = "auto";
+    }
+}
+
+// 6. 交互功能
+function openCaseDetail(id) {
+    const item = mapData.find(i => i.id === id);
+    if (!item) return;
+    
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+    
+    document.getElementById('case-title').innerText = isCN ? item.title_cn : item.title;
+    const story = isCN ? (item.full_story_cn || "") : (item.full_story || "");
+    document.getElementById('case-story').innerText = story;
+    const hwText = isCN ? (item.hardware_text_cn || "标准配置") : (item.hardware_text || "Standard Config");
+    document.getElementById('case-config-display').innerText = hwText;
+    const savings = isCN ? item.savings_cn : item.savings;
+    document.getElementById('case-saving-tag').innerText = savings || "Savings";
+
+    const imgEl = document.getElementById('case-img-hero');
+    if(item.images && item.images.length > 0) {
+    imgEl.src = item.images[0]; 
+    } else {
+    // 换成 placehold.co
+    imgEl.src = 'https://placehold.co/400x200?text=No+Image';
+    }
+
+    const btn = document.getElementById('btn-copy-setup');
+    btn.onclick = () => copySetup(item);
+    
+    document.getElementById('case-detail-modal').style.display = 'flex';
+}
+
+// [REPLACED] 修复后的 Copy Setup 函数
+function copySetup(item) {
+    // 1. 关闭地图和弹窗
+    document.getElementById('case-detail-modal').style.display = 'none';
+    closeLiveMap();
+
+    // 2. 智能解析配置文本 (e.g., "10kW Solar + 13.5kWh Tesla")
+    // 获取中英文混合文本以确保解析准确
+    const text = (item.hardware_text || "") + " " + (item.hardware_text_cn || "");
+    
+    // --- A. 解析太阳能 (kW) ---
+    // 正则提取 "xx.x kW"
+    const solarMatch = text.match(/(\d+(\.\d+)?)\s*kW\b/i);
+    let targetSolar = solarMatch ? parseFloat(solarMatch[1]) : 6.6; // 没找到则默认 6.6
+    
+    // 在你的 solarTiers 数组中找到最接近的档位索引
+    // solarTiers = [6.6, 8, 10, 13, 15, 20]
+    let bestSolarIdx = 0;
+    let minDiff = 999;
+    solarTiers.forEach((tier, index) => {
+        const diff = Math.abs(tier - targetSolar);
+        if(diff < minDiff) { 
+            minDiff = diff; 
+            bestSolarIdx = index; 
+        }
+    });
+
+    // --- B. 解析电池 (kWh) ---
+    const batMatch = text.match(/(\d+(\.\d+)?)\s*kWh/i);
+    let targetBat = batMatch ? parseFloat(batMatch[1]) : 0;
+    // 判断是否包含电池关键字
+    const hasBattery = targetBat > 0 || text.toLowerCase().includes('battery') || text.includes('电池') || text.includes('Powerwall');
+
+    // 3. 赋值给表单 (更新滑块和数字显示)
+    
+    // 更新太阳能滑块
+    const solarInput = document.getElementById('solar-input');
+    if (solarInput) {
+        solarInput.value = bestSolarIdx;
+        updateVal('solar'); // 调用你现有的函数刷新显示
+    }
+
+    // 更新电池滑块
+    if(hasBattery) {
+        const batInput = document.getElementById('bat-input');
+        if (batInput) {
+            // 如果解析出具体数值就用数值，否则默认 10kWh
+            batInput.value = (targetBat > 4) ? targetBat : 10; 
+            updateVal('battery'); // 调用你现有的函数刷新显示
+        }
+    }
+
+    // 4. 切换模式 (Solar Only vs Both)
+    setMode(hasBattery ? 'both' : 'solar');
+
+    // 5. [核心修复] 模拟点击 "Get Quote" 按钮
+    // 这一步会接管所有流程：显示 Loading 动画 -> 计算价格 -> 自动滚动到底部结果
+    setTimeout(() => {
+        // 找到你的计算按钮 (注意：你的 HTML 里它是 class="btn-calc")
+        const calcBtn = document.querySelector('.btn-calc');
+        
+        if(calcBtn) {
+            calcBtn.click(); // <--- 模拟用户点击！
+        } else {
+            console.error("找不到计算按钮");
+            calculate(true); // 兜底方案
+        }
+        
+        // 显示提示
+        const msg = (typeof curLang !== 'undefined' && curLang === 'cn') 
+            ? "已加载案例配置！" : "Configuration Copied!";
+        showToast(msg);
+        
+    }, 300); // 延迟 300ms 确保 setMode 也就是 DOM 渲染完成
+}
+
+function triggerQuoteFromMap() {
+    closeLiveMap();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast("Let's calculate a quote first!");
+}
+
+function openLoginModal() {
+    document.getElementById('lead-login-modal').style.display = 'flex';
+}
+
+// [REPLACED] 真实的登录逻辑
+async function attemptLeadLogin() {
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    const btn = document.querySelector('#lead-login-modal .btn-calc'); // 登录按钮
+    
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+
+    if (!email || !password) {
+        alert(isCN ? "请输入邮箱和密码" : "Please enter email and password");
+        return;
+    }
+
+    // UI 状态更新
+    const originalText = btn.innerText;
+    btn.innerText = isCN ? "登录中..." : "Logging in...";
+    btn.disabled = true;
+
+    try {
+        // --- 真实验证 ---
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (error) throw error;
+
+        // --- 登录成功 ---
+        userHasLoggedIn = true; // 更新全局状态
+        document.getElementById('lead-login-modal').style.display = 'none';
+        
+        showToast(isCN ? "登录成功！线索已解锁" : "Login Successful! Leads Unlocked.");
+        
+        // 刷新地图标记，显示已解锁的线索
+        renderMarkers(); 
+
+    } catch (err) {
+        console.error("Login Error:", err);
+        let msg = isCN ? "登录失败：账号或密码错误" : "Login Failed: Invalid credentials";
+        if (err.message.includes("Email not confirmed")) {
+            msg = isCN ? "请先去邮箱激活您的账号" : "Please confirm your email first";
+        }
+        alert(msg);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+function redirectToPartnerReg() {
+    document.getElementById('lead-login-modal').style.display = 'none';
+    closeLiveMap();
+    cameFromMap = true;
+    openPartnerModal();
+}
+
+function connectElectrician() {
+    closeLiveMap();
+    cameFromMap = true;
+    openPartnerModal();
+}
+
+// 劫持 Partner 弹窗关闭，实现闭环
+// ==========================================
+// [FIXED] 劫持 Partner 弹窗关闭，实现闭环 (修复冒泡导致的误触)
+// ==========================================
+const originalClosePartner = window.closePartnerModal;
+window.closePartnerModal = function(e) {
+    // 1. 获取遮罩层元素
+    const overlay = document.getElementById('partner-modal');
+    
+    // 2. 核心判断：用户是否真的点击了“关闭”？
+    // 只有当 e 不存在 (手动调用)，或者点击的是遮罩层本身，或者点击的是关闭按钮时，才算“关闭”
+    // 如果点击的是弹窗内部的 Input、按钮或卡片，shouldClose 为 false
+    const shouldClose = !e || e.target === overlay || e.target.classList.contains('close-btn');
+
+    // 3. 执行原始的关闭逻辑 (隐藏 UI)
+    if(originalClosePartner) originalClosePartner(e); 
+
+    // 4. 只有在【确认要关闭】且【来自地图】的情况下，才重新打开地图
+    if (shouldClose && cameFromMap) {
+        setTimeout(() => {
+            openLiveMap();
+            cameFromMap = false; 
+        }, 300);
+    }
+}
+
+// ==========================================
+// [UPDATED] 路由守卫：区分 邀请注册 vs 找回密码
+// ==========================================
+
+// 1. 监听 URL 哈希 (最快响应)
+window.addEventListener('DOMContentLoaded', () => {
+    const hash = window.location.hash;
+
+    if (hash) {
+        // 场景 A: 合作伙伴邀请 (Invite User)
+        if (hash.includes('type=invite')) {
+            console.log("检测到邀请链接，跳转至激活页面...");
+            window.location.href = '/register.html' + hash;
+        }
+        // 场景 B: 找回密码 (Password Recovery)
+        else if (hash.includes('type=recovery')) {
+            console.log("检测到重置链接，跳转至重置页面...");
+            window.location.href = '/reset.html' + hash;
+        }
+    }
+});
+
+// 2. 监听 Supabase 事件 (双重保险)
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    // 这里主要处理一些边缘情况，大部分情况上面的 hash 监听就够了
+    if (event === 'PASSWORD_RECOVERY') {
+        // 注意：这里无法区分是 invite 还是 recovery，
+        // 但通常 recovery 会触发这个事件。
+        // 为了安全起见，我们优先信任 URL hash 的判断。
+        const hash = window.location.hash;
+        if (!hash.includes('type=invite')) {
+             window.location.href = '/reset.html';
+        }
+    }
+});
