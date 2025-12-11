@@ -4718,29 +4718,28 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
 }
 
 /* ==========================================
-   [FINAL COMPACT] 手机端地图 UI (超紧凑协调版)
+   [FINAL TWEAK] 手机端地图 UI (置顶紧凑版)
    ========================================== */
 
 /* 1. 通用手机适配 (< 500px) */
 @media (max-width: 500px) {
 
-    /* --- 顶部切换栏：改为通栏悬浮 --- */
+    /* --- 顶部切换栏：上移至顶部 --- */
     .map-switcher-container {
-        /* 位置控制 */
-        top: 55px !important;         /* 避开通话绿条，但尽量靠上 */
+        /* 🟢 位置核心修改：往上提 */
+        top: 15px !important;         
         left: 50% !important;
         transform: translateX(-50%) !important;
         
         /* 尺寸与外观 */
         width: auto !important;
-        max-width: 85% !important;    /* 左右留出呼吸感 */
-        padding: 3px !important;      /* 极窄内胆 */
+        max-width: 85% !important;
+        padding: 3px !important;
         background: rgba(255, 255, 255, 0.95) !important;
         backdrop-filter: blur(8px);
         border-radius: 100px !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
         
-        /* 布局 */
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
@@ -4749,26 +4748,28 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
     /* 按钮本体 */
     .map-switch-btn {
         padding: 6px 14px !important;
-        font-size: 0.75rem !important; /* 12px 字体 */
+        font-size: 0.75rem !important;
         font-weight: 700 !important;
-        height: 32px !important;       /* 锁定高度，显精致 */
+        height: 32px !important;
         line-height: 1 !important;
         border-radius: 20px !important;
-        white-space: nowrap !important; /* 禁止换行 */
+        white-space: nowrap !important;
     }
 
-    /* --- 关闭按钮：与顶部栏视觉对齐 --- */
+    /* --- 关闭按钮：与顶部栏平齐上移 --- */
     .map-close-btn {
-        top: 55px !important;          /* 高度与切换栏一致 */
-        right: 12px !important;        /* 稍微靠边 */
-        width: 32px !important;        /* 缩小尺寸 */
+        /* 🟢 位置核心修改：往上提，与切换栏对齐 */
+        top: 15px !important;          
+        right: 12px !important;
+        
+        width: 32px !important;
         height: 32px !important;
         font-size: 1rem !important;
         background: rgba(255, 255, 255, 0.9) !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
 
-    /* --- 底部过滤器：极简风格 --- */
+    /* --- 底部过滤器 --- */
     .map-filters-container {
         bottom: 25px !important;
         width: auto !important;
@@ -4780,15 +4781,14 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
     }
 
     .map-filter-pill {
-        height: 30px !important;       /* 压扁一点 */
+        height: 30px !important;
         padding: 0 12px !important;
         font-size: 0.75rem !important;
         border-radius: 15px !important;
     }
     
-    /* 修正圆点大小 */
     .map-filter-pill .dot {
-        font-size: 0.6rem !important;  /* 缩小圆点 */
+        font-size: 0.6rem !important;
         margin-right: 4px !important;
     }
 
@@ -4796,40 +4796,40 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
     .map-locate-btn {
         width: 36px !important;
         height: 36px !important;
-        bottom: 80px !important;       /* 紧贴底部过滤器上方 */
+        bottom: 80px !important;
         right: 12px !important;
         font-size: 1.1rem !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
 
-    /* 隐藏多余控件 */
     .gmnoprint { display: none !important; }
 }
 
-/* 2. 针对极小屏 (iPhone SE/Mini, < 375px) 的极限压缩 */
+/* 2. 针对极小屏 (iPhone SE/Mini, < 375px) */
 @media (max-width: 375px) {
-    /* 顶部栏再缩小 */
+    /* 顶部栏再稍微紧凑一点 */
     .map-switcher-container {
-        max-width: 92% !important;    /* 稍微宽一点以容纳文字 */
-        top: 50px !important;         /* 再往上提一点 */
+        max-width: 92% !important;
+        /* 🟢 极小屏再往上挤一点点 */
+        top: 12px !important;         
     }
     
     .map-switch-btn {
-        padding: 5px 10px !important; /* 减少内边距 */
-        font-size: 0.7rem !important; /* 字体缩到 11px */
-        height: 28px !important;      /* 高度压缩 */
+        padding: 5px 10px !important;
+        font-size: 0.7rem !important;
+        height: 28px !important;
     }
     
     /* 关闭按钮微调 */
     .map-close-btn {
-        top: 50px !important;
+        /* 🟢 对齐顶部 */
+        top: 12px !important;
         right: 8px !important;
         width: 28px !important;
         height: 28px !important;
         font-size: 0.9rem !important;
     }
     
-    /* 底部过滤器再紧凑 */
     .map-filters-container {
         bottom: 20px !important;
     }
