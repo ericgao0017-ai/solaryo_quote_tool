@@ -4716,3 +4716,87 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
 .forgot-pwd-link:hover {
     color: var(--primary);
 }
+
+/* ==========================================
+   [REFINED] 手机端地图 UI (精致平衡版)
+   ========================================== */
+@media (max-width: 500px) {
+
+    /* --- 1. 顶部切换栏：精致胶囊 --- */
+    .map-switcher-container {
+        width: auto !important;       /* 宽度自适应，不强制撑满 */
+        min-width: 260px;             /* 最小宽度，保证排版 */
+        max-width: 90%;               /* 防止超出屏幕 */
+        
+        top: 60px !important;         /* 🟢 下移：完美避开左上角通话绿条 */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        
+        padding: 4px !important;      /* 紧凑内边距 */
+        border-radius: 100px !important; /* 完全圆角 */
+        background: rgba(255, 255, 255, 0.9) !important; /* 稍微通透一点 */
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important; /* 柔和阴影 */
+    }
+
+    .map-switch-btn {
+        padding: 8px 16px !important; /* 恢复舒适的点击范围 */
+        font-size: 0.8rem !important; /* 字体不至于太小看不清 */
+        font-weight: 600 !important;
+        height: 36px !important;      /* 固定高度，整齐划一 */
+        line-height: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* --- 2. 底部过滤器：悬浮药丸 --- */
+    .map-filters-container {
+        bottom: 30px !important;      /* 底部留出安全距离 */
+        width: auto !important;       
+        min-width: 240px;
+        
+        padding: 5px !important;      /* 极简内边距 */
+        gap: 8px !important;          /* 按钮间距 */
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-radius: 100px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+    }
+
+    .map-filter-pill {
+        height: 34px !important;      /* 高度适中 */
+        padding: 0 14px !important;   /* 左右留白 */
+        font-size: 0.8rem !important; 
+        display: flex !important;
+        align-items: center !important;
+        border-radius: 20px !important;
+    }
+
+    /* --- 3. 右侧功能按钮 (关闭/定位) --- */
+    /* 关闭按钮：右上角 */
+    .map-close-btn {
+        top: 60px !important;         /* 跟切换栏平齐 */
+        right: 15px !important;       /* 靠右 */
+        width: 36px !important;       /* 尺寸微调 */
+        height: 36px !important;
+        font-size: 1rem !important;
+        background: rgba(255, 255, 255, 0.9) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+    }
+
+    /* 定位按钮：右下角 */
+    .map-locate-btn {
+        width: 40px !important;
+        height: 40px !important;
+        bottom: 90px !important;      /* 位于底部过滤器上方 */
+        right: 15px !important;
+        border-radius: 12px !important; /* 方圆角，像原生 App */
+        background: white !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+    
+    /* 隐藏 Google 原生缩放按钮 (手机上用手指缩放更自然，且省空间) */
+    .gmnoprint {
+        display: none !important;
+    }
+}
