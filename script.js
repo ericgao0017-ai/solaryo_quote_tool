@@ -3489,80 +3489,88 @@ function openCaseDetail(id) {
     document.getElementById('case-detail-modal').style.display = 'flex';
 }
 
-// [REPLACED] 修复后的 Copy Setup 函数
+// ==========================================
+// [FIXED] Copy Setup (修复 Battery Only 跳转失败问题)
+// ==========================================
 function copySetup(item) {
-    // 1. 关闭地图和弹窗
+    // 1. 关闭地图
     document.getElementById('case-detail-modal').style.display = 'none';
     closeLiveMap();
 
-    // 2. 智能解析配置文本 (e.g., "10kW Solar + 13.5kWh Tesla")
-    // 获取中英文混合文本以确保解析准确
+    // 2. 准备文本
     const text = (item.hardware_text || "") + " " + (item.hardware_text_cn || "");
     
-    // --- A. 解析太阳能 (kW) ---
-    // 正则提取 "xx.x kW"
+    // 3. 解析数据
+    // 找太阳能 (kW)
     const solarMatch = text.match(/(\d+(\.\d+)?)\s*kW\b/i);
-    let targetSolar = solarMatch ? parseFloat(solarMatch[1]) : 6.6; // 没找到则默认 6.6
+    let targetSolar = 0;
+    let foundSolar = false;
+
+    if (solarMatch) {
+        targetSolar = parseFloat(solarMatch[1]);
+        foundSolar = true;
+    } else {
+        targetSolar = 6.6; // 没找到默认 6.6，但在下面我们会根据 foundSolar 来决定模式
+    }
     
-    // 在你的 solarTiers 数组中找到最接近的档位索引
-    // solarTiers = [6.6, 8, 10, 13, 15, 20]
+    // 找电池 (kWh)
+    const batMatch = text.match(/(\d+(\.\d+)?)\s*kWh/i);
+    let targetBat = batMatch ? parseFloat(batMatch[1]) : 0;
+    const hasBattery = targetBat > 0 || text.toLowerCase().includes('battery') || text.includes('电池') || text.includes('Powerwall');
+
+    // 4. 设置滑块档位
+    // Solar Slider
     let bestSolarIdx = 0;
     let minDiff = 999;
     solarTiers.forEach((tier, index) => {
         const diff = Math.abs(tier - targetSolar);
-        if(diff < minDiff) { 
-            minDiff = diff; 
-            bestSolarIdx = index; 
-        }
+        if(diff < minDiff) { minDiff = diff; bestSolarIdx = index; }
     });
-
-    // --- B. 解析电池 (kWh) ---
-    const batMatch = text.match(/(\d+(\.\d+)?)\s*kWh/i);
-    let targetBat = batMatch ? parseFloat(batMatch[1]) : 0;
-    // 判断是否包含电池关键字
-    const hasBattery = targetBat > 0 || text.toLowerCase().includes('battery') || text.includes('电池') || text.includes('Powerwall');
-
-    // 3. 赋值给表单 (更新滑块和数字显示)
     
-    // 更新太阳能滑块
     const solarInput = document.getElementById('solar-input');
-    if (solarInput) {
-        solarInput.value = bestSolarIdx;
-        updateVal('solar'); // 调用你现有的函数刷新显示
-    }
+    const existSolarInput = document.getElementById('exist-solar-input');
+    
+    if (solarInput) { solarInput.value = bestSolarIdx; updateVal('solar'); }
+    if (existSolarInput) { existSolarInput.value = bestSolarIdx; updateVal('exist-solar'); }
 
-    // 更新电池滑块
+    // Battery Slider
     if(hasBattery) {
         const batInput = document.getElementById('bat-input');
         if (batInput) {
-            // 如果解析出具体数值就用数值，否则默认 10kWh
             batInput.value = (targetBat > 4) ? targetBat : 10; 
-            updateVal('battery'); // 调用你现有的函数刷新显示
+            updateVal('battery');
         }
     }
 
-    // 4. 切换模式 (Solar Only vs Both)
-    setMode(hasBattery ? 'both' : 'solar');
+    // 5. 🟢 智能切换模式 (核心修复)
+    if (hasBattery && !foundSolar) {
+        // 有电池但没写太阳能 -> 认为是 "Battery Only" (加装)
+        setMode('battery');
+    } else if (hasBattery && foundSolar) {
+        // 都有 -> "Solar + Battery"
+        setMode('both');
+    } else {
+        // 只有太阳能 -> "Solar Only"
+        setMode('solar');
+    }
 
-    // 5. [核心修复] 模拟点击 "Get Quote" 按钮
-    // 这一步会接管所有流程：显示 Loading 动画 -> 计算价格 -> 自动滚动到底部结果
+    // 6. 🟢 破解拦截验证 (关键一步)
+    // 无论什么情况，只要是 Copy Setup，都把账单设为 $500，防止因为默认 $100 而被 calculate() 函数拦截
+    const billInput = document.getElementById('bill-input');
+    if (billInput && parseInt(billInput.value) <= 100) {
+        billInput.value = 500;
+        updateVal('bill');
+    }
+
+    // 7. 触发计算跳转
     setTimeout(() => {
-        // 找到你的计算按钮 (注意：你的 HTML 里它是 class="btn-calc")
         const calcBtn = document.querySelector('.btn-calc');
+        if(calcBtn) calcBtn.click(); 
         
-        if(calcBtn) {
-            calcBtn.click(); // <--- 模拟用户点击！
-        } else {
-            console.error("找不到计算按钮");
-            calculate(true); // 兜底方案
-        }
-        
-        // 显示提示
         const msg = (typeof curLang !== 'undefined' && curLang === 'cn') 
             ? "已加载案例配置！" : "Configuration Copied!";
         showToast(msg);
-        
-    }, 300); // 延迟 300ms 确保 setMode 也就是 DOM 渲染完成
+    }, 300);
 }
 
 function triggerQuoteFromMap() {
