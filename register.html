@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Activation - Solaryo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #10b981;
+            --solar-gold: #f59e0b;
+            --text-light: #64748b;
+            --bg-gradient: linear-gradient(120deg, #f1f5f9 0%, #cbd5e1 100%);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--primary);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .brand-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.05em;
+            color: var(--primary);
+            display: inline-block;
+        }
+        .brand-yo { color: var(--solar-gold); position: relative; }
+        .brand-yo::after {
+            content: ''; position: absolute; width: 6px; height: 6px;
+            background: var(--accent); border-radius: 50%; top: 2px; right: -8px;
+        }
+
+        h2 { margin: 10px 0 5px 0; font-size: 1.5rem; }
+        .subtitle { color: var(--text-light); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5; }
+
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--primary); }
+        
+        input {
+            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0;
+            border-radius: 12px; font-size: 1rem; box-sizing: border-box;
+            transition: all 0.3s; font-family: inherit; background: #f8fafc;
+        }
+        input:focus { outline: none; border-color: var(--accent); background: white; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+        /* 让只读状态明显一点，但这里允许修改，所以不一定用到 */
+        input:read-only { background-color: #e2e8f0; cursor: not-allowed; }
+
+        .msg-box {
+            min-height: 20px; font-size: 0.85rem; margin-bottom: 20px;
+            font-weight: 600; display: flex; align-items: center; justify-content: center;
+            gap: 6px; padding: 10px; border-radius: 8px; display: none;
+        }
+        .msg-box.error { background: #fee2e2; color: #ef4444; animation: shake 0.4s; }
+        .msg-box.success { background: #dcfce7; color: #166534; }
+
+        button {
+            width: 100%; padding: 16px; margin-top: 10px;
+            background: linear-gradient(135deg, var(--primary) 0%, #334155 100%);
+            color: white; border: none; border-radius: 16px;
+            font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(15, 23, 42, 0.3); }
+        button:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .requirements { text-align: left; margin-bottom: 20px; padding-left: 5px; }
+        .req-item { font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .req-item.valid { color: #10b981; }
+        .req-item::before { content: '○'; font-weight: bold; }
+        .req-item.valid::before { content: '✓'; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="brand-logo">Solar<span class="brand-yo">yo</span></div>
+        <h2>Activate Account</h2>
+        <div class="subtitle">Welcome to the Partner Hub! Please confirm your email and set a secure password.</div>
+
+        <div id="msg-box" class="msg-box"></div>
+
+        <div id="form-content">
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="email-input" placeholder="Loading email...">
+            </div>
+
+            <div class="input-group">
+                <label>Create Password</label>
+                <input type="password" id="new-pwd" placeholder="Enter password" oninput="checkRequirements()">
+            </div>
+
+            <div class="requirements">
+                <div class="req-item" id="req-len">At least 8 characters</div>
+                <div class="req-item" id="req-cap">At least one uppercase letter (A-Z)</div>
+            </div>
+
+            <div class="input-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirm-pwd" placeholder="Re-enter password">
+            </div>
+
+            <button onclick="activateAccount()" id="btn-activate">Activate Account</button>
+        </div>
+
+        <div id="success-content" style="display:none;">
+            <div style="font-size:4rem; margin-bottom:10px;">🚀</div>
+            <h3 style="color:#10b981; margin:0;">Account Activated!</h3>
+            <p style="color:#64748b; margin-top:10px;">You can now log in to the Partner Hub.</p>
+            <a href="index.html" style="display:block; margin-top:20px; text-decoration:none; color:var(--accent); font-weight:bold;">Go to Login →</a>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://iytxwgyhemetdkmqoxoa.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dHh3Z3loZW1ldGRrbXFveG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzI3MDIsImV4cCI6MjA3OTkwODcwMn0.ZsiueMCjwm5FoPlC3IDEgmsPaabkhefw3uHFl6gBm7Q';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 页面加载逻辑
+        window.onload = async function() {
+            // 1. 尝试获取当前会话 (Session)
+            // 只要用户刚才点过一次链接，Session 就会存在于 localStorage 中
+            const { data: { session }, error } = await supabase.auth.getSession();
+
+            // 处理 Hash 里的 Token (如果是首次点击)
+            // Supabase 客户端会自动处理 hash 并建立 session，所以我们主要检查 session 是否存在
+            if (session && session.user) {
+                console.log("检测到有效会话，允许设置密码。");
+                const emailInput = document.getElementById('email-input');
+                emailInput.value = session.user.email;
+                emailInput.readOnly = true; // 锁定邮箱，防止修改（因为是基于当前登录态）
+                emailInput.style.backgroundColor = "#e2e8f0";
+            } else {
+                // 如果没有 Session，也没有 Hash，说明链接彻底失效且未登录
+                // 或者是用户换了浏览器打开
+                if (!window.location.hash) {
+                    showError("链接已失效或您未登录。请联系管理员重新发送邀请。");
+                    document.getElementById('form-content').style.display = 'none'; // 隐藏表单防止误操作
+                } else {
+                    // 有 Hash 但没 Session，可能是 Supabase 正在处理，稍等一下重试
+                    console.log("正在处理 Token...");
+                }
+            }
+            
+            // 监听 Auth 状态变化 (处理首次点击链接瞬间的状态更新)
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    const emailInput = document.getElementById('email-input');
+                    emailInput.value = session.user.email;
+                }
+            });
+        };
+
+        function checkRequirements() {
+            const pwd = document.getElementById('new-pwd').value;
+            const reqLen = document.getElementById('req-len');
+            const reqCap = document.getElementById('req-cap');
+            if (pwd.length >= 8) reqLen.classList.add('valid'); else reqLen.classList.remove('valid');
+            if (/[A-Z]/.test(pwd)) reqCap.classList.add('valid'); else reqCap.classList.remove('valid');
+        }
+
+        async function activateAccount() {
+            const email = document.getElementById('email-input').value.trim();
+            const pwd = document.getElementById('new-pwd').value;
+            const confirm = document.getElementById('confirm-pwd').value;
+            const btn = document.getElementById('btn-activate');
+            
+            // 重置消息
+            const msgBox = document.getElementById('msg-box');
+            msgBox.style.display = 'none';
+            msgBox.className = 'msg-box';
+
+            // 验证
+            if (!email.includes('@')) return showError("未检测到有效邮箱，请刷新重试。");
+            if (pwd.length < 8) return showError("密码长度至少 8 位。");
+            if (!/[A-Z]/.test(pwd)) return showError("密码必须包含至少一个大写字母。");
+            if (pwd !== confirm) return showError("两次输入的密码不一致。");
+
+            btn.disabled = true;
+            btn.innerText = "激活中...";
+
+            try {
+                // 直接调用 updateUser，它依赖当前的 Session
+                const { data, error } = await supabase.auth.updateUser({ 
+                    password: pwd 
+                });
+
+                if (error) throw error;
+
+                // 成功
+                document.getElementById('form-content').style.display = 'none';
+                document.getElementById('success-content').style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                showError(err.message);
+                btn.disabled = false;
+                btn.innerText = "Activate Account";
+            }
+        }
+
+        function showError(text) {
+            const msgBox = document.getElementById('msg-box');
+            msgBox.innerText = "⚠️ " + text;
+            msgBox.className = 'msg-box error';
+            msgBox.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -111,12 +112,19 @@
         </div>
 
 
-        <div class="label-row-header">
-            <label data-i18n="lbl_mode" style="margin-bottom: 0;">Installation Type</label>
-    
+       <div class="label-row-header">
+         <label data-i18n="lbl_mode" style="margin-bottom: 0;">Installation Type</label>
+
+            <div style="display:flex; gap:10px;">
+            <div class="partner-inline-btn" onclick="openLiveMap()" style="border-color: var(--accent);">
+            <span class="p-icon-small">🗺️</span>
+            <span class="p-text-small" data-i18n="btn_live_map">Live Map</span>
+            </div>
+
             <div class="partner-inline-btn" onclick="openPartnerModal()">
             <span class="p-icon-small">🤝</span>
             <span class="p-text-small" data-i18n="btn_partner_hub">Partner Hub</span>
+            </div>
             </div>
         </div>
 
@@ -977,6 +985,81 @@
 
                 <button type="submit" class="btn-partner-submit" data-i18n="btn_submit_app">Submit Application</button>
             </form>
+        </div>
+    </div>
+</div>
+<div id="map-modal" class="map-modal-overlay">
+    <div class="map-container-card">
+        <button class="map-close-btn" onclick="closeLiveMap()">✕</button>
+        
+        <div class="map-switcher-container">
+            <div class="map-switcher">
+                <button class="map-switch-btn active" id="btn-map-consumer" onclick="switchMapMode('consumer')">
+                     🏠 <span data-i18n="map_mode_consumer">I'm a Homeowner</span>
+                </button>
+                <button class="map-switch-btn" id="btn-map-provider" onclick="switchMapMode('provider')">
+                    💼 <span data-i18n="map_mode_provider">I'm an Installer</span>
+                </button>
+            </div>
+        </div>
+    
+        <div id="ecosystem-map"></div>
+    
+        <button class="map-locate-btn" onclick="handleUserLocation()">
+            🎯
+        </button>
+    
+        <div class="map-filters-container" id="map-filters"></div>
+    </div>
+</div>
+
+<div id="lead-login-modal" class="modal-overlay" style="z-index: 20005;">
+    <div class="modal-content" style="max-width: 350px;">
+        <span class="close-btn" onclick="document.getElementById('lead-login-modal').style.display='none'">&times;</span>
+        <h3 style="text-align:center;">🔒 Partner Access</h3>
+        <p style="text-align:center; color:#64748b; font-size:0.9rem; margin-bottom:20px;">
+            Enter credentials to unlock lead details.
+        </p>
+        
+        <div class="form-group-compact">
+            <input type="email" id="login-email" placeholder="Email">
+        </div>
+        <div class="form-group-compact" style="margin-bottom: 5px;">
+            <input type="password" id="login-password" placeholder="Password">
+        </div>
+
+        <a href="#" class="forgot-pwd-link" onclick="handleForgotPassword()">Forgot Password?</a>
+
+        <button class="btn-calc" onclick="attemptLeadLogin()" style="margin-top:5px; padding:12px;">Login</button>
+        
+        <div style="text-align:center; margin-top:15px; font-size:0.8rem;">
+            <a href="#" onclick="redirectToPartnerReg()" style="color:var(--accent); font-weight:bold;">Apply for Access</a>
+        </div>
+    </div>
+</div>
+
+<div id="case-detail-modal" class="modal-overlay" style="z-index: 20005;">
+    <div class="modal-content" style="padding:0; overflow:hidden; border-radius:24px;">
+        <div style="position:relative; height:200px; background:#eee;">
+            <img id="case-img-hero" src="" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://placehold.co/400x200?text=No+Image'">
+            <button class="map-close-btn" style="top:10px; right:10px; background:rgba(0,0,0,0.5); color:white;" onclick="document.getElementById('case-detail-modal').style.display='none'">✕</button>
+        </div>
+        <div style="padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                <h3 id="case-title" style="margin:0; font-size:1.4rem;">Case Title</h3>
+                <span id="case-saving-tag" style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.8rem;">Savings</span>
+            </div>
+            
+            <p id="case-story" style="color:#475569; font-size:0.95rem; line-height:1.6; margin-bottom:20px;">Story...</p>
+
+            <div style="background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:20px;">
+                <div style="font-size:0.75rem; color:#94a3b8; text-transform:uppercase; font-weight:700; margin-bottom:8px;">System Config</div>
+                <div style="font-weight:700; color:#1e293b;" id="case-config-display">Config...</div>
+            </div>
+
+            <button class="btn-calc" id="btn-copy-setup" style="margin-top:0; padding:16px;">
+                ⚡ Copy This Setup
+            </button>
         </div>
     </div>
 </div>

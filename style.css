@@ -4443,3 +4443,237 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
         right: 15px;
     }
 }
+
+/* ==========================================
+   LIVE MAP STYLES (悬浮二级页面版)
+   ========================================== */
+
+/* 1. 遮罩层 */
+.map-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6); /* 深色背景 */
+    backdrop-filter: blur(5px);      /* 背景模糊 */
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 20000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 2. 悬浮卡片容器 */
+.map-container-card {
+    width: 90%;          /* 宽度占屏幕 90% */
+    max-width: 1000px;   /* 最大宽度限制 */
+    height: 85vh;        /* 高度占屏幕 85% */
+    background: #fff;
+    border-radius: 24px; /* 大圆角 */
+    overflow: hidden;    
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); /* 悬浮阴影 */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+#ecosystem-map { width: 100%; height: 100%; }
+
+/* 3. 地图内控件 */
+
+/* 关闭按钮 */
+.map-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+.map-close-btn:hover { transform: scale(1.1); background: #fee2e2; color: #ef4444; }
+
+/* 模式切换器 */
+.map-switcher-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 5;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 6px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.map-switcher { display: flex; gap: 5px; }
+
+.map-switch-btn {
+    border: none;
+    background: transparent;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Outfit', sans-serif;
+    white-space: nowrap;
+}
+
+.map-switch-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+/* 定位按钮 */
+/* 定位按钮 (精确对齐 Google 原生缩放条上方) */
+.map-locate-btn {
+    position: absolute;
+    
+    /* 垂直位置：避开底部的 +/- 缩放条 + Google Logo */
+    /* 130px 大约刚好位于缩放条的正上方 */
+    bottom: 130px; 
+    
+    /* 水平位置：Google 默认控件距离右边通常是 10px */
+    right: 10px;
+    
+    /* 尺寸：40px 跟 Google 的方块按钮宽度一致，看起来更整齐 */
+    width: 40px;
+    height: 40px;
+    
+    background: white;
+    
+    /* 圆角：稍微小一点，跟地图控件风格融合 */
+    border-radius: 4px; 
+    
+    border: none;
+    /* 阴影：模仿 Google 地图原生控件的阴影 */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    
+    font-size: 1.4rem;
+    cursor: pointer;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.map-locate-btn:hover {
+    background: #f3f4f6; /* 悬停变灰 */
+    color: #3b82f6;      /* 图标变蓝 */
+}
+
+/* 底部过滤器 */
+.map-filters-container {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    padding: 6px;
+    border-radius: 40px;
+    width: max-content;
+}
+
+.map-filter-pill {
+    padding: 10px 18px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.map-filter-pill.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Google Maps InfoWindow 美化 */
+.gm-style-iw { padding: 0 !important; border-radius: 12px !important; overflow: hidden !important; }
+.gm-style-iw-d { overflow: hidden !important; padding: 0 !important; }
+.gm-ui-hover-effect { display: none !important; } 
+
+.info-card { width: 260px; font-family: 'Outfit', sans-serif; padding: 15px; }
+.info-tag { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+.info-title { font-weight: 700; font-size: 1.1rem; color: #1e293b; margin-bottom: 4px; line-height: 1.2; }
+.info-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 12px; }
+.info-btn { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+.info-btn.locked { background: #e2e8f0; color: #94a3b8; }
+
+@media (max-width: 500px) {
+    .map-switcher-container { left: 50%; transform: translateX(-50%); width: 80%; top: 15px; }
+    .map-switcher { width: 100%; justify-content: space-between; }
+    .map-switch-btn { flex: 1; text-align: center; padding: 8px 12px; }
+    .map-container-card { width: 95%; height: 80vh; }
+    .map-close-btn { top: 15px; right: 15px; width: 32px; height: 32px; font-size: 1rem; }
+}
+/* ==========================================
+   [NEW] 补充样式 (关闭按钮 & 忘记密码)
+   ========================================== */
+
+/* 1. 地图弹窗内的右上角关闭按钮 (小叉号) */
+.info-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    color: #94a3b8;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 20; /* 保证在最上层 */
+    padding: 0 5px;
+    transition: color 0.2s;
+}
+.info-close-btn:hover {
+    color: #ef4444; /* 悬停变红 */
+}
+
+/* 确保 info-card 支持绝对定位 */
+.info-card {
+    position: relative !important;
+}
+
+/* 2. 忘记密码链接样式 */
+.forgot-pwd-link {
+    display: block;
+    text-align: right;
+    font-size: 0.75rem;
+    color: #64748b;
+    text-decoration: underline;
+    margin-top: 8px;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+.forgot-pwd-link:hover {
+    color: var(--primary);
+}
