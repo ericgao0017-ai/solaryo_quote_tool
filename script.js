@@ -3469,7 +3469,7 @@ function openCaseDetail(id) {
     
     document.getElementById('case-title').innerText = isCN ? item.title_cn : item.title;
     const story = isCN ? (item.full_story_cn || "") : (item.full_story || "");
-    document.getElementById('case-story').innerText = story;
+    document.getElementById('case-story').innerHTML = story;
     const hwText = isCN ? (item.hardware_text_cn || "标准配置") : (item.hardware_text || "Standard Config");
     document.getElementById('case-config-display').innerText = hwText;
     const savings = isCN ? item.savings_cn : item.savings;
