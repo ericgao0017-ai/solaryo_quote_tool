@@ -279,6 +279,17 @@ const i18n = {
         // 在 i18n.cn 中添加:
         flash_title: "⚡ 60秒获取精准报价",
         flash_subtitle: "电池补贴即将调整，立即查看您的资格！",
+        // 在 cn 对象里找个地方加这两行
+        partner_note: "说明：合作伙伴为【邀约制】。请先填表申请，资质审核通过后，我们将为您开通账户。",
+        btn_apply: "提交入驻申请",
+
+        // Partner Access Modal
+        pa_title: "🔒 合作伙伴入口",
+        pa_desc: "请输入账号密码以解锁线索详情。",
+        ph_email_simple: "电子邮箱",
+        ph_password: "登录密码",
+        pa_forgot: "忘记密码？",
+        pa_login_btn: "登录后台",
 
         // [新增] 底部悬浮栏 & 假加载
         sticky_net: "预估净价",
@@ -369,6 +380,16 @@ const i18n = {
         // 在 en 对象里找到合适的位置加入：
         map_mode_consumer: "I'm a Homeowner",
         map_mode_provider: "I'm an Installer",
+        // 在 en 对象里找个地方加这两行
+        partner_note: "Note: Partnership is <strong>invite-only</strong>. Accounts are issued after application & verification.",
+        btn_apply: "Apply for Access",
+        // Partner Access Modal
+        pa_title: "🔒 Partner Access",
+        pa_desc: "Enter credentials to unlock lead details.",
+        ph_email_simple: "Email Address",
+        ph_password: "Password",
+        pa_forgot: "Forgot Password?",
+        pa_login_btn: "Login",
 
         // --- Partner Hub EN ---
         btn_partner_hub: "Partner Hub",
@@ -3677,3 +3698,66 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         }
     }
 });
+
+// ==========================================
+// [FIXED] 补充缺失的连接申请函数 (带 Email 写入)
+// ==========================================
+async function requestConnection(leadId) {
+    const container = document.getElementById(`action-area-${leadId}`);
+    const btn = container ? container.querySelector('button') : null;
+    const isCN = (typeof curLang !== 'undefined' && curLang === 'cn');
+
+    if (btn) {
+        btn.innerText = isCN ? "申请中..." : "Requesting...";
+        btn.disabled = true;
+    }
+
+    try {
+        // 1. 获取当前登录用户
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+        
+        if (authError || !user) {
+            throw new Error(isCN ? "未检测到登录状态，请重新登录" : "User session invalid. Please relogin.");
+        }
+
+        // 2. 向 Supabase 写入申请记录
+        const { error: dbError } = await supabaseClient
+            .from('lead_applications')
+            .insert([
+                {
+                    lead_id: leadId,
+                    partner_id: user.id,
+                    partner_email: user.email, // 🟢 新增：显式写入邮箱
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                }
+            ]);
+
+        if (dbError) throw dbError;
+
+        // 3. 成功反馈
+        if (btn) {
+            btn.innerText = isCN ? "已申请 ✅" : "Request Sent ✅";
+            btn.style.background = "#10b981";
+            btn.style.cursor = "default";
+        }
+        
+        showToast(isCN ? "申请已发送！请等待管理员审核。" : "Connection request sent!");
+
+    } catch (err) {
+        console.error("Connection Request Error:", err);
+        let errMsg = err.message;
+        if (err.code === '42501') errMsg = "权限不足 (RLS Error)";
+        // 捕捉字段不存在的错误
+        if (err.code === '42703') errMsg = "数据库缺少 partner_email 字段"; 
+        
+        alert((isCN ? "申请失败: " : "Request Failed: ") + errMsg);
+        
+        if (btn) {
+            btn.innerText = isCN ? "重试" : "Retry";
+            btn.disabled = false;
+        }
+    }
+}
+
+window.requestConnection = requestConnection;

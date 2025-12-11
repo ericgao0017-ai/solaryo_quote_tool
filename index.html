@@ -1016,24 +1016,34 @@
 <div id="lead-login-modal" class="modal-overlay" style="z-index: 20005;">
     <div class="modal-content" style="max-width: 350px;">
         <span class="close-btn" onclick="document.getElementById('lead-login-modal').style.display='none'">&times;</span>
-        <h3 style="text-align:center;">🔒 Partner Access</h3>
-        <p style="text-align:center; color:#64748b; font-size:0.9rem; margin-bottom:20px;">
+        
+        <h3 style="text-align:center;" data-i18n="pa_title">🔒 Partner Access</h3>
+        
+        <p style="text-align:center; color:#64748b; font-size:0.9rem; margin-bottom:20px;" data-i18n="pa_desc">
             Enter credentials to unlock lead details.
         </p>
         
         <div class="form-group-compact">
-            <input type="email" id="login-email" placeholder="Email">
+            <input type="email" id="login-email" data-i18n-ph="ph_email_simple" placeholder="Email">
         </div>
         <div class="form-group-compact" style="margin-bottom: 5px;">
-            <input type="password" id="login-password" placeholder="Password">
+            <input type="password" id="login-password" data-i18n-ph="ph_password" placeholder="Password">
         </div>
 
-        <a href="#" class="forgot-pwd-link" onclick="handleForgotPassword()">Forgot Password?</a>
+        <a href="#" class="forgot-pwd-link" onclick="handleForgotPassword()" data-i18n="pa_forgot">Forgot Password?</a>
 
-        <button class="btn-calc" onclick="attemptLeadLogin()" style="margin-top:5px; padding:12px;">Login</button>
+        <button class="btn-calc" onclick="attemptLeadLogin()" style="margin-top:5px; padding:12px;" data-i18n="pa_login_btn">Login</button>
         
-        <div style="text-align:center; margin-top:15px; font-size:0.8rem;">
-            <a href="#" onclick="redirectToPartnerReg()" style="color:var(--accent); font-weight:bold;">Apply for Access</a>
+        <div style="text-align:center; margin-top:20px; padding-top:15px; border-top:1px dashed #e2e8f0;">
+            <p style="font-size:0.75rem; color:#64748b; margin:0 0 10px 0; line-height:1.5; padding:0 5px;">
+            <span data-i18n="partner_note">
+            Note: Partnership is invite-only. Please apply first; accounts are issued after verification.
+            </span>
+            </p>
+    
+        <a href="#" onclick="redirectToPartnerReg()" style="color:var(--accent); font-weight:800; font-size:0.9rem; text-decoration:none; border-bottom:1px solid var(--accent);">
+        <span data-i18n="btn_apply">Apply for Access</span> →
+        </a>
         </div>
     </div>
 </div>
