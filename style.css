@@ -4718,20 +4718,18 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
 }
 
 /* ==========================================
-   [FINAL TWEAK] 手机端地图 UI (置顶紧凑版)
+   [FINAL LAYOUT] 手机端地图 UI (底部平行对齐版)
    ========================================== */
 
 /* 1. 通用手机适配 (< 500px) */
 @media (max-width: 500px) {
 
-    /* --- 顶部切换栏：上移至顶部 --- */
+    /* --- 顶部切换栏 (保持置顶) --- */
     .map-switcher-container {
-        /* 🟢 位置核心修改：往上提 */
         top: 15px !important;         
         left: 50% !important;
         transform: translateX(-50%) !important;
         
-        /* 尺寸与外观 */
         width: auto !important;
         max-width: 85% !important;
         padding: 3px !important;
@@ -4745,7 +4743,6 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
         justify-content: space-between !important;
     }
 
-    /* 按钮本体 */
     .map-switch-btn {
         padding: 6px 14px !important;
         font-size: 0.75rem !important;
@@ -4756,9 +4753,8 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
         white-space: nowrap !important;
     }
 
-    /* --- 关闭按钮：与顶部栏平齐上移 --- */
+    /* --- 关闭按钮 (保持置顶) --- */
     .map-close-btn {
-        /* 🟢 位置核心修改：往上提，与切换栏对齐 */
         top: 15px !important;          
         right: 12px !important;
         
@@ -4769,15 +4765,16 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
         box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
 
-    /* --- 底部过滤器 --- */
+    /* --- 底部过滤器 (中间) --- */
     .map-filters-container {
-        bottom: 25px !important;
+        bottom: 25px !important;      /* 距底高度 */
         width: auto !important;
         padding: 4px !important;
         gap: 6px !important;
         background: rgba(255, 255, 255, 0.9) !important;
         border-radius: 100px !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+        z-index: 10 !important;
     }
 
     .map-filter-pill {
@@ -4792,51 +4789,47 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
         margin-right: 4px !important;
     }
 
-    /* --- 右侧功能区 --- */
+    /* --- 定位按钮 (右下角，与过滤器平行) --- */
     .map-locate-btn {
-        width: 36px !important;
-        height: 36px !important;
-        bottom: 80px !important;
-        right: 12px !important;
-        font-size: 1.1rem !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        width: 38px !important;       /* 尺寸 */
+        height: 38px !important;
+        
+        /* 🟢 位置修改：下沉到底部，与左侧胶囊对齐 */
+        bottom: 25px !important;      
+        right: 15px !important;       /* 靠右留出一点距离 */
+        
+        font-size: 1.2rem !important;
+        border-radius: 50% !important; /* 改成圆形，更像功能按钮 */
+        background: white !important;
+        color: #3b82f6 !important;    /* 蓝色图标 */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        z-index: 20 !important;       /* 确保层级最高 */
     }
 
+    /* 保持隐藏 Google 原生控件 */
     .gmnoprint { display: none !important; }
 }
 
-/* 2. 针对极小屏 (iPhone SE/Mini, < 375px) */
+/* 2. 针对极小屏微调 (iPhone SE/Mini) */
 @media (max-width: 375px) {
-    /* 顶部栏再稍微紧凑一点 */
-    .map-switcher-container {
-        max-width: 92% !important;
-        /* 🟢 极小屏再往上挤一点点 */
-        top: 12px !important;         
-    }
-    
-    .map-switch-btn {
-        padding: 5px 10px !important;
-        font-size: 0.7rem !important;
-        height: 28px !important;
-    }
-    
-    /* 关闭按钮微调 */
-    .map-close-btn {
-        /* 🟢 对齐顶部 */
+    /* 顶部微调 */
+    .map-switcher-container, .map-close-btn {
         top: 12px !important;
-        right: 8px !important;
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 0.9rem !important;
     }
     
-    .map-filters-container {
+    /* 底部微调 */
+    .map-filters-container, .map-locate-btn {
         bottom: 20px !important;
     }
     
+    /* 防止底部按钮撞车，稍微缩小间距 */
     .map-filter-pill {
-        height: 28px !important;
-        padding: 0 10px !important;
-        font-size: 0.7rem !important;
+        padding: 0 8px !important;
+    }
+    
+    .map-locate-btn {
+        right: 10px !important;
+        width: 34px !important;
+        height: 34px !important;
     }
 }
