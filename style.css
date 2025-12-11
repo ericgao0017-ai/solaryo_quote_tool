@@ -4621,19 +4621,58 @@ input[type=range].gold-slider::-webkit-slider-thumb:hover {
 .gm-style-iw-d { overflow: hidden !important; padding: 0 !important; }
 .gm-ui-hover-effect { display: none !important; } 
 
-.info-card { width: 260px; font-family: 'Outfit', sans-serif; padding: 15px; }
+/* 1. 卡片容器：从固定宽度改为最大宽度 */
+.info-card {
+    /* width: 260px;  <-- 删除这行，它是罪魁祸首 */
+    width: 100%;      /* 改为 100%，让它自适应地图弹窗的大小 */
+    min-width: 200px; /* 设置最小宽度，防止压得太扁 */
+    max-width: 260px; /* 保持最大宽度，电脑上不至于太宽 */
+    font-family: 'Outfit', sans-serif;
+    padding: 15px;
+    box-sizing: border-box; /* 🟢 关键：确保 padding 不会撑大盒子 */
+}
 .info-tag { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
 .info-title { font-weight: 700; font-size: 1.1rem; color: #1e293b; margin-bottom: 4px; line-height: 1.2; }
 .info-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 12px; }
-.info-btn { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+/* 2. 按钮样式：防止文字溢出 */
+.info-btn {
+    width: 100%;
+    padding: 10px 5px; /* 🟢 左右 padding 减小，给文字腾地方 */
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    
+    /* 🟢 新增：防止文字换行导致按钮变高，或者允许换行但居中 */
+    white-space: nowrap; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
 .info-btn.locked { background: #e2e8f0; color: #94a3b8; }
 
-@media (max-width: 500px) {
-    .map-switcher-container { left: 50%; transform: translateX(-50%); width: 80%; top: 15px; }
-    .map-switcher { width: 100%; justify-content: space-between; }
-    .map-switch-btn { flex: 1; text-align: center; padding: 8px 12px; }
-    .map-container-card { width: 95%; height: 80vh; }
-    .map-close-btn { top: 15px; right: 15px; width: 32px; height: 32px; font-size: 1rem; }
+/* 4. 针对极小屏幕 (iPhone SE/Mini) 的专项优化 */
+@media (max-width: 380px) {
+    .info-card {
+        padding: 10px 8px; /* 进一步减小内边距 */
+    }
+    
+    .info-title {
+        font-size: 1rem !important; /* 标题改小一点 */
+    }
+    
+    .info-btn {
+        font-size: 0.8rem !important; /* 按钮文字改小 */
+        padding: 8px 4px !important;
+    }
+
+    /* 调整标签大小 */
+    .info-tag {
+        font-size: 0.6rem !important;
+    }
 }
 /* ==========================================
    [NEW] 补充样式 (关闭按钮 & 忘记密码)
