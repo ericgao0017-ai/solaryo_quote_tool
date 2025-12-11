@@ -249,6 +249,7 @@ const i18n = {
 
         map_mode_consumer: "我是房主",
         map_mode_provider: "我是安装商",
+        btn_live_map: "活点地图",
         
         lbl_cec: "CEC 认证编号",
         lbl_svc_area: "服务区域",
@@ -376,6 +377,7 @@ const i18n = {
         flash_subtitle: "Rebates are changing soon. Check eligibility now!",
 
         lbl_budget: "Target Budget (Opt.)", // 🟢 新增
+        btn_live_map: "Live Map",
 
         // 在 en 对象里找到合适的位置加入：
         map_mode_consumer: "I'm a Homeowner",
