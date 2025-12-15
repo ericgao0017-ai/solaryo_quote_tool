@@ -39,10 +39,12 @@ const brandConfig = {
     medium: {
         title: "Medium Tier Brands",
         brands: [
-            // Medium - Low (Base = Old Entry Price)
+            // Medium - Low (Base = Old Entry Price) fox only
             { id: 'fox', name: 'FoxESS', markup: 0, markupPerKwh: 0 },
-            { id: 'dyness', name: 'Dyness', markup: 0, markupPerKwh: 0 },
-            { id: 'solplanet', name: 'Solplanet', markup: 0, markupPerKwh: 0 },
+
+            // Medium - Low (Base = Old Entry Price)
+            { id: 'dyness', name: 'Dyness', markup: 0, markupPerKwh: 22 },
+            { id: 'solplanet', name: 'Solplanet', markup: 0, markupPerKwh: 22 },
 
             // Medium - High (Base + $55/kWh)
             { id: 'goodwe', name: 'GoodWe', markup: 0, markupPerKwh: 55, tag: 'Smart' },
@@ -1069,6 +1071,7 @@ function calculate(forceShow = false) {
             playAnalysisAnimation();
         }
 
+
         // --- 2. 获取基础数据 ---
         const state = document.getElementById('state-select').value;
         const solarNewIndex = parseInt(document.getElementById('solar-input').value);
@@ -1081,6 +1084,7 @@ function calculate(forceShow = false) {
         const P_BASE_INSTALL = BP.install_base_fee || 0;
         const costShade = parseFloat(document.getElementById('shade-select').value) === 1500 ? BP.addon_extras.addon_shading : 0;
 
+
         // 计算太阳能部分的 Gross Price (不含电池)
         let grossSolarBase = 0;
         if (curMode !== 'battery') {
@@ -1088,7 +1092,7 @@ function calculate(forceShow = false) {
         }
 
         // --- 3. 电池基准价格计算 (Gross Battery Logic) ---
-        const OLD_ENTRY_RATE = 350;
+        const OLD_ENTRY_RATE = 329.6; //tier 中间档改这里
         const OLD_MEDIUM_RATE = 600;
         const FIXED_PROFIT = 4000;
         const P_BAT_LABOR = (curMode === 'battery') ? 1500 : 500;
@@ -1141,8 +1145,10 @@ function calculate(forceShow = false) {
         const valStorey = parseFloat(document.getElementById('storey-select').value);
         let costStorey = (valStorey === 300) ? 300 : (valStorey === 500 ? 500 : 0);
         let costBackup = userApplianceProfile.backup ? 600 : 0;
-        const siteExtras = valRoof + costStorey + costBackup;
-
+        const valPhase = parseFloat(document.getElementById('phase-select').value) === 1000 ? 1000 : 0;
+        const siteExtras = valRoof + costStorey + costBackup + valPhase;
+       
+       
         // --- 6. 最终净价计算 (Net Prices) ---
 
         const fmt = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
