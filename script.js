@@ -3326,19 +3326,41 @@ function showInfoWindow(marker, item) {
     // [MODIFIED] 线索展示逻辑：未登录时隐藏详情
     else if (item.type === 'lead') {
         
-        // --- 1. 智能解析需求类型 (用于显示 Tag) ---
+        // --- 1. 智能解析需求类型 (Tag Logic) ---
+        // 将标题和描述转为小写，方便匹配
         const fullText = (item.title + " " + item.description).toLowerCase();
-        let demandTag = isCN ? "光伏系统需求" : "Solar System";
+
+        // 定义关键词标识
+        // 注意：为了更精准，我把 'panel', 'pv', 'powerwall' 等常见词也加进去了
+        const hasSolar   = fullText.includes('solar') || fullText.includes('光伏') || fullText.includes('pv') || fullText.includes('panel');
+        const hasBattery = fullText.includes('battery') || fullText.includes('storage') || fullText.includes('储能') || fullText.includes('电池') || fullText.includes('powerwall');
+        const hasRepair  = fullText.includes('repair') || fullText.includes('维修') || fullText.includes('maintenance');
+
+        let demandTag = isCN ? "光伏系统" : "Solar System"; // 默认兜底
         let demandIcon = "☀️";
 
-        if (fullText.includes('battery') || fullText.includes('storage') || fullText.includes('电池')) {
-            demandTag = isCN ? "电池需求" : "Battery";
-            demandIcon = "⚡";
-        } else if (fullText.includes('Solar + Battery') || fullText.includes('光伏+储能')) {
-            demandTag = isCN ? "光伏+储能" : "Solar + Battery";
+        // --- 逻辑判断树 ---
+        
+        if (hasRepair) {
+            // 优先判断维修（通常维修是单独的一类）
+            demandTag = isCN ? "维修/维护" : "Maintenance";
             demandIcon = "🔧";
+        } 
+        else if (hasSolar && hasBattery) {
+            // [Both] 既有光伏又有电池 -> 光储一体
+            demandTag = isCN ? "光伏+储能" : "Solar + Battery";
+            demandIcon = "⚡"; 
+        } 
+        else if (hasBattery && !hasSolar) {
+            // [Only Battery] 只有电池，没有光伏 -> 纯电池需求 (Retrofit)
+            demandTag = isCN ? "电池储能需求" : "Battery Storage";
+            demandIcon = "🔋";
+        } 
+        else {
+            // [Only Solar] 只有光伏，或者都没写（默认）
+            demandTag = isCN ? "光伏系统" : "Solar System";
+            demandIcon = "☀️";
         }
-
         // --- 2. 状态分支 ---
         if (!userHasLoggedIn) {
             // [未登录状态] -> 只显示标题，模糊描述
