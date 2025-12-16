@@ -3323,7 +3323,7 @@ function showInfoWindow(marker, item) {
         `;
     }
     // [C] 线索 (核心修改：未解锁也显示需求类型)
-   // [MODIFIED] 线索展示逻辑：未登录时隐藏详情
+    // [MODIFIED] 线索展示逻辑：未登录时隐藏详情
     else if (item.type === 'lead') {
         
         // --- 1. 智能解析需求类型 (用于显示 Tag) ---
@@ -3332,10 +3332,10 @@ function showInfoWindow(marker, item) {
         let demandIcon = "☀️";
 
         if (fullText.includes('battery') || fullText.includes('storage') || fullText.includes('电池')) {
-            demandTag = isCN ? "光伏+电池需求" : "Solar + Battery";
+            demandTag = isCN ? "电池需求" : "Battery";
             demandIcon = "⚡";
-        } else if (fullText.includes('repair') || fullText.includes('维修')) {
-            demandTag = isCN ? "维修/维护" : "Maintenance";
+        } else if (fullText.includes('Solar + Battery') || fullText.includes('光伏+储能')) {
+            demandTag = isCN ? "光伏+储能" : "Solar + Battery";
             demandIcon = "🔧";
         }
 
