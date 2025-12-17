@@ -4,7 +4,52 @@
 const SUPABASE_URL = 'https://iytxwgyhemetdkmqoxoa.supabase.co'; // 替换这里
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dHh3Z3loZW1ldGRrbXFveG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzI3MDIsImV4cCI6MjA3OTkwODcwMn0.ZsiueMCjwm5FoPlC3IDEgmsPaabkhefw3uHFl6gBm7Q';          // 替换这里
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ============================================================
+// 🟢 [新增] 1. 专属链接捕获 (放在文件最顶部)
+// ============================================================
+// ============================================================
+// 🟢 [升级版] 专属链接捕获 + 验证 + 记录访问量
+// ============================================================
+window.addEventListener('DOMContentLoaded', async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const rawRefCode = urlParams.get('ref'); // 获取 ?ref= 后的值
 
+    if (rawRefCode) {
+        console.log(`[CPS] 正在验证推荐码: ${rawRefCode}...`);
+
+        try {
+            // 1. 验证：这个码是否有效？
+            const { data, error } = await supabaseClient
+                .from('partners')
+                .select('ref_code')
+                .eq('ref_code', rawRefCode)
+                .single();
+
+            if (data && !error) {
+                // ✅ 验证成功
+                console.log(`[CPS] ✅ 有效推荐人: ${rawRefCode}`);
+                
+                // A. 存入本地缓存（为了后续提交 Lead 用）
+                localStorage.setItem('solaryo_ref_code', rawRefCode);
+
+                // 🟢 [新增] B. 写入访问记录表 (Referral Visits)
+                // 只有验证通过的有效代码，才会被记录到 visits 表
+                await supabaseClient.from('referral_visits').insert([
+                    { 
+                        ref_code: rawRefCode,
+                        user_agent: navigator.userAgent // 记录一下用户设备信息（可选）
+                    }
+                ]);
+
+            } else {
+                console.warn(`[CPS] ⚠️ 无效/伪造的推荐码，已忽略。`);
+            }
+
+        } catch (err) {
+            console.error("[CPS] 验证/记录出错:", err);
+        }
+    }
+});
 // 🟢 [新增] 州与区域的映射关系 (Partner Hub)
 const regionMap = {
     'Nationwide': [],
@@ -1472,17 +1517,20 @@ async function submitLead() {
     const address = document.getElementById('lead-address').value.trim(); // 获取地址
     const msgEl = document.getElementById('submit-msg');
 
+    // 🟢 [新增 1] 尝试从缓存里取出推荐码
+    const trackingCode = localStorage.getItem('solaryo_ref_code') || null;
+
     const finalBtn = document.getElementById('btn-final-enquiry');
-        if (finalBtn) {
-            finalBtn.style.display = 'flex';
-            finalBtn.classList.add('highlight'); // 添加呼吸效果
-        }
+    if (finalBtn) {
+        finalBtn.style.display = 'flex';
+        finalBtn.classList.add('highlight'); // 添加呼吸效果
+    }
     const stickyBtn = document.querySelector('.sticky-btn');
-        if (stickyBtn) {
-    // 强制改成极简文案，节省手机空间
-            stickyBtn.innerText = (curLang === 'cn') ? "咨询" : "Enquiry"; 
-            stickyBtn.classList.add('highlight');
-        }
+    if (stickyBtn) {
+        // 强制改成极简文案，节省手机空间
+        stickyBtn.innerText = (curLang === 'cn') ? "咨询" : "Enquiry"; 
+        stickyBtn.classList.add('highlight');
+    }
 
     // 清除错误信息
     msgEl.innerText = '';
@@ -1512,7 +1560,7 @@ async function submitLead() {
     btn.disabled = true;
 
     try {
-        // --- [新增] 3. 构建数据包 (Payload) ---
+        // --- 3. 构建数据包 (Payload) ---
         // 即使没有最终确认，我们也把当前计算器里的所有配置存下来
         const payload = {
             created_at: new Date().toISOString(),
@@ -1527,18 +1575,22 @@ async function submitLead() {
             address: address,
             postcode: extractedPostcode || "", // 如果 Google Maps 提取到了邮编
 
+            // 🟢 [新增 2] 写入推荐码 (必须和数据库字段一致)
+            referral_code: trackingCode,
+
             // 标记这是一个 "解锁阶段" 的线索，而非最终确认
             notes: "[System] User Unlocked Price (Preliminary Lead)",
-            // 🟢 [新增] 补全房屋详情 (Property Details)
-            // 使用 getSelectedText 获取下拉框的文本 (例如 "Single Storey")
+            
+            // 补全房屋详情 (Property Details)
             property_storeys: getSelectedText('storey-select'),
             property_roof: getSelectedText('roof-select'),
             property_shade: getSelectedText('shade-select'),
             property_type: getSelectedText('property-type-select'),
             property_phase: getSelectedText('phase-select'),
+            
             // 系统配置数据
             bill_amount: document.getElementById('bill-input').value,
-            budget_target: document.getElementById('budget-input').value, // 🟢 新增
+            budget_target: document.getElementById('budget-input').value,
             solar_size: document.getElementById('solar-val').innerText,
             battery_size: document.getElementById('bat-val').innerText,
             existing_solar_size: document.getElementById('exist-solar-val').innerText,
@@ -1552,7 +1604,7 @@ async function submitLead() {
             chat_history: globalChatHistory
         };
 
-        // --- [新增] 4. 发送给 Supabase ---
+        // --- 4. 发送给 Supabase ---
         const { error } = await supabaseClient.from('leads').insert([payload]);
 
         if (error) {
@@ -1576,8 +1628,8 @@ async function submitLead() {
         const vppBanner = document.getElementById('vpp-banner');
         if (vppBanner && curMode !== 'solar') vppBanner.style.display = 'flex';
 
-        const finalBtn = document.getElementById('btn-final-enquiry');
-        if (finalBtn) finalBtn.style.display = 'flex';
+        const finalBtnDisplay = document.getElementById('btn-final-enquiry');
+        if (finalBtnDisplay) finalBtnDisplay.style.display = 'flex';
 
         // 启动底部悬浮栏监听
         setupStickyObserver();
@@ -1632,6 +1684,8 @@ async function sendFinalEnquiry() {
     const billInput = document.getElementById('bill-input');
     const contactMethodEl = document.querySelector('input[name="contact-method"]:checked');
     const fileInput = document.getElementById('conf-file');
+    // 🟢 [新增] 1. 取出推荐码
+    const trackingCode = localStorage.getItem('solaryo_ref_code') || null;
 
     // 2. 验证
     if (!nameEl.value || !phoneEl.value || !postcodeEl.value) {
@@ -1710,6 +1764,8 @@ async function sendFinalEnquiry() {
             notes: notesEl.value,
             user_profile: userApplianceProfile,
             chat_history: globalChatHistory,
+            // 🟢 [新增] 2. 再次写入推荐码
+            referral_code: trackingCode,
             
             file_name: fileName,
             file_url: fileUrl
