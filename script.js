@@ -1201,7 +1201,7 @@ function calculate(forceShow = false) {
         // >>> ENTRY TIER (Felicity) <<<
         // 逻辑：(Gross - STC) * 50%。不减 State Rebate。
         const grossEntryTotal = grossSolarBase + grossBatNewEntry + siteExtras;
-        const netEntryFinal = (grossEntryTotal - totalSTC) * 0.5;
+        const netEntryFinal = (grossBatNewEntry - stcBatteryValue) * 0.5 + (grossSolarBase - stcSolarValue) - stateRebateVal;
 
         currentBasePrices['entry'] = netEntryFinal;
         safeSetText('net-entry', fmt.format(netEntryFinal));
