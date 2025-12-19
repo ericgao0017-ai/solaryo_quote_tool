@@ -3384,7 +3384,7 @@ function showInfoWindow(marker, item) {
         
         // --- 1. 智能解析需求类型 (Tag Logic) ---
         // 将标题和描述转为小写，方便匹配
-        const fullText = (item.title + " " + item.description).toLowerCase();
+        const fullText = (item.title).toLowerCase();
 
         // 定义关键词标识
         // 注意：为了更精准，我把 'panel', 'pv', 'powerwall' 等常见词也加进去了
