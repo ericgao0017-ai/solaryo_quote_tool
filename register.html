@@ -144,41 +144,46 @@
     </div>
 
     <script>
+        // 1. 初始化 Supabase
         const SUPABASE_URL = 'https://iytxwgyhemetdkmqoxoa.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dHh3Z3loZW1ldGRrbXFveG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMzI3MDIsImV4cCI6MjA3OTkwODcwMn0.ZsiueMCjwm5FoPlC3IDEgmsPaabkhefw3uHFl6gBm7Q';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 🟢 [关键修改] 改个名字叫 sbClient，防止和外部的 'supabase' 变量打架
+        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // 页面加载逻辑
         window.onload = async function() {
-            // 1. 尝试获取当前会话 (Session)
-            // 只要用户刚才点过一次链接，Session 就会存在于 localStorage 中
-            const { data: { session }, error } = await supabase.auth.getSession();
+            // 1. 尝试获取当前会话
+            // 🟢 注意这里都改成了 sbClient
+            const { data: { session }, error } = await sbClient.auth.getSession();
 
-            // 处理 Hash 里的 Token (如果是首次点击)
-            // Supabase 客户端会自动处理 hash 并建立 session，所以我们主要检查 session 是否存在
             if (session && session.user) {
                 console.log("检测到有效会话，允许设置密码。");
                 const emailInput = document.getElementById('email-input');
                 emailInput.value = session.user.email;
-                emailInput.readOnly = true; // 锁定邮箱，防止修改（因为是基于当前登录态）
+                emailInput.readOnly = true; 
                 emailInput.style.backgroundColor = "#e2e8f0";
             } else {
-                // 如果没有 Session，也没有 Hash，说明链接彻底失效且未登录
-                // 或者是用户换了浏览器打开
                 if (!window.location.hash) {
-                    showError("链接已失效或您未登录。请联系管理员重新发送邀请。");
-                    document.getElementById('form-content').style.display = 'none'; // 隐藏表单防止误操作
+                    // 只有真的没填进去才报错
+                    const emailInput = document.getElementById('email-input');
+                    if(emailInput && emailInput.placeholder.includes('Loading')) {
+                        showError("链接已失效或您未登录。请联系管理员重新发送邀请。");
+                        document.getElementById('form-content').style.display = 'none';
+                    }
                 } else {
-                    // 有 Hash 但没 Session，可能是 Supabase 正在处理，稍等一下重试
                     console.log("正在处理 Token...");
                 }
             }
             
-            // 监听 Auth 状态变化 (处理首次点击链接瞬间的状态更新)
-            supabase.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_IN' && session) {
+            // 监听 Auth 状态变化
+            sbClient.auth.onAuthStateChange((event, session) => {
+                if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
                     const emailInput = document.getElementById('email-input');
-                    emailInput.value = session.user.email;
+                    if(emailInput) {
+                        emailInput.value = session.user.email;
+                        emailInput.style.backgroundColor = "#e2e8f0";
+                    }
                 }
             });
         };
@@ -197,12 +202,10 @@
             const confirm = document.getElementById('confirm-pwd').value;
             const btn = document.getElementById('btn-activate');
             
-            // 重置消息
             const msgBox = document.getElementById('msg-box');
             msgBox.style.display = 'none';
             msgBox.className = 'msg-box';
 
-            // 验证
             if (!email.includes('@')) return showError("未检测到有效邮箱，请刷新重试。");
             if (pwd.length < 8) return showError("密码长度至少 8 位。");
             if (!/[A-Z]/.test(pwd)) return showError("密码必须包含至少一个大写字母。");
@@ -212,14 +215,13 @@
             btn.innerText = "激活中...";
 
             try {
-                // 直接调用 updateUser，它依赖当前的 Session
-                const { data, error } = await supabase.auth.updateUser({ 
+                // 🟢 这里的 supabase 也改成了 sbClient
+                const { data, error } = await sbClient.auth.updateUser({ 
                     password: pwd 
                 });
 
                 if (error) throw error;
 
-                // 成功
                 document.getElementById('form-content').style.display = 'none';
                 document.getElementById('success-content').style.display = 'block';
 
