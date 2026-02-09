@@ -1087,7 +1087,7 @@ window.submitWithdrawRequest = async function() {
         await recordTransaction(currentProfile.id, -amount, 'withdrawal', `Payout Request: $${amount}`);
 
         // D. 成功反馈
-        alert("✅ Withdrawal Request Submitted!\n\nMoney is on the way (5-7 business days).");
+        alert("✅ Withdrawal Request Submitted!\n\nMoney is on the way (5-10 business days).");
         
         // E. 刷新页面数据
         if(currentProfile.role === 'referral') loadReferrerDashboard(); 
@@ -2005,4 +2005,5 @@ window.handleSentEmail = function() {
     setTimeout(() => {
         alert("✅ Request Received!\n\nYour reference code helps us identify your payment instantly. Funds will be credited once verified.");
     }, 400);
+
 }
