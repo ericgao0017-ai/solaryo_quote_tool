@@ -167,7 +167,7 @@ let config = {
     subsidy_logic: {
         fed_stc_price_net: 37.5,
         stc_deeming_years: 6,
-        fed_bat_rate_per_kwh: 340,
+        fed_bat_rate_per_kwh: 270,
         fed_bat_cap_kwh: 50,
         nsw_vpp_cap_kwh: 28,
         rebate_vic: 1400,
@@ -1382,7 +1382,7 @@ function calculate(forceShow = false) {
         }
 
         // --- 3. 电池基准价格计算 (Gross Battery Logic) ---
-        const OLD_ENTRY_RATE = 329.6; //tier 中间档改这里
+        const OLD_ENTRY_RATE = 240; //tier 中间档改这里
         const OLD_MEDIUM_RATE = 600;
         const FIXED_PROFIT = 4000;
         const P_BAT_LABOR = (curMode === 'battery') ? 1500 : 500;
@@ -1407,9 +1407,23 @@ function calculate(forceShow = false) {
 
         // B. STC Battery
         let stcBatteryValue = 0;
+
         if (curMode !== 'solar') {
-            stcBatteryValue = Math.min(batteryKwh, SL.fed_bat_cap_kwh) * SL.fed_bat_rate_per_kwh;
-        }
+            const rate = SL.fed_bat_rate_per_kwh;
+            const kwh = batteryKwh;
+
+            // 1. 第一阶段：0 - 14 kWh (100% 补贴)
+             const tier1 = Math.min(kwh, 14) * rate;
+
+             // 2. 第二阶段：14 - 28 kWh (60% 补贴)
+             // 使用 Math.max(0, ...) 确保如果 kwh 小于 14，该区间计算结果不会为负
+             const tier2 = Math.max(0, Math.min(kwh, 28) - 14) * rate * 0.6;
+
+                // 3. 第三阶段：28 - 50 kWh (15% 补贴)
+             const tier3 = Math.max(0, Math.min(kwh, 50) - 28) * rate * 0.15;
+
+             stcBatteryValue = tier1 + tier2 + tier3;
+        }  
 
         const totalSTC = stcSolarValue + stcBatteryValue;
 
